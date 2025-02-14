@@ -35,47 +35,68 @@ params = {
     'acc': 'UA973052990000026002025035545',
     'startDate': start_date,
     'endDate': end_date,
-    'limit': '100'
+    'limit': '50'  # Одержуємо перші 50 записів
 }
-response = requests.get(url, headers=headers, params=params)
 
-if response.status_code == 200:
-    data = response.json()
-    if data.get('status') == 'SUCCESS':
-        transactions = data.get('transactions', [])
-        for transaction in transactions:
-            # Перевіряємо на коректність значення дати та часу
-            try:
-                if 'DATE_TIME_DAT_OD_TIM_P' in transaction and transaction['DATE_TIME_DAT_OD_TIM_P']:
-                    transaction['DATE_TIME_DAT_OD_TIM_P'] = datetime.strptime(transaction['DATE_TIME_DAT_OD_TIM_P'], '%d.%m.%Y %H:%M:%S')
-                else:
-                    transaction['DATE_TIME_DAT_OD_TIM_P'] = None
+# Перевірка на наявність наступної пачки
+next_page_id = None
+while True:
+    if next_page_id:
+        params['followId'] = next_page_id  # Додаємо followId для отримання наступної пачки
+    
+    response = requests.get(url, headers=headers, params=params)
+    
+    if response.status_code == 200:
+        data = response.json()
+        if data.get('status') == 'SUCCESS':
+            transactions = data.get('transactions', [])
+            if transactions:
+                for transaction in transactions:
+                    try:
+                        # Перетворюємо дати
+                        if 'DATE_TIME_DAT_OD_TIM_P' in transaction and transaction['DATE_TIME_DAT_OD_TIM_P']:
+                            transaction['DATE_TIME_DAT_OD_TIM_P'] = datetime.strptime(transaction['DATE_TIME_DAT_OD_TIM_P'], '%d.%m.%Y %H:%M:%S')
+                        else:
+                            transaction['DATE_TIME_DAT_OD_TIM_P'] = None
+                        
+                        if 'DAT_OD' in transaction and transaction['DAT_OD']:
+                            transaction['DAT_OD'] = datetime.strptime(transaction['DAT_OD'], '%d.%m.%Y').date()
+                        else:
+                            transaction['DAT_OD'] = None
+                    except Exception as e:
+                        print(f"❌ Помилка при обробці дати/часу: {e}")
+                        continue
+                    
+                    # Зберігаємо транзакцію в БД
+                    cursor.execute(""" 
+                        INSERT INTO bnk_trazact_prvt (%s) 
+                        VALUES (%s)
+                        ON DUPLICATE KEY UPDATE 
+                        DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),
+                        DAT_OD = VALUES(DAT_OD)
+                    """ % (
+                        ', '.join(transaction.keys()),
+                        ', '.join(['%s'] * len(transaction))
+                    ), tuple(transaction.values()))
                 
-                if 'DAT_OD' in transaction and transaction['DAT_OD']:
-                    transaction['DAT_OD'] = datetime.strptime(transaction['DAT_OD'], '%d.%m.%Y').date()
-                else:
-                    transaction['DAT_OD'] = None
-                
-            except Exception as e:
-                print(f"❌ Помилка при обробці дати/часу: {e}")
-                continue
+                conn.commit()
+                print(f"✅ Пачка з {len(transactions)} транзакцій успішно збережена у БД")
+            else:
+                print("❌ Немає транзакцій для цього запиту.")
             
-            cursor.execute(""" 
-                INSERT INTO bnk_trazact_prvt (%s) 
-                VALUES (%s)
-                ON DUPLICATE KEY UPDATE 
-                DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),
-                DAT_OD = VALUES(DAT_OD)
-            """ % (
-                ', '.join(transaction.keys()),
-                ', '.join(['%s'] * len(transaction))
-            ), tuple(transaction.values()))
-        conn.commit()
-        print("✅ Транзакції успішно збережено у БД")
+            # Перевіряємо, чи є наступна пачка
+            if data.get('exist_next_page'):  # Якщо наступна сторінка є
+                next_page_id = data.get('next_page_id')  # Отримуємо next_page_id для наступного запиту
+                print(f"🔄 Наступна пачка: {next_page_id}")
+            else:
+                print("✅ Усі транзакції отримано.")
+                break  # Якщо наступної пачки немає, завершуємо цикл
+        else:
+            print("❌ Помилка отримання транзакцій:", data.get('message'))
+            break
     else:
-        print("❌ Помилка отримання транзакцій: ", data.get('message'))
-else:
-    print(f"❌ Помилка {response.status_code}: {response.text}")
+        print(f"❌ Помилка {response.status_code}: {response.text}")
+        break
 
 cursor.close()
 conn.close()
