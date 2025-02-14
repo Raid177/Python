@@ -44,11 +44,28 @@ if response.status_code == 200:
     if data.get('status') == 'SUCCESS':
         transactions = data.get('transactions', [])
         for transaction in transactions:
-            cursor.execute("""
+            # Перевіряємо на коректність значення дати та часу
+            try:
+                if 'DATE_TIME_DAT_OD_TIM_P' in transaction and transaction['DATE_TIME_DAT_OD_TIM_P']:
+                    transaction['DATE_TIME_DAT_OD_TIM_P'] = datetime.strptime(transaction['DATE_TIME_DAT_OD_TIM_P'], '%d.%m.%Y %H:%M:%S')
+                else:
+                    transaction['DATE_TIME_DAT_OD_TIM_P'] = None
+                
+                if 'DAT_OD' in transaction and transaction['DAT_OD']:
+                    transaction['DAT_OD'] = datetime.strptime(transaction['DAT_OD'], '%d.%m.%Y').date()
+                else:
+                    transaction['DAT_OD'] = None
+                
+            except Exception as e:
+                print(f"❌ Помилка при обробці дати/часу: {e}")
+                continue
+            
+            cursor.execute(""" 
                 INSERT INTO bnk_trazact_prvt (%s) 
                 VALUES (%s)
-                ON DUPLICATE KEY UPDATE
-                DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P)
+                ON DUPLICATE KEY UPDATE 
+                DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),
+                DAT_OD = VALUES(DAT_OD)
             """ % (
                 ', '.join(transaction.keys()),
                 ', '.join(['%s'] * len(transaction))
@@ -56,7 +73,7 @@ if response.status_code == 200:
         conn.commit()
         print("✅ Транзакції успішно збережено у БД")
     else:
-        print("❌ Помилка отримання транзакцій:", data.get('message'))
+        print("❌ Помилка отримання транзакцій: ", data.get('message'))
 else:
     print(f"❌ Помилка {response.status_code}: {response.text}")
 
