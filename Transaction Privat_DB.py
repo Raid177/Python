@@ -16,12 +16,24 @@ DB_DATABASE = os.getenv('DB_DATABASE')
 conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_DATABASE)
 cursor = conn.cursor()
 
-# Отримуємо дату останнього запису
-cursor.execute("SELECT MAX(DATE_TIME_DAT_OD_TIM_P) FROM bnk_trazact_prvt")
+# Номер рахунку
+account_number = 'UA973052990000026002025035545'
+
+# Отримуємо максимальну дату для конкретного рахунку
+cursor.execute("""
+    SELECT MAX(DATE_TIME_DAT_OD_TIM_P)
+    FROM bnk_trazact_prvt
+    WHERE AUT_MY_ACC = %s
+""", (account_number,))
 last_date = cursor.fetchone()[0]
-if not last_date:
-    last_date = datetime.now() - timedelta(days=30)
-start_date = (last_date - timedelta(days=1)).strftime('%d-%m-%Y')
+
+# Якщо рахунок є в БД і є транзакції, беремо максимальну дату, віднімаємо 1 день
+if last_date:
+    start_date = (last_date - timedelta(days=1)).strftime('%d-%m-%Y')
+else:
+    # Якщо рахунку ще немає в БД, початкова дата буде 2024-07-01
+    start_date = '01-07-2024'
+
 end_date = datetime.now().strftime('%d-%m-%Y')
 
 # API-запит
@@ -32,7 +44,7 @@ headers = {
     'Content-Type': 'application/json;charset=cp1251'
 }
 params = {
-    'acc': 'UA973052990000026002025035545',
+    'acc': account_number,
     'startDate': start_date,
     'endDate': end_date,
     'limit': '50'  # Одержуємо перші 50 записів
