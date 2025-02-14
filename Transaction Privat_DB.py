@@ -36,6 +36,10 @@ else:
 
 end_date = datetime.now().strftime('%d-%m-%Y')
 
+# Виведення дати старту та фінішу в термінал
+print(f"📅 Дата старту: {start_date}")
+print(f"📅 Дата фінішу: {end_date}")
+
 # API-запит
 url = 'https://acp.privatbank.ua/api/statements/transactions'
 headers = {
