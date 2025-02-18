@@ -37,7 +37,7 @@ def migrate_data():
                     modified_row = row.copy()
                     modified_row['NUM_DOC'] += "_ek"
                     modified_row['TRANTYPE'] = "D" if row['TRANTYPE'] == "C" else row['TRANTYPE']
-                    modified_row['OSND'] = "Комісія банку за еквайринг"
+                    modified_row['OSND'] = "Розрахунки з еквайрингу"
                     commission_amount = extract_commission(row['OSND'])
                     modified_row['SUM'] = commission_amount
                     modified_row['SUM_E'] = commission_amount
