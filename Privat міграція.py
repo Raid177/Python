@@ -2,6 +2,7 @@ import pymysql
 import os
 import re
 from dotenv import load_dotenv
+from datetime import datetime, timedelta
 
 # Завантажуємо змінні середовища
 load_dotenv()
@@ -25,9 +26,28 @@ def migrate_data():
     connection = pymysql.connect(**DB_CONFIG)
     try:
         with connection.cursor() as cursor:
-            # Отримуємо всі записи з bnk_trazact_prvt
-            cursor.execute("SELECT * FROM bnk_trazact_prvt")
+            # Отримуємо найновішу дату DAT_OD у bnk_trazact_prvt_ekv
+            cursor.execute("SELECT MAX(DAT_OD) AS max_date FROM bnk_trazact_prvt_ekv")
+            result = cursor.fetchone()
+            max_date = result["max_date"]
+            
+            # Якщо дат немає, беремо 1 липня 2024
+            if not max_date:
+                max_date = datetime(2024, 7, 1)
+            else:
+                max_date -= timedelta(days=1)
+            
+            print(f"Вибірка записів від дати: {max_date}")
+            cursor.execute("SELECT COUNT(*) AS count FROM bnk_trazact_prvt WHERE DAT_OD >= %s", (max_date,))
+            count_result = cursor.fetchone()
+            print(f"Кількість записів для перенесення: {count_result['count']}")
+            
+            cursor.execute("SELECT * FROM bnk_trazact_prvt WHERE DAT_OD >= %s", (max_date,))
             rows = cursor.fetchall()
+            
+            if not rows:
+                print("Немає нових даних для переносу.")
+                return
             
             for row in rows:
                 new_rows = [row.copy()]
@@ -37,7 +57,7 @@ def migrate_data():
                     modified_row = row.copy()
                     modified_row['NUM_DOC'] += "_ek"
                     modified_row['TRANTYPE'] = "D" if row['TRANTYPE'] == "C" else row['TRANTYPE']
-                    modified_row['OSND'] = "Розрахунки з еквайрингу"
+                    modified_row['OSND'] = "Комісія за екваринг"
                     commission_amount = extract_commission(row['OSND'])
                     modified_row['SUM'] = commission_amount
                     modified_row['SUM_E'] = commission_amount
@@ -52,6 +72,7 @@ def migrate_data():
                     cursor.execute(sql, tuple(new_row.values()))
             
             connection.commit()
+            print(f"Перенесено {len(rows)} записів.")
     finally:
         connection.close()
 
