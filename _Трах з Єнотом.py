@@ -13,7 +13,7 @@ headers = {
 
 # Данные нового документа
 data_create = { 
-    "Number": "000774407",  # Вставьте свой номер
+    "Number": "200004407",  # Вставьте свой номер
     "Date": "2025-03-30T00:00:00",
     "Posted": True,
     "Валюта_Key": "da1cdf6a-4e84-11ef-83bb-2ae983d8a0f0",
@@ -44,7 +44,9 @@ response_create = requests.post(
 # Проверяем ответ
 if response_create.status_code == 201:
     response_data_create = response_create.json()
-    ref_key_create = response_data_create.get('Ref_Key')
-    print(f"Документ успешно создан! Ref_Key: {ref_key_create}")
+    print("Документ успешно создан! Ответ от 1С:")
+    
+    for key, value in response_data_create.items():
+        print(f"{key}: {value}")
 else:
     print(f"Ошибка {response_create.status_code}: {response_create.text}")
