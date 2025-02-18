@@ -38,14 +38,17 @@ def migrate_data():
                     modified_row['NUM_DOC'] += "_ek"
                     modified_row['TRANTYPE'] = "D" if row['TRANTYPE'] == "C" else row['TRANTYPE']
                     modified_row['OSND'] = "Комісія банку за еквайринг"
-                    modified_row['SUM'] = extract_commission(row['OSND'])
+                    commission_amount = extract_commission(row['OSND'])
+                    modified_row['SUM'] = commission_amount
+                    modified_row['SUM_E'] = commission_amount
                     new_rows.append(modified_row)
                 
-                # Записуємо дані у bnk_trazact_prvt_ekv
+                # Записуємо дані у bnk_trazact_prvt_ekv з обробкою дублікатів
                 for new_row in new_rows:
                     placeholders = ", ".join(["%s"] * len(new_row))
                     columns = ", ".join(new_row.keys())
-                    sql = f"INSERT INTO bnk_trazact_prvt_ekv ({columns}) VALUES ({placeholders})"
+                    updates = ", ".join([f"{col} = VALUES({col})" for col in new_row.keys() if col not in ('NUM_DOC', 'DATE_TIME_DAT_OD_TIM_P', 'AUT_CNTR_MFO', 'TRANTYPE')])
+                    sql = f"INSERT INTO bnk_trazact_prvt_ekv ({columns}) VALUES ({placeholders}) ON DUPLICATE KEY UPDATE {updates}"
                     cursor.execute(sql, tuple(new_row.values()))
             
             connection.commit()
