@@ -21,7 +21,7 @@ if not ODATA_URL:
     raise ValueError("ODATA_URL не знайдено в змінних середовища")
 
 # Фільтр по даті (останні 45 днів)
-start_date_filter = (datetime.now() - timedelta(days=45)).strftime("%Y-%m-%dT%H:%M:%S")
+start_date_filter = (datetime.now() - timedelta(days=450)).strftime("%Y-%m-%dT%H:%M:%S")
 
 # Базовий URL з фільтром і сортуванням
 BASE_ODATA_URL = (
