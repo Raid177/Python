@@ -7,15 +7,12 @@ from mysql.connector import Error
 from dotenv import load_dotenv
 import os
 
-# Завантаження змінних з .env
 load_dotenv()
 
-# 🔹 API Binotel
 API_URL = "https://api.binotel.com/api/4.0/stats/list-of-calls-for-period.json"
 API_KEY = os.getenv("BNT_KEY")
 API_SECRET = os.getenv("BNT_SECRET")
 
-# 🔹 Конфігурація MySQL
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -23,39 +20,39 @@ DB_CONFIG = {
     "database": os.getenv("DB_DATABASE")
 }
 
-# 🔹 Функція отримання дзвінків з API
-def get_calls(start_time, stop_time):
-    payload = {
-        "startTime": start_time,
-        "stopTime": stop_time,
-        "key": API_KEY,
-        "secret": API_SECRET
-    }
-
-    headers = {"Content-Type": "application/json"}
-    print(f"📡 Запит до API: {API_URL}, Параметри: {payload}")
-
-    try:
-        response = requests.post(API_URL, json=payload, headers=headers, timeout=10)
-        print(f"🔍 Код відповіді API: {response.status_code}, Відповідь: {response.text[:500]}")
-
-        return response.json() if response.status_code == 200 else None
-    except requests.exceptions.RequestException as e:
-        print(f"❌ Помилка запиту: {e}")
-        return None
-
-# 🔹 Конвертація timestamp у формат MySQL
-def convert_timestamp(ts):
-    try:
-        return datetime.datetime.fromtimestamp(int(ts)).strftime('%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        return None
-
-def save_to_db(call_data):
+def get_last_date_from_db():
     try:
         connection = mysql.connector.connect(**DB_CONFIG)
         cursor = connection.cursor()
+        cursor.execute("SELECT MAX(startTime) FROM bnt_calls")
+        last_date = cursor.fetchone()[0]
+        return last_date.date() - datetime.timedelta(days=1) if last_date else datetime.date.today()
+    except:
+        return datetime.date.today()
+    finally:
+        if connection.is_connected():
+            cursor.close()
+            connection.close()
 
+def get_calls(start_time, stop_time):
+    payload = {"startTime": int(start_time), "stopTime": int(stop_time), "key": API_KEY, "secret": API_SECRET}
+    try:
+        response = requests.post(API_URL, json=payload, headers={"Content-Type": "application/json"}, timeout=10)
+        return response.json() if response.status_code == 200 else None
+    except:
+        return None
+
+def save_to_db(call_data):
+    if not isinstance(call_data, dict) or "callDetails" not in call_data:
+        return 0
+
+    call_details = call_data.get("callDetails", {})
+    if not isinstance(call_details, dict):
+        return 0
+
+    try:
+        connection = mysql.connector.connect(**DB_CONFIG)
+        cursor = connection.cursor()
         insert_query = """
         INSERT INTO bnt_calls (
             companyID, generalCallID, startTime, callType, internalNumber,
@@ -63,52 +60,44 @@ def save_to_db(call_data):
             disposition, isNewCall
         ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
-            companyID=VALUES(companyID), startTime=VALUES(startTime),
-            callType=VALUES(callType), internalNumber=VALUES(internalNumber),
-            internalAdditionalData=VALUES(internalAdditionalData),
+            startTime=VALUES(startTime), callType=VALUES(callType),
+            internalNumber=VALUES(internalNumber), internalAdditionalData=VALUES(internalAdditionalData),
             externalNumber=VALUES(externalNumber), waitsec=VALUES(waitsec),
             billsec=VALUES(billsec), disposition=VALUES(disposition),
             isNewCall=VALUES(isNewCall)
         """
 
-        for call_id, call in call_data.get("callDetails", {}).items():  # 🔹 Додаємо .items() для розпакування ID
-            start_time = convert_timestamp(call["startTime"])  # 🔹 Час дзвінка у нормальному форматі
-            if start_time:
-                cursor.execute(insert_query, (
-                    call["companyID"], call["generalCallID"], start_time,
-                    call["callType"], call["internalNumber"], call.get("internalAdditionalData", ""),
-                    call["externalNumber"], call["waitsec"], call["billsec"],
-                    call["disposition"], call["isNewCall"]
-                ))
+        count = 0
+        for call in call_details.values():
+            start_time = int(call["startTime"])
+            cursor.execute(insert_query, (
+                call["companyID"], call["generalCallID"], datetime.datetime.fromtimestamp(start_time),
+                call["callType"], call["internalNumber"], call.get("internalAdditionalData", ""),
+                call["externalNumber"], call["waitsec"], call["billsec"],
+                call["disposition"], call["isNewCall"]
+            ))
+            count += 1
 
         connection.commit()
-        print("✅ Дані збережені в MySQL")
-
-    except Error as e:
-        print(f"❌ Помилка MySQL: {e}")
-
+        return count
+    except:
+        return 0
     finally:
         if connection.is_connected():
             cursor.close()
             connection.close()
 
-
-# 🔹 Основний код: отримання дзвінків за 20-21 лютого 2025
 if __name__ == "__main__":
-    start_date = datetime.datetime(2025, 2, 20)
-    end_date = datetime.datetime(2025, 2, 21, 23, 59, 59)
-
+    start_date = get_last_date_from_db()
+    end_date = datetime.date.today()
+    
     while start_date <= end_date:
-        start_time = int(start_date.timestamp())
-        stop_time = start_time + 14400  # 4 години
-
-        print(f"🔍 Отримуємо дзвінки за {start_date.strftime('%Y-%m-%d %H:%M:%S')}")
-
-        call_data = get_calls(start_time, stop_time)
-        if call_data and call_data.get("status") == "success":
-            save_to_db(call_data)
-        else:
-            print("❌ Даних нема або помилка API")
-
-        time.sleep(6)  # Чекаємо перед наступним запитом
-        start_date += datetime.timedelta(hours=4)  # Рухаємось по 4 години
+        start_timestamp = int(time.mktime(start_date.timetuple()))
+        stop_timestamp = int(time.mktime((start_date + datetime.timedelta(days=1)).timetuple()))
+        
+        call_data = get_calls(start_timestamp, stop_timestamp)
+        saved_records = save_to_db(call_data) if call_data else 0
+        print(f"📅 {start_date}: {saved_records} записів")
+        
+        start_date += datetime.timedelta(days=1)
+        time.sleep(6)
