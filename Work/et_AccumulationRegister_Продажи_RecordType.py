@@ -36,7 +36,7 @@ def get_last_period():
     
     if last_period:
         return last_period - timedelta(days=45)
-    return datetime(2024, 7, 20)  # Якщо немає записів, беремо 450 днів тому
+    return datetime(2024, 7, 20)  # Якщо немає записів, 20 липня 2024 року
 
 # Визначаємо дату для фільтрації
 start_date_filter = get_last_period().strftime("%Y-%m-%dT%H:%M:%S")
