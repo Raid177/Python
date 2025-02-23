@@ -20,8 +20,26 @@ ODATA_URL = os.getenv("ODATA_URL")
 if not ODATA_URL:
     raise ValueError("ODATA_URL не знайдено в змінних середовища")
 
-# Фільтр по даті (останні 45 днів)
-start_date_filter = (datetime.now() - timedelta(days=450)).strftime("%Y-%m-%dT%H:%M:%S")
+# Функція отримання останньої дати Period з БД
+def get_last_period():
+    conn = mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_DATABASE
+    )
+    cursor = conn.cursor()
+    cursor.execute("SELECT MAX(Period) FROM et_AccumulationRegister_Продажи_RecordType")
+    last_period = cursor.fetchone()[0]
+    cursor.close()
+    conn.close()
+    
+    if last_period:
+        return last_period - timedelta(days=45)
+    return datetime(2024, 7, 20)  # Якщо немає записів, беремо 450 днів тому
+
+# Визначаємо дату для фільтрації
+start_date_filter = get_last_period().strftime("%Y-%m-%dT%H:%M:%S")
 
 # Базовий URL з фільтром і сортуванням
 BASE_ODATA_URL = (
