@@ -15,9 +15,11 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_DATABASE")
 
 # Параметри підключення до OData (Єнот)
-odata_url_create = os.getenv('ODATA_URL_COPY')
-odata_username = os.getenv("ODATA_USER")
-odata_password = os.getenv("ODATA_PASSWORD")
+ODATA_URL_BASE = os.getenv("ODATA_URL")
+ODATA_TABLE = "Document_ДенежныйЧек"  # Назва таблиці
+ODATA_URL_CREATE = f"{ODATA_URL_BASE}{ODATA_TABLE}"
+ODATA_USER = os.getenv("ODATA_USER")
+ODATA_PASSWORD = os.getenv("ODATA_PASSWORD")
 
 headers = {
     'Content-Type': 'application/json',
@@ -35,10 +37,11 @@ connection = pymysql.connect(
 
 try:
     with connection.cursor() as cursor:
-        # Отримуємо всі транзакції, де TRANTYPE = 'D' і enote_ref IS NULL
+        # Отримуємо всі транзакції, де TRANTYPE = 'D' і enote_ref IS NULL, сортуємо за DATE_TIME_DAT_OD_TIM_P
         cursor.execute("""
             SELECT * FROM bnk_trazact_prvt_ekv
             WHERE TRANTYPE = 'D' AND enote_ref IS NULL
+            ORDER BY DATE_TIME_DAT_OD_TIM_P ASC
         """)
         transactions = cursor.fetchall()
 
@@ -59,36 +62,34 @@ try:
             """, (aut_my_acc,))
             account_result = cursor.fetchone()
 
-            if account_result:
-                account_ref_key = account_result["Ref_Key"]
-            else:
-                # Якщо не знайшли рахунок, записуємо помилку
+            if not account_result:
                 cursor.execute("""
                     UPDATE bnk_trazact_prvt_ekv
                     SET enote_check = 'Err ДенСчет'
                     WHERE NUM_DOC = %s AND DATE_TIME_DAT_OD_TIM_P = %s AND AUT_CNTR_MFO = %s AND TRANTYPE = %s
                 """, (num_doc, date_time, aut_cntr_mfo, trantype))
                 connection.commit()
-                continue  # Переходимо до наступної транзакції
+                continue
+            
+            account_ref_key = account_result["Ref_Key"]
 
             # Шукаємо Ref_Key у ent_counterparties
             cursor.execute("""
-                SELECT Ref_Key FROM ent_counterparties
+                SELECT Ref_Key FROM et_counterparties
                 WHERE ЕДРПОУ = %s
             """, (aut_cntr_crf,))
             counterpart_result = cursor.fetchone()
 
-            if counterpart_result:
-                counterpart_ref_key = counterpart_result["Ref_Key"]
-            else:
-                # Якщо не знайшли контрагента, записуємо помилку
+            if not counterpart_result:
                 cursor.execute("""
                     UPDATE bnk_trazact_prvt_ekv
                     SET enote_check = 'Err Объект'
                     WHERE NUM_DOC = %s AND DATE_TIME_DAT_OD_TIM_P = %s AND AUT_CNTR_MFO = %s AND TRANTYPE = %s
                 """, (num_doc, date_time, aut_cntr_mfo, trantype))
                 connection.commit()
-                continue  # Переходимо до наступної транзакції
+                continue
+            
+            counterpart_ref_key = counterpart_result["Ref_Key"]
 
             # Формуємо дані для створення чека
             data_create = {
@@ -113,9 +114,9 @@ try:
 
             # Відправляємо запит на створення документа в 1С (Єнот)
             response_create = requests.post(
-                odata_url_create,
+                ODATA_URL_CREATE,
                 headers=headers,
-                auth=HTTPBasicAuth(odata_username, odata_password),
+                auth=HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD),
                 json=data_create
             )
 
