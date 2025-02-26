@@ -35,6 +35,8 @@ connection = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 
+seen_errors = set()
+
 try:
     with connection.cursor() as cursor:
         # Отримуємо всі транзакції, де TRANTYPE = 'D' і enote_ref IS NULL, сортуємо за DATE_TIME_DAT_OD_TIM_P
@@ -75,15 +77,18 @@ try:
             
             account_ref_key = account_result["Ref_Key"]
 
-            # Шукаємо Ref_Key у et_counterparties
+            # Шукаємо Ref_Key у ent_counterparties
             cursor.execute("""
-                SELECT Ref_Key FROM et_counterparties
+                SELECT Ref_Key FROM ent_counterparties
                 WHERE ЕДРПОУ = %s
             """, (aut_cntr_crf,))
             counterpart_result = cursor.fetchone()
 
             if not counterpart_result:
-                print(f"Контрагент '{aut_cntr_nam}', Платіж '{osnd_text}' не знайдено. Дата: {dat_od}")
+                error_key = (aut_cntr_nam, osnd_text, dat_od)
+                if error_key not in seen_errors:
+                    print(f"Контрагент '{aut_cntr_nam}', Платіж '{osnd_text}' не знайдено. Дата: {dat_od}")
+                    seen_errors.add(error_key)
                 cursor.execute("""
                     UPDATE bnk_trazact_prvt_ekv
                     SET enote_check = 'Err Объект'
