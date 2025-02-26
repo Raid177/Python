@@ -109,7 +109,7 @@ try:
                 "Объект": counterpart_ref_key,
                 "Объект_Type": "StandardODATA.Catalog_Контрагенты",
                 "Организация_Key": "e3e20bc4-4e84-11ef-83bb-2ae983d8a0f0",
-                "Ответственный_Key": "a0ac4d62-a517-11ef-82d9-2ae983d8a0f0",
+                "Ответственный_Key": "0b3e903a-eee3-11ef-9ac5-2ae983d8a0f0",
                 "Подразделение_Key": "7f5078ca-4dfe-11ef-978c-2ae983d8a0f0",
                 "Сумма": 0,
                 "СуммаБезнал": float(sum_value)
