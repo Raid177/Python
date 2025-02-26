@@ -58,6 +58,7 @@ try:
             osnd_text = transaction["OSND"]
             aut_cntr_nam = transaction["AUT_CNTR_NAM"]
             dat_od = transaction["DAT_OD"]
+            enote_check = transaction["enote_check"]
 
             # Шукаємо Ref_Key у et_Catalog_ДенежныеСчета за НомерСчета
             cursor.execute("""
@@ -85,10 +86,11 @@ try:
             counterpart_result = cursor.fetchone()
 
             if not counterpart_result:
-                error_key = (aut_cntr_nam, osnd_text, dat_od)
-                if error_key not in seen_errors:
-                    print(f"Контрагент '{aut_cntr_nam}', Платіж '{osnd_text}' не знайдено. Дата: {dat_od}")
-                    seen_errors.add(error_key)
+                if enote_check is None:
+                    error_key = (aut_cntr_nam, osnd_text, dat_od)
+                    if error_key not in seen_errors:
+                        print(f"Контрагент '{aut_cntr_nam}', Платіж '{osnd_text}' не знайдено. Дата: {dat_od}")
+                        seen_errors.add(error_key)
                 cursor.execute("""
                     UPDATE bnk_trazact_prvt_ekv
                     SET enote_check = 'Err Объект'
@@ -98,6 +100,7 @@ try:
                 continue
             
             counterpart_ref_key = counterpart_result["Ref_Key"]
+            error_fixed = enote_check is not None
 
             # Формуємо дані для створення чека
             data_create = {
@@ -132,7 +135,10 @@ try:
                 response_data_create = response_create.json()
                 enote_ref = response_data_create.get("Ref_Key")
                 enote_check = response_data_create.get("Number")
-                print(f"Чек створено: {enote_check}, Дата: {dat_od}")
+                msg = f"Чек створено: {enote_check}, Дата: {dat_od}"
+                if error_fixed:
+                    msg += " (Помилку виправлено!)"
+                print(msg)
 
                 # Оновлюємо запис у БД
                 cursor.execute("""
