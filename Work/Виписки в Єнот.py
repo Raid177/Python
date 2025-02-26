@@ -15,7 +15,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_DATABASE")
 
 # Параметри підключення до OData (Єнот)
-ODATA_URL_BASE = os.getenv("ODATA_URL_COPY")
+ODATA_URL_BASE = os.getenv("ODATA_URL")
 ODATA_TABLE = "Document_ДенежныйЧек"  # Назва таблиці
 ODATA_URL_CREATE = f"{ODATA_URL_BASE}{ODATA_TABLE}"
 ODATA_USER = os.getenv("ODATA_USER")
