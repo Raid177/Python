@@ -54,6 +54,8 @@ try:
             aut_cntr_crf = transaction["AUT_CNTR_CRF"]
             sum_value = transaction["SUM"]
             osnd_text = transaction["OSND"]
+            aut_cntr_nam = transaction["AUT_CNTR_NAM"]
+            dat_od = transaction["DAT_OD"]
 
             # Шукаємо Ref_Key у et_Catalog_ДенежныеСчета за НомерСчета
             cursor.execute("""
@@ -81,6 +83,7 @@ try:
             counterpart_result = cursor.fetchone()
 
             if not counterpart_result:
+                print(f"Контрагент '{aut_cntr_nam}', Платіж '{osnd_text}' не знайдено. Дата: {dat_od}")
                 cursor.execute("""
                     UPDATE bnk_trazact_prvt_ekv
                     SET enote_check = 'Err Объект'
@@ -106,7 +109,7 @@ try:
                 "Объект": counterpart_ref_key,
                 "Объект_Type": "StandardODATA.Catalog_Контрагенты",
                 "Организация_Key": "e3e20bc4-4e84-11ef-83bb-2ae983d8a0f0",
-                "Ответственный_Key": "43996fe4-4e85-11ef-83bb-2ae983d8a0f0",
+                "Ответственный_Key": "a0ac4d62-a517-11ef-82d9-2ae983d8a0f0",
                 "Подразделение_Key": "7f5078ca-4dfe-11ef-978c-2ae983d8a0f0",
                 "Сумма": 0,
                 "СуммаБезнал": float(sum_value)
@@ -124,6 +127,7 @@ try:
                 response_data_create = response_create.json()
                 enote_ref = response_data_create.get("Ref_Key")
                 enote_check = response_data_create.get("Number")
+                print(f"Чек створено: {enote_check}, Дата: {dat_od}")
 
                 # Оновлюємо запис у БД
                 cursor.execute("""
@@ -132,7 +136,6 @@ try:
                     WHERE NUM_DOC = %s AND DATE_TIME_DAT_OD_TIM_P = %s AND AUT_CNTR_MFO = %s AND TRANTYPE = %s
                 """, (enote_ref, enote_check, num_doc, date_time, aut_cntr_mfo, trantype))
                 connection.commit()
-                print(f"Чек створено: {enote_check}")
             else:
                 print(f"Помилка {response_create.status_code}: {response_create.text}")
 
