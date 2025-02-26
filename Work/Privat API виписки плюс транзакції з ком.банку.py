@@ -102,7 +102,7 @@ def migrate_data(connection):
         last_date = cursor.fetchone()['MAX(DAT_OD)']
 
         if last_date is None:
-            last_date = datetime(2024, 7, 1).date()
+            last_date = datetime(2024, 10, 12).date()
         else:
             last_date -= timedelta(days=1)
 

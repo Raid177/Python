@@ -15,7 +15,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_DATABASE")
 
 # Параметри підключення до OData (Єнот)
-odata_url_create = "https://app.enote.vet/7edc4405-f8d6-4022-9999-8186ee1ce262-copy/odata/standard.odata/Document_ДенежныйЧек"
+odata_url_create = os.getenv('ODATA_URL_COPY')
 odata_username = os.getenv("ODATA_USER")
 odata_password = os.getenv("ODATA_PASSWORD")
 

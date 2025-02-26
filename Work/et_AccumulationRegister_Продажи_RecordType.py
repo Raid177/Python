@@ -35,7 +35,7 @@ def get_last_period():
     conn.close()
     
     if last_period:
-        return last_period - timedelta(days=45)
+        return last_period - timedelta(days=25)
     return datetime(2024, 7, 20)  # Якщо немає записів, 20 липня 2024 року
 
 # Визначаємо дату для фільтрації
