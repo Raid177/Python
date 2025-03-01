@@ -78,9 +78,9 @@ try:
             
             account_ref_key = account_result["Ref_Key"]
 
-            # Шукаємо Ref_Key у et_counterparties
+            # Шукаємо Ref_Key у ent_counterparties
             cursor.execute("""
-                SELECT Ref_Key FROM et_counterparties
+                SELECT Ref_Key FROM ent_counterparties
                 WHERE ЕДРПОУ = %s
             """, (aut_cntr_crf,))
             counterpart_result = cursor.fetchone()
@@ -109,6 +109,7 @@ try:
                 "Валюта_Key": "da1cdf6a-4e84-11ef-83bb-2ae983d8a0f0",
                 "ВидДвижения": "РасчетыСПоставщиками",
                 "ДенежныйСчет": account_ref_key,
+                "ДенежныйСчетБезнал_Key": account_ref_key,
                 "ДенежныйСчет_Type": "StandardODATA.Catalog_ДенежныеСчета",
                 "Комментарий": f"Racoon_BankTransaction, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{osnd_text}",
                 "Кратность": "1",
