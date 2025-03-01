@@ -24,7 +24,7 @@ def connect_to_mysql():
 # Вставка даних у таблицю MySQL
 def insert_records(records, cursor):
     sql_query = """
-        INSERT INTO et_Document_НачислениеЗП (
+        INSERT INTO ent_Document_НачислениеЗП (
             Ref_Key, DataVersion, DeletionMark, Number, Date, Posted,
             Организация_Key, Ответственный_Key, СуммаДокумента, Комментарий,
             LineNumber, Сотрудник_Key, Сумма, Статья_Key, Комментарий_Статья

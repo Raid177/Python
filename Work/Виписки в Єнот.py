@@ -78,9 +78,9 @@ try:
             
             account_ref_key = account_result["Ref_Key"]
 
-            # Шукаємо Ref_Key у ent_counterparties
+            # Шукаємо Ref_Key у et_counterparties
             cursor.execute("""
-                SELECT Ref_Key FROM ent_counterparties
+                SELECT Ref_Key FROM et_counterparties
                 WHERE ЕДРПОУ = %s
             """, (aut_cntr_crf,))
             counterpart_result = cursor.fetchone()
