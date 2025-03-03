@@ -136,20 +136,9 @@ try:
                 response_data_create = response_create.json()
                 enote_ref = response_data_create.get("Ref_Key")
                 enote_check = response_data_create.get("Number")
-                msg = f"Чек створено: {enote_check}, Дата: {dat_od}"
-                if error_fixed:
-                    msg += " (Помилку виправлено!)"
-                print(msg)
-
-                # Оновлюємо запис у БД
-                cursor.execute("""
-                    UPDATE bnk_trazact_prvt_ekv
-                    SET enote_ref = %s, enote_check = %s
-                    WHERE NUM_DOC = %s AND DATE_TIME_DAT_OD_TIM_P = %s AND AUT_CNTR_MFO = %s AND TRANTYPE = %s
-                """, (enote_ref, enote_check, num_doc, date_time, aut_cntr_mfo, trantype))
-                connection.commit()
-            else:
-                print(f"Помилка {response_create.status_code}: {response_create.text}")
+                post_url = f"{ODATA_URL_CREATE}(guid'{enote_ref}')/Post?PostingModeOperational=false"
+                requests.post(post_url, headers=headers, auth=HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD))
+                print(f"Чек проведено: {enote_check}, Дата: {dat_od}")
 
 finally:
     connection.close()
