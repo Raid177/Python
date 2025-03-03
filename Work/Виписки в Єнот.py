@@ -102,34 +102,31 @@ try:
             counterpart_ref_key = counterpart_result["Ref_Key"]
             error_fixed = enote_check is not None
 
-            # Формуємо дані для створення чека
-            data_create = {
-                "Date": date_time.strftime("%Y-%m-%dT%H:%M:%S"),
-                "Posted": True,
-                "Валюта_Key": "da1cdf6a-4e84-11ef-83bb-2ae983d8a0f0",
-                "ВидДвижения": "РасчетыСПоставщиками",
-                "ДенежныйСчет": account_ref_key,
-                "ДенежныйСчетБезнал_Key": account_ref_key,
-                "ДенежныйСчет_Type": "StandardODATA.Catalog_ДенежныеСчета",
-                "Комментарий": f"Racoon_BankTransaction, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{osnd_text}",
-                "Кратность": "1",
-                "Курс": 1,
-                "НаправлениеДвижения": "Расход",
-                "Объект": counterpart_ref_key,
-                "Объект_Type": "StandardODATA.Catalog_Контрагенты",
-                "Организация_Key": "e3e20bc4-4e84-11ef-83bb-2ae983d8a0f0",
-                "Ответственный_Key": "0b3e903a-eee3-11ef-9ac5-2ae983d8a0f0",
-                "Подразделение_Key": "7f5078ca-4dfe-11ef-978c-2ae983d8a0f0",
-                "Сумма": 0,
-                "СуммаБезнал": float(sum_value)
-            }
-
             # Відправляємо запит на створення документа в 1С (Єнот)
             response_create = requests.post(
                 ODATA_URL_CREATE,
                 headers=headers,
                 auth=HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD),
-                json=data_create
+                json={
+                    "Date": date_time.strftime("%Y-%m-%dT%H:%M:%S"),
+                    "Posted": True,
+                    "Валюта_Key": "da1cdf6a-4e84-11ef-83bb-2ae983d8a0f0",
+                    "ВидДвижения": "РасчетыСПоставщиками",
+                    "ДенежныйСчет": account_ref_key,
+                    "ДенежныйСчетБезнал_Key": account_ref_key,
+                    "ДенежныйСчет_Type": "StandardODATA.Catalog_ДенежныеСчета",
+                    "Комментарий": f"Racoon_BankTransaction, {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n{osnd_text}",
+                    "Кратность": "1",
+                    "Курс": 1,
+                    "НаправлениеДвижения": "Расход",
+                    "Объект": counterpart_ref_key,
+                    "Объект_Type": "StandardODATA.Catalog_Контрагенты",
+                    "Организация_Key": "e3e20bc4-4e84-11ef-83bb-2ae983d8a0f0",
+                    "Ответственный_Key": "0b3e903a-eee3-11ef-9ac5-2ae983d8a0f0",
+                    "Подразделение_Key": "7f5078ca-4dfe-11ef-978c-2ae983d8a0f0",
+                    "Сумма": 0,
+                    "СуммаБезнал": float(sum_value)
+                }
             )
 
             if response_create.status_code == 201:
@@ -138,7 +135,16 @@ try:
                 enote_check = response_data_create.get("Number")
                 post_url = f"{ODATA_URL_CREATE}(guid'{enote_ref}')/Post?PostingModeOperational=false"
                 requests.post(post_url, headers=headers, auth=HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD))
-                print(f"Чек проведено: {enote_check}, Дата: {dat_od}")
+                cursor.execute("""
+                    UPDATE bnk_trazact_prvt_ekv
+                    SET enote_ref = %s, enote_check = %s
+                    WHERE NUM_DOC = %s AND DATE_TIME_DAT_OD_TIM_P = %s AND AUT_CNTR_MFO = %s AND TRANTYPE = %s
+                """, (enote_ref, enote_check, num_doc, date_time, aut_cntr_mfo, trantype))
+                connection.commit()
+                msg = f"Чек проведено: {enote_check}, Дата: {dat_od}"
+                if error_fixed:
+                    msg += " (Помилку виправлено!)"
+                print(msg)
 
 finally:
     connection.close()
