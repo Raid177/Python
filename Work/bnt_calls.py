@@ -26,9 +26,9 @@ def get_last_date_from_db():
         cursor = connection.cursor()
         cursor.execute("SELECT MAX(startTime) FROM bnt_calls")
         last_date = cursor.fetchone()[0]
-        return last_date.date() - datetime.timedelta(days=1) if last_date else datetime.date.today()
+        return last_date.date() - datetime.timedelta(days=1) if last_date else None
     except:
-        return datetime.date.today()
+        return None
     finally:
         if connection.is_connected():
             cursor.close()
@@ -90,6 +90,8 @@ def save_to_db(call_data):
 
 if __name__ == "__main__":
     start_date = get_last_date_from_db()
+    if start_date is None:
+        start_date = datetime.date(2024, 10, 18)  # Встановлення стартової дати
     end_date = datetime.date.today()
     
     while start_date <= end_date:
