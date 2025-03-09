@@ -57,24 +57,25 @@ def save_to_db(call_data):
         INSERT INTO bnt_calls (
             companyID, generalCallID, startTime, callType, internalNumber,
             internalAdditionalData, externalNumber, waitsec, billsec,
-            disposition, isNewCall
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            disposition, isNewCall, pbxNumber
+        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ON DUPLICATE KEY UPDATE
             startTime=VALUES(startTime), callType=VALUES(callType),
             internalNumber=VALUES(internalNumber), internalAdditionalData=VALUES(internalAdditionalData),
             externalNumber=VALUES(externalNumber), waitsec=VALUES(waitsec),
             billsec=VALUES(billsec), disposition=VALUES(disposition),
-            isNewCall=VALUES(isNewCall)
+            isNewCall=VALUES(isNewCall), pbxNumber=VALUES(pbxNumber)
         """
 
         count = 0
         for call in call_details.values():
             start_time = int(call["startTime"])
+            pbx_number = call.get("pbxNumberData", {}).get("number", None)  # Додаємо поле pbxNumber
             cursor.execute(insert_query, (
                 call["companyID"], call["generalCallID"], datetime.datetime.fromtimestamp(start_time),
                 call["callType"], call["internalNumber"], call.get("internalAdditionalData", ""),
                 call["externalNumber"], call["waitsec"], call["billsec"],
-                call["disposition"], call["isNewCall"]
+                call["disposition"], call["isNewCall"], pbx_number
             ))
             count += 1
 
@@ -97,7 +98,7 @@ if __name__ == "__main__":
         
         call_data = get_calls(start_timestamp, stop_timestamp)
         saved_records = save_to_db(call_data) if call_data else 0
-        print(f"📅 {start_date}: {saved_records} записів")
+        print(f"\U0001F4C5 {start_date}: {saved_records} записів")
         
         start_date += datetime.timedelta(days=1)
         time.sleep(6)
