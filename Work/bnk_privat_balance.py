@@ -45,7 +45,7 @@ def get_last_balance_info(account):
             result = cursor.fetchone()
             
             last_date = result["last_date"] if result["last_date"] else None
-            close_date = result["close_date"] if result["close_date"] and result["close_date"] != datetime(1900, 1, 1).date() else None
+            close_date = result["close_date"] if result["close_date"] and result["close_date"] != datetime(1900, 1, 1) else None
             
             # Приводимо close_date до date, якщо воно у форматі datetime
             if close_date and isinstance(close_date, datetime):
@@ -151,7 +151,7 @@ def main():
         for account in acc_list:
             last_date, close_date = get_last_balance_info(account)
             
-            if close_date and close_date <= last_date:
+            if close_date and last_date and close_date <= last_date:
                 print(f"🔴 Рахунок {account} закритий {close_date.strftime('%d-%m-%Y')}, пропускаємо.")
                 continue
 
@@ -166,7 +166,7 @@ def main():
                 if balances:
                     save_balances_to_db(balances)
                     total_records += len(balances)
-                    print(f"✅ Рахунок {account} - отримано баланс за {current_date.strftime('%d-%m-%Y')} (записів: {len(balances)})")
+                    print(f"✅ Рахунок {account} - отримано баланс за {current_date.strftime('%d-%m-%Y')}")
                 else:
                     print(f"⚠️ Рахунок {account} - немає даних за {current_date.strftime('%d-%m-%Y')}")
 
