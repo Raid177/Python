@@ -32,15 +32,26 @@ tokens = {
 # URL API для отримання балансів
 API_URL = "https://acp.privatbank.ua/api/statements/balance"
 
-# Отримання останньої дати балансу для рахунку
-def get_last_balance_date(account):
+# Отримання останньої дати балансу та дати закриття рахунку
+def get_last_balance_info(account):
     connection = pymysql.connect(**DB_CONFIG)
     try:
         with connection.cursor() as cursor:
-            query = "SELECT MAX(balance_date) AS last_date FROM bnk_privat_balance WHERE acc = %s"
+            query = """
+                SELECT MAX(balance_date) AS last_date, MAX(date_close_acc) AS close_date
+                FROM bnk_privat_balance WHERE acc = %s
+            """
             cursor.execute(query, (account,))
             result = cursor.fetchone()
-            return result["last_date"].date() if result["last_date"] else None  # Приводимо до date
+            
+            last_date = result["last_date"] if result["last_date"] else None
+            close_date = result["close_date"] if result["close_date"] and result["close_date"] != datetime(1900, 1, 1).date() else None
+            
+            # Приводимо close_date до date, якщо воно у форматі datetime
+            if close_date and isinstance(close_date, datetime):
+                close_date = close_date.date()
+
+            return last_date, close_date
     finally:
         connection.close()
 
@@ -64,16 +75,20 @@ def save_balances_to_db(balances):
                     turnoverDebtEq = VALUES(turnoverDebtEq),
                     turnoverCred = VALUES(turnoverCred),
                     turnoverCredEq = VALUES(turnoverCredEq),
+                    date_close_acc = VALUES(date_close_acc),
                     is_final_bal = VALUES(is_final_bal),
                     updated_at = CURRENT_TIMESTAMP
             """
             for bal in balances:
+                date_close_acc = bal["date_close_acc"]
+                if date_close_acc and date_close_acc == datetime(1900, 1, 1).date():
+                    date_close_acc = None  # Замінюємо 1900-01-01 на NULL
+
                 cursor.execute(insert_query, (
                     bal["acc"], bal["balance_date"], bal["currency"], bal["balanceIn"], bal["balanceInEq"],
                     bal["balanceOut"], bal["balanceOutEq"], bal["turnoverDebt"], bal["turnoverDebtEq"],
                     bal["turnoverCred"], bal["turnoverCredEq"], bal["dpd"], bal["nameACC"],
-                    bal["date_open_acc_reg"], bal["date_open_acc_sys"], bal["date_close_acc"],
-                    bal["is_final_bal"]
+                    bal["date_open_acc_reg"], bal["date_open_acc_sys"], date_close_acc, bal["is_final_bal"]
                 ))
         connection.commit()
     finally:
@@ -134,14 +149,14 @@ def main():
         token = tokens[fop]
 
         for account in acc_list:
-            # Отримуємо останню дату балансу або починаємо з 01.07.2024
-            last_date = get_last_balance_date(account)
-            if last_date:
-                start_date = last_date - timedelta(days=1)  # Мінус 1 день
-            else:
-                start_date = datetime(2024, 7, 1).date()  # Приводимо до date
+            last_date, close_date = get_last_balance_info(account)
+            
+            if close_date and close_date <= last_date:
+                print(f"🔴 Рахунок {account} закритий {close_date.strftime('%d-%m-%Y')}, пропускаємо.")
+                continue
 
-            end_date = (datetime.now() - timedelta(days=1)).date()  # Вчорашній день
+            start_date = (last_date - timedelta(days=1)) if last_date else datetime(2024, 7, 1).date()
+            end_date = (datetime.now() - timedelta(days=1)).date()
 
             print(f"📌 Отримання балансів для рахунку {account} з {start_date.strftime('%d-%m-%Y')} по {end_date.strftime('%d-%m-%Y')}")
 
@@ -156,10 +171,9 @@ def main():
                     print(f"⚠️ Рахунок {account} - немає даних за {current_date.strftime('%d-%m-%Y')}")
 
                 current_date += timedelta(days=1)
-                time.sleep(1)  # Пауза 1 секунда
+                time.sleep(1)
 
-    end_time = datetime.now()
-    print(f"🎯 Завершено! Усього отримано {total_records} записів за {end_time - start_time}.")
+    print(f"🎯 Завершено! Отримано {total_records} записів за {datetime.now() - start_time}.")
 
 if __name__ == "__main__":
     main()
