@@ -4,6 +4,7 @@ import xml.etree.ElementTree as ET
 import os
 import datetime
 from dotenv import load_dotenv
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Завантаження змінних з .env
 load_dotenv()
@@ -18,6 +19,9 @@ DB_DATABASE = os.getenv("DB_DATABASE")
 ODATA_USER = os.getenv("ODATA_USER")
 ODATA_PASSWORD = os.getenv("ODATA_PASSWORD")
 ODATA_URL = os.getenv("ODATA_URL") + "AccumulationRegister_ДенежныеСредства/Balance"
+
+# Кількість потоків
+MAX_THREADS = 5  # Можна збільшити до 10
 
 # Функція отримання останньої дати з БД
 def get_last_balance_date():
@@ -39,32 +43,37 @@ def fetch_balance_data(date):
     url = f"{ODATA_URL}(Period=datetime'{formatted_date}')"
 
     print(f"Отримую дані за {date.strftime('%Y-%m-%d')}")
-    
-    response = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
-    if response.status_code != 200:
-        print(f"Помилка при запиті {date.strftime('%Y-%m-%d')}: {response.status_code}")
-        return []
 
-    return parse_xml(response.text, date)  # Передаємо дату запиту
+    try:
+        response = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD), timeout=10)
+        response.raise_for_status()  # Викличе помилку, якщо статус-код 4xx або 5xx
+        return parse_xml(response.text, date)
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Помилка запиту {date.strftime('%Y-%m-%d')}: {e}")
+        return []
 
 # Функція парсингу XML у список JSON
 def parse_xml(xml_data, period_date):
     """Перетворення XML-відповіді у список JSON"""
-    root = ET.fromstring(xml_data)
-    namespace = {"d": "http://schemas.microsoft.com/ado/2007/08/dataservices"}
-    results = []
+    try:
+        root = ET.fromstring(xml_data)
+        namespace = {"d": "http://schemas.microsoft.com/ado/2007/08/dataservices"}
+        results = []
 
-    for element in root.findall(".//d:element", namespace):
-        data = {
-            "ДатаВремя": period_date,  # Використовуємо дату із запиту
-            "Организация_Key": element.find("d:Организация_Key", namespace).text,
-            "ВидДенежныхСредств": element.find("d:ВидДенежныхСредств", namespace).text,
-            "ДенежныйСчет_Key": element.find("d:ДенежныйСчет_Key", namespace).text,
-            "СуммаBalance": float(element.find("d:СуммаBalance", namespace).text)  # Перетворюємо в float
-        }
-        results.append(data)
-    
-    return results
+        for element in root.findall(".//d:element", namespace):
+            data = {
+                "ДатаВремя": period_date,  # Використовуємо дату із запиту
+                "Организация_Key": element.find("d:Организация_Key", namespace).text,
+                "ВидДенежныхСредств": element.find("d:ВидДенежныхСредств", namespace).text,
+                "ДенежныйСчет_Key": element.find("d:ДенежныйСчет_Key", namespace).text,
+                "СуммаBalance": float(element.find("d:СуммаBalance", namespace).text)  # Перетворюємо в float
+            }
+            results.append(data)
+        
+        return results
+    except ET.ParseError:
+        print(f"❌ Помилка парсингу XML за {period_date.strftime('%Y-%m-%d')}")
+        return []
 
 # Функція оновлення БД
 def update_database(data):
@@ -99,20 +108,33 @@ def update_database(data):
     connection.commit()
     connection.close()
 
-# Основний процес
+# Функція обробки дати в потоці
+def process_date(date):
+    """Обробка конкретного дня (отримання + запис у БД)"""
+    data = fetch_balance_data(date)
+    if data:
+        update_database(data)
+
+# Основний процес (з багатопотоковістю)
 def main():
     """Головна функція"""
     start_date = get_last_balance_date()
     end_date = datetime.datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
     
-    print(f"Отримуємо дані з {start_date.strftime('%Y-%m-%d')} по {end_date.strftime('%Y-%m-%d')}")
+    print(f"🚀 Отримуємо дані з {start_date.strftime('%Y-%m-%d')} по {end_date.strftime('%Y-%m-%d')}, потоки: {MAX_THREADS}")
 
-    current_date = start_date
-    while current_date <= end_date:
-        data = fetch_balance_data(current_date)
-        if data:
-            update_database(data)
-        current_date += datetime.timedelta(days=1)
+    dates = [start_date + datetime.timedelta(days=i) for i in range((end_date - start_date).days + 1)]
+
+    # Запускаємо потоки
+    with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
+        future_to_date = {executor.submit(process_date, date): date for date in dates}
+        
+        for future in as_completed(future_to_date):
+            date = future_to_date[future]
+            try:
+                future.result()  # Отримуємо результат виконання
+            except Exception as e:
+                print(f"❌ Помилка обробки {date.strftime('%Y-%m-%d')}: {e}")
 
 if __name__ == "__main__":
     main()
