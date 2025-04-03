@@ -67,7 +67,7 @@ while start_date <= end_date:
             print(f'Ошибка: {response.status_code} для даты {formatted_date}')
 
     start_date += timedelta(days=30)
-    time.sleep(1)
+    # time.sleep(1)
 
 # Закрытие соединения с базой данных
 cursor.close()
