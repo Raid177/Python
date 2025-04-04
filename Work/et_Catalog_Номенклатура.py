@@ -67,7 +67,7 @@ while True:
     
     conn.commit()
     page_number += 1  # Збільшуємо номер сторінки
-    time.sleep(3)  # Пауза між запитами
+    time.sleep(1)  # Пауза між запитами
 
 # Завершення роботи
 cursor.close()
