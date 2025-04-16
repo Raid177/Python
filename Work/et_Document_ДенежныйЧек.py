@@ -1,12 +1,13 @@
 import os
 import requests
 import mysql.connector
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from requests.auth import HTTPBasicAuth
 
-# 🧪 Завантаження налаштувань
 load_dotenv()
 
+# Авторизація
 ODATA_URL = os.getenv("ODATA_URL") + "Document_ДенежныйЧек"
 ODATA_USER = os.getenv("ODATA_USER")
 ODATA_PASSWORD = os.getenv("ODATA_PASSWORD")
@@ -20,10 +21,10 @@ DB_CONFIG = {
     "autocommit": True
 }
 
-PAGE_SIZE = 1000
+PAGE_SIZE = 1
+START_DATE_FALLBACK = datetime(2024, 7, 28)
 
-# 🎯 Поля, які є в БД
-ODATA_FIELDS = [
+ODATA_FIELDS = [  # всі поля з таблиці, окрім created_at, updated_at
     "Ref_Key", "DataVersion", "DeletionMark", "Number", "Date", "Posted",
     "Валюта_Key", "ВидДвижения", "ВидОплатыБезнал_Key", "ВидСкидки_Key",
     "ДенежныйСчет", "ДенежныйСчет_Type", "ДенежныйСчетБезнал_Key", "ДенежныйСчетКредит_Key",
@@ -44,18 +45,24 @@ ODATA_FIELDS = [
     "ДенежныйСчетБезналДСО_Key", "СуммаБезналДСО", "Проверен"
 ]
 
-def get_records_from_odata():
-    skip = 0
+def get_last_date_from_db(cursor):
+    cursor.execute("SELECT MAX(`Date`) FROM et_Document_ДенежныйЧек")
+    result = cursor.fetchone()
+    return result[0] if result and result[0] else None
+
+def get_records_from_odata(start_date):
     while True:
+        formatted_date = start_date.strftime("%Y-%m-%dT%H:%M")
         params = {
             "$format": "json",
+            "$orderby": "Date",
             "$top": str(PAGE_SIZE),
-            "$skip": str(skip),
+            "$filter": f"cast(Date,'Edm.DateTime') ge {formatted_date}",
+
             "$select": ",".join(ODATA_FIELDS)
         }
 
         response = requests.get(ODATA_URL, auth=ODATA_AUTH, params=params)
-        print(f"🔗 {response.url}")
         if response.status_code != 200:
             print(f"❌ Помилка {response.status_code}: {response.text}")
             break
@@ -64,13 +71,20 @@ def get_records_from_odata():
         if not data:
             break
 
-        print(f"📦 Отримано {len(data)} записів (skip={skip})")
+        dates = [d["Date"] for d in data if "Date" in d]
+        if dates:
+            d_from = min(dates)
+            d_to = max(dates)
+            print(f"📦 Отримано {len(data)} записів з {d_from} по {d_to}")
+        else:
+            print(f"📦 Отримано {len(data)} записів (дата не визначена)")
+
         yield from data
 
         if len(data) < PAGE_SIZE:
             break
 
-        skip += PAGE_SIZE
+        start_date = datetime.fromisoformat(dates[-1]) + timedelta(seconds=1)
 
 def insert_or_update(cursor, row):
     ref_key = row["Ref_Key"]
@@ -107,9 +121,15 @@ def main():
     conn = mysql.connector.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
+    last_date = get_last_date_from_db(cursor)
+    if last_date:
+        date_from = last_date - timedelta(days=15)
+    else:
+        date_from = START_DATE_FALLBACK
+
     stats = {"inserted": 0, "updated": 0, "skipped": 0}
 
-    for row in get_records_from_odata():
+    for row in get_records_from_odata(date_from):
         result = insert_or_update(cursor, row)
         stats[result] += 1
 
