@@ -1,30 +1,27 @@
 import os
 import requests
 import mysql.connector
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from requests.auth import HTTPBasicAuth
+from datetime import datetime, timedelta
 
 load_dotenv()
 
-# Авторизація
-ODATA_URL = os.getenv("ODATA_URL") + "Document_ДенежныйЧек"
+ODATA_URL = os.getenv("ODATA_URL").rstrip("/")
 ODATA_USER = os.getenv("ODATA_USER")
 ODATA_PASSWORD = os.getenv("ODATA_PASSWORD")
-ODATA_AUTH = HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD)
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_DATABASE"),
-    "autocommit": True
-}
+DB_HOST = os.getenv("DB_HOST")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_DATABASE = os.getenv("DB_DATABASE")
 
-PAGE_SIZE = 1
-START_DATE_FALLBACK = datetime(2024, 7, 28)
+ODATA_ENTITY = "Document_ДенежныйЧек"
+MYSQL_TABLE = "et_Document_ДенежныйЧек"
+PAGE_SIZE = 1000
+START_DATE = datetime(2024, 7, 28)
 
-ODATA_FIELDS = [  # всі поля з таблиці, окрім created_at, updated_at
+# поля з БД (без created_at, updated_at)
+odata_fields = [
     "Ref_Key", "DataVersion", "DeletionMark", "Number", "Date", "Posted",
     "Валюта_Key", "ВидДвижения", "ВидОплатыБезнал_Key", "ВидСкидки_Key",
     "ДенежныйСчет", "ДенежныйСчет_Type", "ДенежныйСчетБезнал_Key", "ДенежныйСчетКредит_Key",
@@ -45,101 +42,102 @@ ODATA_FIELDS = [  # всі поля з таблиці, окрім created_at, up
     "ДенежныйСчетБезналДСО_Key", "СуммаБезналДСО", "Проверен"
 ]
 
-def get_last_date_from_db(cursor):
-    cursor.execute("SELECT MAX(`Date`) FROM et_Document_ДенежныйЧек")
+def connect_db():
+    return mysql.connector.connect(
+        host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_DATABASE
+    )
+
+def get_last_date_from_db():
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT MAX(`Date`) FROM `{MYSQL_TABLE}`")
+    result = cursor.fetchone()[0]
+    conn.close()
+    if result:
+        return result - timedelta(days=15)
+    else:
+        return START_DATE
+
+def fetch_data(start_date, skip):
+    filter_date = start_date.strftime("%Y-%m-%dT%H:%M:%S")
+    select_fields = ",".join(odata_fields)
+    url = (
+        f"{ODATA_URL}/{ODATA_ENTITY}"
+        f"?$format=json"
+        f"&$orderby=Date"
+        f"&$top={PAGE_SIZE}"
+        f"&$skip={skip}"
+        f"&$filter=Date ge datetime'{filter_date}'"
+        f"&$select={select_fields}"
+    )
+    response = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
+    response.raise_for_status()
+    return response.json().get("value", [])
+
+def insert_or_update_record(record, cursor):
+    ref_key = record["Ref_Key"]
+    dataversion = record.get("DataVersion", "")
+    cursor.execute(
+        f"SELECT `DataVersion` FROM `{MYSQL_TABLE}` WHERE `Ref_Key` = %s",
+        (ref_key,)
+    )
     result = cursor.fetchone()
-    return result[0] if result and result[0] else None
+    if result:
+        if result[0] != dataversion:
+            placeholders = ", ".join([f"`{k}` = %s" for k in record])
+            sql = f"UPDATE `{MYSQL_TABLE}` SET {placeholders}, `updated_at` = NOW() WHERE `Ref_Key` = %s"
+            cursor.execute(sql, list(record.values()) + [ref_key])
+            return "updated"
+        else:
+            return "skipped"
+    else:
+        fields = ", ".join(f"`{k}`" for k in record)
+        placeholders = ", ".join(["%s"] * len(record))
+        sql = f"INSERT INTO `{MYSQL_TABLE}` ({fields}, `created_at`, `updated_at`) VALUES ({placeholders}, NOW(), NOW())"
+        cursor.execute(sql, list(record.values()))
+        return "inserted"
 
-def get_records_from_odata(start_date):
+def main():
+    print(f"🚀 Старт завантаження {ODATA_ENTITY}")
+    start_date = get_last_date_from_db()
+    print(f"📅 Починаємо з дати: {start_date}")
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    skip = 0
+    total_inserted = total_updated = total_skipped = 0
+
     while True:
-        formatted_date = start_date.strftime("%Y-%m-%dT%H:%M")
-        params = {
-            "$format": "json",
-            "$orderby": "Date",
-            "$top": str(PAGE_SIZE),
-            "$filter": f"cast(Date,'Edm.DateTime') ge {formatted_date}",
-
-            "$select": ",".join(ODATA_FIELDS)
-        }
-
-        response = requests.get(ODATA_URL, auth=ODATA_AUTH, params=params)
-        if response.status_code != 200:
-            print(f"❌ Помилка {response.status_code}: {response.text}")
-            break
-
-        data = response.json().get("value", [])
+        data = fetch_data(start_date, skip)
         if not data:
             break
 
+        inserted = updated = skipped = 0
         dates = [d["Date"] for d in data if "Date" in d]
-        if dates:
-            d_from = min(dates)
-            d_to = max(dates)
-            print(f"📦 Отримано {len(data)} записів з {d_from} по {d_to}")
-        else:
-            print(f"📦 Отримано {len(data)} записів (дата не визначена)")
+        min_date = min(dates)
+        max_date = max(dates)
 
-        yield from data
+        for item in data:
+            record = {k: item.get(k) for k in odata_fields}
+            status = insert_or_update_record(record, cursor)
+            if status == "inserted":
+                inserted += 1
+            elif status == "updated":
+                updated += 1
+            elif status == "skipped":
+                skipped += 1
 
-        if len(data) < PAGE_SIZE:
-            break
+        conn.commit()
 
-        start_date = datetime.fromisoformat(dates[-1]) + timedelta(seconds=1)
+        print(f"📦 Отримано {len(data)} записів: з {min_date} по {max_date} | ➕ {inserted} 🔁 {updated} ⏭️ {skipped}")
 
-def insert_or_update(cursor, row):
-    ref_key = row["Ref_Key"]
-    data_version = row["DataVersion"]
+        total_inserted += inserted
+        total_updated += updated
+        total_skipped += skipped
+        skip += PAGE_SIZE
 
-    cursor.execute("SELECT DataVersion FROM et_Document_ДенежныйЧек WHERE Ref_Key = %s", (ref_key,))
-    existing = cursor.fetchone()
-
-    if existing:
-        if existing[0] != data_version:
-            update_record(cursor, row)
-            return "updated"
-        return "skipped"
-    else:
-        insert_record(cursor, row)
-        return "inserted"
-
-def insert_record(cursor, row):
-    fields = ", ".join(row.keys()) + ", created_at, updated_at"
-    placeholders = ", ".join(["%s"] * len(row)) + ", NOW(), NOW()"
-    values = tuple(row.values())
-    cursor.execute(
-        f"INSERT INTO et_Document_ДенежныйЧек ({fields}) VALUES ({placeholders})", values
-    )
-
-def update_record(cursor, row):
-    assignments = ", ".join([f"{key} = %s" for key in row.keys()])
-    values = tuple(row.values()) + (row["Ref_Key"],)
-    cursor.execute(
-        f"UPDATE et_Document_ДенежныйЧек SET {assignments}, updated_at = NOW() WHERE Ref_Key = %s", values
-    )
-
-def main():
-    conn = mysql.connector.connect(**DB_CONFIG)
-    cursor = conn.cursor()
-
-    last_date = get_last_date_from_db(cursor)
-    if last_date:
-        date_from = last_date - timedelta(days=15)
-    else:
-        date_from = START_DATE_FALLBACK
-
-    stats = {"inserted": 0, "updated": 0, "skipped": 0}
-
-    for row in get_records_from_odata(date_from):
-        result = insert_or_update(cursor, row)
-        stats[result] += 1
-
-    print("\n✅ Завершено:")
-    print(f"➕ Додано: {stats['inserted']}")
-    print(f"✏️  Оновлено: {stats['updated']}")
-    print(f"⏭️  Пропущено без змін: {stats['skipped']}")
-
-    cursor.close()
     conn.close()
+    print(f"✅ Завершено. Всього ➕ {total_inserted} 🔁 {total_updated} ⏭️ {total_skipped}")
 
 if __name__ == "__main__":
     main()
