@@ -18,8 +18,8 @@ DB_CONFIG = {
 }
 
 # Номери рахунків для кожного ФОП
-accounts_fop1 = ['UA973052990000026002025035545']  # ЛАВ
-accounts_fop2 = ['UA173375460000026000045200003', 'UA453052990000026004005203890']  # ЖВА
+accounts_fop1 = ['UA973052990000026002025035545']
+accounts_fop2 = ['UA173375460000026000045200003', 'UA453052990000026004005203890']
 
 # Токени для кожного ФОП
 tokens = {
@@ -27,20 +27,46 @@ tokens = {
     'FOP2': os.getenv('API_TOKEN_ZVO'),
 }
 
+# Глобальний список нових полів
+global_new_fields = {}
+global_field_samples = {}
+
+def guess_mysql_type(values):
+    non_nulls = [v for v in values if v is not None]
+    if not non_nulls:
+        return "TEXT"
+    if all(isinstance(v, int) or (isinstance(v, str) and v.isdigit()) for v in non_nulls):
+        return "BIGINT"
+    if all(re.match(r'^-?\\d+\\.\\d+$', str(v)) for v in non_nulls):
+        return "DECIMAL(18,4)"
+    if all(re.match(r'^\\d{4}-\\d{2}-\\d{2}$', str(v)) for v in non_nulls):
+        return "DATE"
+    if all(re.match(r'^\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}$', str(v)) for v in non_nulls):
+        return "DATETIME"
+    if max(len(str(v)) for v in non_nulls) <= 255:
+        return "VARCHAR(255)"
+    return "TEXT"
+
 def ensure_columns_exist(table_name, sample_record, cursor):
-    """Додає відсутні поля до таблиці БД."""
     cursor.execute(f"SHOW COLUMNS FROM {table_name}")
     existing_columns = set(row["Field"] for row in cursor.fetchall())
     added_fields = []
 
     for field in sample_record:
         if field not in existing_columns:
-            cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{field}` TEXT NULL")
-            added_fields.append(field)
+            global_field_samples.setdefault(field, []).append(sample_record[field])
+            if len(global_field_samples[field]) >= 10:
+                guessed_type = guess_mysql_type(global_field_samples[field])
+                cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{field}` {guessed_type} NULL")
+                added_fields.append(field)
+                global_new_fields.setdefault(field, set()).add(table_name)
     return added_fields
 
+def extract_commission(osnd_text):
+    match = re.search(r"Ком бан ([\d.]+)грн", osnd_text)
+    return float(match.group(1)) if match else 0.0
+
 def fetch_and_save_transactions(account_number, token, start_date, end_date, connection):
-    """Отримує транзакції з ПриватБанку та зберігає їх у БД."""
     url = 'https://acp.privatbank.ua/api/statements/transactions'
     headers = {
         'User-Agent': 'PythonClient',
@@ -74,14 +100,9 @@ def fetch_and_save_transactions(account_number, token, start_date, end_date, con
                                 print(f"❌ Помилка при обробці дати/часу: {e}")
                                 continue
 
-                            # Додаємо нові поля, якщо вони з’явились
-                            added_fields_prvt = ensure_columns_exist("bnk_trazact_prvt", transaction, cursor)
-                            added_fields_ekv = ensure_columns_exist("bnk_trazact_prvt_ekv", transaction, cursor)
+                            ensure_columns_exist("bnk_trazact_prvt", transaction, cursor)
+                            ensure_columns_exist("bnk_trazact_prvt_ekv", transaction, cursor)
 
-                            for field in set(added_fields_prvt + added_fields_ekv):
-                                print(f"🆕 Отримано дані для нового поля {field}. Поле додано до таблиць.")
-
-                            # Збереження транзакції в БД
                             placeholders = ", ".join(["%s"] * len(transaction))
                             columns = ", ".join(f"`{k}`" for k in transaction.keys())
                             sql = f"""INSERT INTO bnk_trazact_prvt ({columns}) \
@@ -109,13 +130,7 @@ def fetch_and_save_transactions(account_number, token, start_date, end_date, con
                 print(f"❌ HTTP {response.status_code}: {response.text}")
                 break
 
-def extract_commission(osnd_text):
-    """Витягуємо суму комісії з тексту OSND."""
-    match = re.search(r"Ком бан ([\d.]+)грн", osnd_text)
-    return float(match.group(1)) if match else 0.0
-
 def migrate_data(connection):
-    """Переносимо дані між таблицями."""
     with connection.cursor() as cursor:
         cursor.execute("SELECT MAX(DAT_OD) FROM bnk_trazact_prvt_ekv")
         last_date = cursor.fetchone()['MAX(DAT_OD)']
@@ -177,6 +192,11 @@ if __name__ == "__main__":
                 fetch_and_save_transactions(account, token, start_date, end_date, connection)
 
         migrate_data(connection)
+
+        if global_new_fields:
+            print("\n🚨 !НОВІ ПОЛЯ ДОДАНО!")
+            for field, tables in sorted(global_new_fields.items()):
+                print(f"   ➕ {field} (таблиці: {', '.join(tables)})")
 
     finally:
         connection.close()
