@@ -32,7 +32,7 @@ def get_last_balance_date():
     connection.close()
     
     if last_date:
-        return last_date - datetime.timedelta(days=15)
+        return last_date - datetime.timedelta(days=21)
     else:
         return datetime.datetime(2024, 7, 30)
 

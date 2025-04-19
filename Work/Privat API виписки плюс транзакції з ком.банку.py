@@ -18,14 +18,26 @@ DB_CONFIG = {
 }
 
 # Номери рахунків для кожного ФОП
-accounts_fop1 = ['UA973052990000026002025035545'] #ЛАВ
-accounts_fop2 = ['UA173375460000026000045200003','UA453052990000026004005203890'] #ЖВА
+accounts_fop1 = ['UA973052990000026002025035545']  # ЛАВ
+accounts_fop2 = ['UA173375460000026000045200003', 'UA453052990000026004005203890']  # ЖВА
 
 # Токени для кожного ФОП
 tokens = {
     'FOP1': os.getenv('API_TOKEN_LOV'),
     'FOP2': os.getenv('API_TOKEN_ZVO'),
 }
+
+def ensure_columns_exist(table_name, sample_record, cursor):
+    """Додає відсутні поля до таблиці БД."""
+    cursor.execute(f"SHOW COLUMNS FROM {table_name}")
+    existing_columns = set(row["Field"] for row in cursor.fetchall())
+    added_fields = []
+
+    for field in sample_record:
+        if field not in existing_columns:
+            cursor.execute(f"ALTER TABLE `{table_name}` ADD COLUMN `{field}` TEXT NULL")
+            added_fields.append(field)
+    return added_fields
 
 def fetch_and_save_transactions(account_number, token, start_date, end_date, connection):
     """Отримує транзакції з ПриватБанку та зберігає їх у БД."""
@@ -47,7 +59,7 @@ def fetch_and_save_transactions(account_number, token, start_date, end_date, con
         while True:
             if next_page_id:
                 params['followId'] = next_page_id
-            
+
             response = requests.get(url, headers=headers, params=params)
             if response.status_code == 200:
                 data = response.json()
@@ -61,14 +73,21 @@ def fetch_and_save_transactions(account_number, token, start_date, end_date, con
                             except Exception as e:
                                 print(f"❌ Помилка при обробці дати/часу: {e}")
                                 continue
-                            
+
+                            # Додаємо нові поля, якщо вони з’явились
+                            added_fields_prvt = ensure_columns_exist("bnk_trazact_prvt", transaction, cursor)
+                            added_fields_ekv = ensure_columns_exist("bnk_trazact_prvt_ekv", transaction, cursor)
+
+                            for field in set(added_fields_prvt + added_fields_ekv):
+                                print(f"🆕 Отримано дані для нового поля {field}. Поле додано до таблиць.")
+
                             # Збереження транзакції в БД
                             placeholders = ", ".join(["%s"] * len(transaction))
-                            columns = ", ".join(transaction.keys())
-                            sql = f"""INSERT INTO bnk_trazact_prvt ({columns}) 
-                                      VALUES ({placeholders}) 
-                                      ON DUPLICATE KEY UPDATE 
-                                      DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),
+                            columns = ", ".join(f"`{k}`" for k in transaction.keys())
+                            sql = f"""INSERT INTO bnk_trazact_prvt ({columns}) \
+                                      VALUES ({placeholders}) \
+                                      ON DUPLICATE KEY UPDATE \
+                                      DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),\
                                       DAT_OD = VALUES(DAT_OD)"""
                             cursor.execute(sql, tuple(transaction.values()))
 
@@ -102,7 +121,7 @@ def migrate_data(connection):
         last_date = cursor.fetchone()['MAX(DAT_OD)']
 
         if last_date is None:
-            last_date = datetime(2024, 10, 12).date()
+            last_date = datetime(2024, 7, 1).date()
         else:
             last_date -= timedelta(days=1)
 
@@ -111,7 +130,7 @@ def migrate_data(connection):
 
         for row in rows:
             new_rows = [row.copy()]
-            
+
             if row['AUT_CNTR_NAM'] == "Розрахунки з еквайрингу" and row['OSND'].startswith("cmps: 12"):
                 modified_row = row.copy()
                 modified_row['NUM_DOC'] += "_ek"
@@ -123,13 +142,13 @@ def migrate_data(connection):
 
             for new_row in new_rows:
                 placeholders = ", ".join(["%s"] * len(new_row))
-                columns = ", ".join(new_row.keys())
-                sql = f"""INSERT INTO bnk_trazact_prvt_ekv ({columns}) 
-                          VALUES ({placeholders}) 
-                          ON DUPLICATE KEY UPDATE 
-                          DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),
-                          DAT_OD = VALUES(DAT_OD),
-                          SUM = VALUES(SUM),
+                columns = ", ".join(f"`{k}`" for k in new_row.keys())
+                sql = f"""INSERT INTO bnk_trazact_prvt_ekv ({columns}) \
+                          VALUES ({placeholders}) \
+                          ON DUPLICATE KEY UPDATE \
+                          DATE_TIME_DAT_OD_TIM_P = VALUES(DATE_TIME_DAT_OD_TIM_P),\
+                          DAT_OD = VALUES(DAT_OD),\
+                          SUM = VALUES(SUM),\
                           SUM_E = VALUES(SUM_E)"""
                 cursor.execute(sql, tuple(new_row.values()))
 
@@ -144,7 +163,7 @@ if __name__ == "__main__":
             print(f"🔑 Використовується токен для {fop}")
             for account in (accounts_fop1 if fop == 'FOP1' else accounts_fop2):
                 print(f"📅 Одержання транзакцій для рахунку {account}")
-                
+
                 with connection.cursor() as cursor:
                     cursor.execute("SELECT MAX(DATE_TIME_DAT_OD_TIM_P) FROM bnk_trazact_prvt WHERE AUT_MY_ACC = %s", (account,))
                     last_date = cursor.fetchone()['MAX(DATE_TIME_DAT_OD_TIM_P)']
