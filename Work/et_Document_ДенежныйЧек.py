@@ -54,7 +54,7 @@ def get_last_date_from_db():
     result = cursor.fetchone()[0]
     conn.close()
     if result:
-        return result - timedelta(days=15)
+        return result - timedelta(days=30)
     else:
         return START_DATE
 
