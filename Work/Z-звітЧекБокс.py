@@ -1,12 +1,11 @@
 import requests
 import time
-import json
 import os
 import mysql.connector
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-# 🔹 Завантажуємо змінні з .env
+# 🔹 Завантаження змінних з .env
 load_dotenv()
 
 # 🔹 Дані для підключення до БД
@@ -15,7 +14,7 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_DATABASE = os.getenv("DB_DATABASE")
 
-# 🔹 ЧекБокс API: Дані для авторизації
+# 🔹 Дані по ФОПах
 CREDENTIALS = [
     {
         "license_key": os.getenv("DPS_LAV_LICENSE_KEY"),
@@ -33,45 +32,19 @@ CREDENTIALS = [
     }
 ]
 
-# 🔹 URL-адреси API
 AUTH_URL = "https://api.checkbox.ua/api/v1/cashier/signinPinCode"
 Z_REPORT_URL = "https://api.checkbox.ua/api/v1/extended-reports/z"
-REPORT_STATUS_URL = "https://api.checkbox.ua/api/v1/extended-reports"
 REPORT_DOWNLOAD_URL = "https://api.checkbox.ua/api/v1/extended-reports/{report_id}/report.json"
 
-# 🔹 Функція отримання останньої дати open_date
-def get_last_open_date(cash_register_id, branch_id):
-    try:
-        db_conn = mysql.connector.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_DATABASE
-        )
-        cursor = db_conn.cursor()
-        query = """
-        SELECT MAX(open_date) FROM Z_CheckBox
-        WHERE cash_register_id = %s AND branch_id = %s
-        """
-        cursor.execute(query, (cash_register_id, branch_id))
-        result = cursor.fetchone()[0]
-        cursor.close()
-        db_conn.close()
-        return (result - timedelta(days=1)).strftime("%Y-%m-%dT00:00:00+0300") if result else "2025-01-01T00:00:00+0300"
-    except Exception as e:
-        print(f"❌ Помилка отримання дати з БД: {e}")
-        return "2025-01-01T00:00:00+0300"
-
 # 🔹 Підключення до MySQL
-db_conn = mysql.connector.connect(
+conn = mysql.connector.connect(
     host=DB_HOST,
     user=DB_USER,
     password=DB_PASSWORD,
     database=DB_DATABASE
 )
-cursor = db_conn.cursor()
+cursor = conn.cursor()
 
-# 🔹 SQL-запит для вставки або оновлення
 insert_query = """
 INSERT INTO Z_CheckBox (
     cash_register_id, branch_id, address, open_date, close_date, receipts_count, 
@@ -92,9 +65,14 @@ INSERT INTO Z_CheckBox (
     vat_amount = VALUES(vat_amount);
 """
 
-# 🔹 Обробка всіх кас
+# 🔹 Отримати останню дату open_date для каси
+get_last_open_date_query = """
+SELECT MAX(open_date) FROM Z_CheckBox
+WHERE cash_register_id = %s AND branch_id = %s
+"""
+
 for cred in CREDENTIALS:
-    print(f"🔑 Отримую токен для {cred['fop']} (Каса: {cred['cash_register_id']}, Точка: {cred['branch_id']})...")
+    print(f"[AUTH] Авторизуюсь для {cred['fop']}...")
 
     auth_headers = {
         "accept": "application/json",
@@ -106,42 +84,84 @@ for cred in CREDENTIALS:
     auth_data = {"pin_code": cred["pin_code"]}
     auth_response = requests.post(AUTH_URL, headers=auth_headers, json=auth_data)
 
-    if auth_response.status_code in [200, 201]:
-        access_token = auth_response.json().get("access_token")
-    else:
-        print(f"❌ Помилка авторизації: {auth_response.status_code}")
+    if auth_response.status_code not in [200, 201]:
+        print(f"[ERROR] Авторизація не вдалася: {auth_response.status_code}")
         continue
 
-    from_date = get_last_open_date(cred["cash_register_id"], cred["branch_id"])
-    to_date = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%dT23:59:59+0300")
+    access_token = auth_response.json().get("access_token")
+    headers = {
+        "accept": "application/json",
+        "Authorization": f"Bearer {access_token}",
+        "X-Client-Name": "My-Integration",
+        "X-Client-Version": "1.0",
+        "Content-Type": "application/json"
+    }
 
-    print(f"📊 Отримую дані за {from_date} - {to_date}...")
+    # 🔹 Визначаємо стартовий період для каси
+    cursor.execute(get_last_open_date_query, (cred["cash_register_id"], cred["branch_id"]))
+    last_date = cursor.fetchone()[0]
+    start_date = (last_date - timedelta(days=1)) if last_date else datetime(2025, 1, 1)
+    end_date = datetime.now() - timedelta(days=1)
 
-    z_headers = {"accept": "application/json", "Authorization": f"Bearer {access_token}"}
-    z_data = {"from_date": from_date, "to_date": to_date, "cash_register_id": cred["cash_register_id"], "branch_id": cred["branch_id"], "export_extension": "JSON"}
-    z_response = requests.post(Z_REPORT_URL, headers=z_headers, json=z_data)
+    # 🔹 Формування періодів лише до вчора
+    PERIODS = []
+    start = start_date
+    while start <= end_date:
+        end = (start.replace(day=28) + timedelta(days=4)).replace(day=1) - timedelta(days=1)
+        if end > end_date:
+            end = end_date
+        PERIODS.append((start, end))
+        start = end + timedelta(days=1)
 
-    if z_response.status_code == 200:
-        report_id = z_response.json().get("id")
-    else:
-        print(f"❌ Помилка створення звіту: {z_response.status_code}")
-        continue
+    for period_start, period_end in PERIODS:
+        from_date = period_start.strftime("%Y-%m-%dT00:00:00+0300")
+        to_date = period_end.strftime("%Y-%m-%dT23:59:59+0300")
 
-    time.sleep(10)
-    final_report_response = requests.get(REPORT_DOWNLOAD_URL.format(report_id=report_id), headers=z_headers)
+        print(f"[INFO] Запитую {from_date} - {to_date}...")
+        z_data = {
+            "from_date": from_date,
+            "to_date": to_date,
+            "cash_register_id": cred["cash_register_id"],
+            "branch_id": cred["branch_id"],
+            "export_extension": "JSON"
+        }
 
-    if final_report_response.status_code == 200:
-        z_reports = final_report_response.json()
+        attempt = 0
+        while attempt < 3:
+            z_response = requests.post(Z_REPORT_URL, headers=headers, json=z_data)
 
-        for report in z_reports:
-            report_data = {**report, "cash_register_id": cred["cash_register_id"], "branch_id": cred["branch_id"]}
-            report_data["address"] = report_data["address"].encode("utf-8", "ignore").decode("utf-8")  # ✅ Фікс кодування
+            if z_response.status_code == 200:
+                report_id = z_response.json().get("id")
+                time.sleep(10)
+                report_response = requests.get(REPORT_DOWNLOAD_URL.format(report_id=report_id), headers=headers)
 
-            cursor.execute(insert_query, report_data)
+                if report_response.status_code == 200:
+                    z_reports = report_response.json()
+                    print(f"[SUCCESS] Отримано {len(z_reports)} звітів для {cred['fop']} за {from_date[:10]} - {to_date[:10]}")
 
-    db_conn.commit()
-    print(f"✅ Дані для {cred['fop']} вставлені в MySQL!")
+                    for report in z_reports:
+                        report_data = {
+                            **report,
+                            "cash_register_id": cred["cash_register_id"],
+                            "branch_id": cred["branch_id"],
+                            "address": report.get("address", "").encode("utf-8", "ignore").decode("utf-8")
+                        }
+                        cursor.execute(insert_query, report_data)
+                    conn.commit()
+                    time.sleep(30)  # анти-флуд пауза
+                    break
+                else:
+                    print(f"[ERROR] Помилка отримання звіту: {report_response.status_code}")
+                    break
+
+            elif z_response.status_code == 429:
+                print("[WARN] Ліміт запитів перевищено, чекаю 60 секунд...")
+                time.sleep(60)
+                attempt += 1
+            else:
+                print(f"[ERROR] Помилка створення звіту: {z_response.status_code}")
+                break
 
 cursor.close()
-db_conn.close()
-print("🚀 Обробка завершена!")
+conn.close()
+print("\n[FINISH] Обробка завершена!")
