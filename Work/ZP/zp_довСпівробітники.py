@@ -1,4 +1,4 @@
-
+# zp_довСпівробітники.py
 import os
 import pickle
 import pandas as pd
@@ -49,9 +49,7 @@ def main():
     for col in df.columns:
         df[col] = df[col].apply(lambda x: str(x) if x is not None else None)
 
-    print(f"📄 Зчитано {{len(df)}} рядків з таблиці {{SHEET_NAME}}")
-    print("🔍 Перший рядок:", df.iloc[0].to_dict())
-    print("🔎 Типи колонок:\n", df.dtypes)
+    print(f"📄 Зчитано {len(df)} рядків з таблиці {SHEET_NAME}")
 
     if df.empty:
         print("⚠️ Дані відсутні у таблиці.")
@@ -67,35 +65,35 @@ def main():
     )
     cursor = conn.cursor()
 
-    cursor.execute(f"DESCRIBE {{TABLE_NAME}}")
+    cursor.execute(f"DESCRIBE {TABLE_NAME}")
     db_columns = [row[0] for row in cursor.fetchall() if row[0] not in ("id", "created_at", "updated_at")]
     sheet_columns = df.columns.tolist()
 
     missing_in_sheet = set(db_columns) - set(sheet_columns)
     if missing_in_sheet:
-        raise Exception(f"❌ У Google Sheet відсутні поля з БД: {{missing_in_sheet}}")
+        raise Exception(f"❌ У Google Sheet відсутні поля з БД: {missing_in_sheet}")
 
     new_columns = set(sheet_columns) - set(db_columns)
     for col in new_columns:
-        print(f"➕ Додаю нове поле в БД: `{{col}}`")
-        cursor.execute(f"ALTER TABLE {{TABLE_NAME}} ADD COLUMN `{{col}}` TEXT NULL")
+        print(f"➕ Додаю нове поле в БД: `{col}`")
+        cursor.execute(f"ALTER TABLE {TABLE_NAME} ADD COLUMN `{col}` TEXT NULL")
 
     conn.commit()
 
     placeholders = ', '.join(['%s'] * len(sheet_columns))
-    columns_str = ', '.join(f"`{{col}}`" for col in sheet_columns)
-    updates_str = ', '.join(f"`{{col}}` = VALUES(`{{col}}`)" for col in sheet_columns)
+    columns_str = ', '.join(f"`{col}`" for col in sheet_columns)
+    updates_str = ', '.join(f"`{col}` = VALUES(`{col}`)" for col in sheet_columns)
 
     sql = f"""
-        INSERT INTO {{TABLE_NAME}} ({{columns_str}})
-        VALUES ({{placeholders}})
-        ON DUPLICATE KEY UPDATE {{updates_str}}
+        INSERT INTO {TABLE_NAME} ({columns_str})
+        VALUES ({placeholders})
+        ON DUPLICATE KEY UPDATE {updates_str}
     """
 
     inserted, updated = 0, 0
     for _, row in df.iterrows():
         key_col = sheet_columns[0]
-        cursor.execute(f"SELECT COUNT(*) FROM {{TABLE_NAME}} WHERE `{{key_col}}` = %s", (row[key_col],))
+        cursor.execute(f"SELECT COUNT(*) FROM {TABLE_NAME} WHERE `{key_col}` = %s", (row[key_col],))
         exists = cursor.fetchone()[0]
         cursor.execute(sql, tuple(row[col] for col in sheet_columns))
         if exists:
@@ -107,7 +105,7 @@ def main():
     cursor.close()
     conn.close()
 
-    print(f"✅ Додано: {{inserted}}, оновлено: {{updated}}")
+    print(f"✅ Додано: {inserted}, оновлено: {updated}")
 
 if __name__ == "__main__":
     main()
