@@ -1,5 +1,61 @@
-.idea/
+# === Python artifacts ===
+*.pyc
+*.pyo
+*.pyd
 __pycache__/
+*.py[cod]
+*$py.class
+
+# === Virtual environments ===
+.env/
+.venv/
+env/
+venv/
+
+# === IDE-specific ===
 .vscode/
-.env
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# === System files ===
+.DS_Store
+Thumbs.db
+
+# === Logs and local databases ===
+*.log
+*.sqlite3
+*.db
+
+# === Security sensitive ===
+*.env
 *.pickle
+*.pkl
+*.token
+token.pickle
+secrets.json
+credentials.json
+
+# === CSV, temp files (optional) ===
+*.csv
+*.tsv
+*.tmp
+*.bak
+
+# === Jupyter Notebooks checkpoints ===
+.ipynb_checkpoints/
+
+# === Other ===
+*.zip
+*.tar
+*.gz
+*.rar
+
+# === Output folders ===
+build/
+dist/
+*.egg-info/
+
+# === Personal files (optional) ===
+notes.txt
+TODO.md
