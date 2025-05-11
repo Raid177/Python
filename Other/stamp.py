@@ -8,9 +8,10 @@ import shutil
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+from PIL import Image, ImageDraw, ImageFont
 
 # === Вхідні дані ===
-source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.xls"
+source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.jpg"
 target_folder = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\Оплачено"
 
 # === Визначення типу ===
@@ -27,6 +28,12 @@ elif ext in (".xls", ".xlsx"):
     print("🔄 Відкриваємо Excel у редакторі...")
     viewer = subprocess.Popen([
         r"C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE",
+        source_path
+    ])
+elif ext in (".jpg", ".jpeg", ".png", ".bmp", ".tiff"):
+    print("🔄 Відкриваємо зображення...")
+    viewer = subprocess.Popen([
+        r"C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe",
         source_path
     ])
 else:
@@ -51,7 +58,7 @@ os.makedirs(target_folder, exist_ok=True)
 ts = datetime.now().strftime("%Y-%m-%d %H-%M")
 filename = os.path.basename(source_path)
 base_name, original_ext = os.path.splitext(filename)
-new_name = f"{ts} {base_name}.xlsx"
+new_name = f"{ts} {base_name}{ext if ext != '.xls' else '.xlsx'}"
 new_path = os.path.join(target_folder, new_name)
 
 if ext == ".pdf":
@@ -99,3 +106,17 @@ if ext in (".xls", ".xlsx"):
     wb.close()
     os.remove(source_path)
     print(f"✅ Штамп додано і Excel-файл переміщено до:\n{new_path}")
+
+elif ext in (".jpg", ".jpeg", ".png", ".bmp", ".tiff"):
+    print("✍️ Вносимо штамп у зображення...")
+    image = Image.open(source_path).convert("RGB")
+    draw = ImageDraw.Draw(image)
+    font = ImageFont.truetype("arialbd.ttf", 20)
+    stamp_text = "PAID"
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    x, y = image.width - 220, 20
+    draw.text((x, y), stamp_text, font=font, fill=(0, 153, 0))
+    draw.text((x, y + 25), timestamp, font=font, fill=(0, 153, 0))
+    image.save(new_path)
+    os.remove(source_path)
+    print(f"✅ Штамп додано і зображення переміщено до:\n{new_path}")
