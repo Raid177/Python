@@ -15,15 +15,30 @@ from dotenv import load_dotenv
 import msvcrt
 import sys
 import tempfile
+import atexit
 
 # === Блокування запуску другого екземпляра ===
-lockfile_path = os.path.join(tempfile.gettempdir(), "stamp_paid.lock")
+script_name = os.path.basename(sys.argv[0])                      # Напр. 'Pay_Bot.exe'
+lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"       # -> 'Pay_Bot.lock'
+lockfile_path = os.path.join(tempfile.gettempdir(), lockfile_name)
+
 try:
     lock_file = open(lockfile_path, 'w')
     msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
 except OSError:
-    print("⚠️ Програма вже запущена. Другий екземпляр не дозволено.")
+    print("⚠️ Екземпляр програми вже запущено. Другий запуск заборонено.")
     sys.exit()
+
+# 🔓 Розблокування та видалення lock-файлу при виході
+def cleanup():
+    try:
+        msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
+        lock_file.close()
+        os.remove(lockfile_path)
+    except Exception:
+        pass
+
+atexit.register(cleanup)
 
 # === Завантаження конфігурації з .env ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
