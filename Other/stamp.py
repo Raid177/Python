@@ -11,7 +11,7 @@ from openpyxl.styles import PatternFill
 from PIL import Image, ImageDraw, ImageFont
 
 # === Вхідні дані ===
-source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.jpg"
+source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.txt"
 target_folder = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\Оплачено"
 
 # === Визначення типу ===
@@ -34,6 +34,12 @@ elif ext in (".jpg", ".jpeg", ".png", ".bmp", ".tiff"):
     print("🔄 Відкриваємо зображення...")
     viewer = subprocess.Popen([
         r"C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe",
+        source_path
+    ])
+elif ext == ".txt":
+    print("🔄 Відкриваємо текстовий файл...")
+    viewer = subprocess.Popen([
+        "notepad.exe",
         source_path
     ])
 else:
@@ -120,3 +126,13 @@ elif ext in (".jpg", ".jpeg", ".png", ".bmp", ".tiff"):
     image.save(new_path)
     os.remove(source_path)
     print(f"✅ Штамп додано і зображення переміщено до:\n{new_path}")
+
+elif ext == ".txt":
+    print("✍️ Вносимо штамп у текстовий файл...")
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+    with open(source_path, "r", encoding="utf-8") as f:
+        original_content = f.read()
+    with open(new_path, "w", encoding="utf-8") as f:
+        f.write(f"PAID {timestamp}\n\n{original_content}")
+    os.remove(source_path)
+    print(f"✅ Штамп додано і текстовий файл переміщено до:\n{new_path}")
