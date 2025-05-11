@@ -92,22 +92,21 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
-    await save_and_record(file, msg, user, is_duplicate=False)
+    await save_and_record(file, msg, context, user, is_duplicate=False)
 
-async def save_and_record(file, msg, user, is_duplicate):
+async def save_and_record(file, msg, context, user, is_duplicate):
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    suffix = "__DUPLICATE" if is_duplicate else ""
     base_name = file.file_name
-    safe_name = f"{ts}{suffix}__{base_name}"
+    if is_duplicate:
+        safe_name = f"{os.path.splitext(base_name)[0]}__DUPLICATE_{ts}{os.path.splitext(base_name)[1]}"
+    else:
+        safe_name = base_name
+
     file_path = os.path.join(SAVE_DIR, safe_name)
     os.makedirs(SAVE_DIR, exist_ok=True)
 
-    telegram_file = await msg.bot.get_file(file.file_id)
+    telegram_file = await context.bot.get_file(file.file_id)
     await telegram_file.download_to_drive(file_path)
-
-    if is_duplicate:
-        with open(file_path + ".txt", "w", encoding="utf-8") as note:
-            note.write(f"Дубль файлу '{base_name}'\nОригінал був надісланий раніше.\nЧас: {ts}\nКористувач: @{user}\n")
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute("""
@@ -133,7 +132,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     file, msg = sessions.pop(user)
     if query.data == "save_again":
-        await save_and_record(file, msg, user, is_duplicate=True)
+        await save_and_record(file, msg, context, user, is_duplicate=True)
         await query.edit_message_text("✅ Повторне збереження виконано")
     else:
         await query.edit_message_text("❌ Повторне збереження скасовано")
