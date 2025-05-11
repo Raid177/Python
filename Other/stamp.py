@@ -1,7 +1,7 @@
 import fitz
 import subprocess
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 from datetime import datetime
 import os
 import shutil
@@ -10,9 +10,28 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 from PIL import Image, ImageDraw, ImageFont
 
-# === Вхідні дані ===
-source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.txt"
-target_folder = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\Оплачено"
+# === Вибір файлу користувачем ===
+root = tk.Tk()
+root.withdraw()
+root.attributes("-topmost", True)
+source_path = filedialog.askopenfilename(
+    title="Оберіть файл для обробки",
+    initialdir=os.getcwd(),
+    filetypes=[
+        ("Всі підтримувані", "*.pdf *.xls *.xlsx *.jpg *.jpeg *.png *.bmp *.tiff *.txt"),
+        ("PDF файли", "*.pdf"),
+        ("Excel файли", "*.xls *.xlsx"),
+        ("Зображення", "*.jpg *.jpeg *.png *.bmp *.tiff"),
+        ("Текстові файли", "*.txt")
+    ]
+)
+
+if not source_path:
+    print("❌ Файл не обрано.")
+    exit()
+
+# === Папка для результату ===
+target_folder = os.path.join(os.path.dirname(source_path), "Оплачено")
 
 # === Визначення типу ===
 ext = os.path.splitext(source_path)[1].lower()
@@ -49,17 +68,11 @@ else:
 viewer.wait()
 print("✅ Редактор закрито.")
 
-# === Підтвердження ===
-root = tk.Tk()
-root.withdraw()
-root.attributes("-topmost", True)
 answer = messagebox.askyesno("Підтвердження", "Внести штамп 'PAID'?")
-
 if not answer:
     print("❌ Внесення штампа скасовано.")
     exit()
 
-# === Створення цільової папки ===
 os.makedirs(target_folder, exist_ok=True)
 ts = datetime.now().strftime("%Y-%m-%d %H-%M")
 filename = os.path.basename(source_path)
@@ -71,17 +84,14 @@ if ext == ".pdf":
     print("✍️ Вносимо штамп у PDF...")
     doc = fitz.open(source_path)
     page = doc[0]
-
     stamp_text = "PAID"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     x = page.rect.width - 200
     y = 50
     fontsize = 18
     color = (0, 0.6, 0)
-
     page.insert_text((x, y), stamp_text, fontsize=fontsize, color=color)
     page.insert_text((x, y + 25), timestamp, fontsize=fontsize, color=color)
-
     doc.save(new_path, garbage=4, deflate=True)
     doc.close()
     os.remove(source_path)
