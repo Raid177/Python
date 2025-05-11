@@ -1,35 +1,26 @@
-import fitz
-import subprocess
-import tkinter as tk
-from tkinter import messagebox, filedialog
-from datetime import datetime
 import os
-import shutil
-import pandas as pd
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill
-from PIL import Image, ImageDraw, ImageFont
-import requests
-import pymysql
-from dotenv import load_dotenv
+import tempfile
 import msvcrt
 import sys
-import tempfile
 import atexit
+from datetime import datetime
+import pymysql
+from dotenv import load_dotenv
+from telegram import Update, MessageEntity
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 # === Блокування запуску другого екземпляра ===
-script_name = os.path.basename(sys.argv[0])                      # Напр. 'Pay_Bot.exe'
-lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"       # -> 'Pay_Bot.lock'
+script_name = os.path.basename(sys.argv[0])
+lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"
 lockfile_path = os.path.join(tempfile.gettempdir(), lockfile_name)
-
 try:
     lock_file = open(lockfile_path, 'w')
     msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
 except OSError:
-    print("⚠️ Екземпляр програми вже запущено. Другий запуск заборонено.")
+    print("⚠️ Бот уже запущений. Вихід.")
     sys.exit()
 
-# 🔓 Розблокування та видалення lock-файлу при виході
+# === Розблокування при виході ===
 def cleanup():
     try:
         msvcrt.locking(lock_file.fileno(), msvcrt.LK_UNLCK, 1)
@@ -37,20 +28,17 @@ def cleanup():
         os.remove(lockfile_path)
     except Exception:
         pass
-
 atexit.register(cleanup)
 
-# === Завантаження конфігурації з .env ===
+# === Завантаження конфігурації ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
-
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_DATABASE = os.getenv("DB_DATABASE")
-
-log_file = os.path.join(os.path.dirname(__file__), "stamp_log.txt")
+SAVE_DIR = "C:/Users/la/OneDrive/Рабочий стол/На оплату!"
+LOG_FILE = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt"
 
 # === Підключення до БД ===
 conn = pymysql.connect(
@@ -63,30 +51,52 @@ conn = pymysql.connect(
 )
 cursor = conn.cursor()
 
-def log(message):
+# === Логування ===
+def log(msg: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    with open(log_file, "a", encoding="utf-8") as f:
-        f.write(f"[{timestamp}] {message}\n")
+    line = f"[{timestamp}] {msg}"
+    print(line)
+    with open(LOG_FILE, "a", encoding="utf-8") as f:
+        f.write(line + "\n")
 
-def send_telegram_reply(file_name, new_name):
-    try:
-        cursor.execute("""
-            SELECT chat_id, message_id FROM telegram_files
-            WHERE file_name = %s
-            ORDER BY id DESC LIMIT 1
-        """, (file_name,))
-        row = cursor.fetchone()
-        if row:
-            chat_id, message_id = row
-            requests.post(API_URL, data={
-                "chat_id": chat_id,
-                "text": f"✅ Оплачено: {new_name}",
-                "reply_to_message_id": message_id
-            })
-            cursor.execute("""
-                UPDATE telegram_files SET status='paid' WHERE file_name = %s
-            """, (file_name,))
-        else:
-            log(f"⚠️ Не знайдено запис у БД для: {file_name}")
-    except Exception as e:
-        log(f"❌ Не вдалося надіслати повідомлення в Telegram: {e}")
+# === Обробка вхідних файлів ===
+async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    caption = msg.caption.lower() if msg.caption else ""
+
+    if "/оплата" not in caption and "/pay" not in caption:
+        return
+
+    if not msg.document:
+        await msg.reply_text("⚠️ Будь ласка, надішліть файл як документ із командою /оплата")
+        log("Відхилено: повідомлення без документа")
+        return
+
+    file = msg.document
+    file_name = file.file_name
+    file_path = os.path.join(SAVE_DIR, file_name)
+
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    telegram_file = await context.bot.get_file(file.file_id)
+    await telegram_file.download_to_drive(file_path)
+    log(f"📥 Отримано файл: {file_name}, збережено в: {file_path}")
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("""
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status)
+        VALUES (%s, %s, %s, %s, %s, %s, 'pending')
+    """, (
+        file_name, file_path,
+        msg.chat.id, msg.message_id,
+        msg.from_user.username or "", timestamp
+    ))
+    log(f"🗂️ Запис додано в БД для {file_name} (chat_id={msg.chat.id}, message_id={msg.message_id})")
+
+    await msg.reply_text(f"📥 Файл {file_name} передано на оплату")
+
+# === Запуск бота ===
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
+    log("🤖 Бот запущено...")
+    app.run_polling()
