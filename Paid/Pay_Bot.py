@@ -8,9 +8,12 @@ import pymysql
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+import psutil
+import threading
+import time
 
-# === Блокування запуску другого екземпляра ===
-script_name = os.path.basename(sys.executable)
+# === Блокування запуску другого екземпляра через lock-файл ===
+script_name = os.path.basename(sys.argv[0])
 lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"
 lockfile_path = os.path.join(tempfile.gettempdir(), lockfile_name)
 try:
@@ -29,7 +32,22 @@ def cleanup():
         pass
 atexit.register(cleanup)
 
-# === Завантаження налаштувань ===
+# === Додатковий захист: kill дублікати процесів через 2 секунди ===
+def kill_duplicates():
+    time.sleep(2)
+    current_pid = os.getpid()
+    name = os.path.basename(sys.argv[0])
+    for proc in psutil.process_iter(['pid', 'name']):
+        try:
+            if proc.info['name'] == name and proc.info['pid'] != current_pid:
+                proc.kill()
+                print(f"🛑 Вбито дубльований процес {name} (PID {proc.info['pid']})")
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
+
+threading.Thread(target=kill_duplicates, daemon=True).start()
+
+# === Конфігурація ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_HOST = os.getenv("DB_HOST")
@@ -49,9 +67,9 @@ conn = pymysql.connect(
     autocommit=True
 )
 cursor = conn.cursor()
-
 sessions = {}
 
+# === Логування ===
 def log(msg: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{timestamp}] {msg}"
@@ -59,6 +77,7 @@ def log(msg: str):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
 
+# === Основна логіка ===
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
     caption = msg.caption.lower() if msg.caption else ""
@@ -100,7 +119,8 @@ async def save_and_record(file, msg, context, user, is_duplicate):
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     base_name = file.file_name
     if is_duplicate:
-        safe_name = f"{os.path.splitext(base_name)[0]}__DUPLICATE_{ts}{os.path.splitext(base_name)[1]}"
+        name_part, ext = os.path.splitext(base_name)
+        safe_name = f"{name_part}__DUPLICATE_{ts}{ext}"
     else:
         safe_name = base_name
 
@@ -140,6 +160,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("❌ Повторне збереження скасовано")
         log(f"🚫 Користувач {user} скасував дубль")
 
+# === Запуск бота ===
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
