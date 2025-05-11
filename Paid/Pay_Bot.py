@@ -10,7 +10,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # === Блокування запуску другого екземпляра ===
-script_name = os.path.basename(sys.argv[0])
+script_name = os.path.basename(sys.executable)
 lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"
 lockfile_path = os.path.join(tempfile.gettempdir(), lockfile_name)
 try:
@@ -29,6 +29,7 @@ def cleanup():
         pass
 atexit.register(cleanup)
 
+# === Завантаження налаштувань ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 DB_HOST = os.getenv("DB_HOST")
@@ -38,6 +39,7 @@ DB_DATABASE = os.getenv("DB_DATABASE")
 SAVE_DIR = "C:/Users/la/OneDrive/Рабочий стол/На оплату!"
 LOG_FILE = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt"
 
+# === Підключення до БД ===
 conn = pymysql.connect(
     host=DB_HOST,
     user=DB_USER,
