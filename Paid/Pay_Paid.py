@@ -34,6 +34,7 @@ DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_DATABASE = os.getenv("DB_DATABASE")
+FALLBACK_CHAT_ID = os.getenv("FALLBACK_CHAT_ID", "-4624165634")
 
 log_file = os.path.join(os.path.dirname(__file__), "stamp_log.txt")
 
@@ -67,9 +68,10 @@ def send_telegram_reply(file_name, new_name):
         if row:
             chat_id, message_id = row
             log(f"📦 Знайдено: chat_id={chat_id}, message_id={message_id}")
+            msg = f"✅ Файл «{file_name}» оплачено"
             resp = requests.post(API_URL, data={
                 "chat_id": chat_id,
-                "text": f"✅ Оплачено: {new_name}",
+                "text": msg,
                 "reply_to_message_id": message_id
             })
             log(f"📤 Telegram response: {resp.status_code} {resp.text}")
@@ -77,10 +79,19 @@ def send_telegram_reply(file_name, new_name):
                 UPDATE telegram_files SET status='paid' WHERE file_name = %s
             """, (file_name,))
         else:
-            log(f"⚠️ Не знайдено запис у БД для: {file_name}")
+            msg = (
+                f"✅ Файл «{file_name}» оплачено\n"
+                f"⚠️ Але файл не знайдено в базі.\n‼️ Надсилайте файли через бота, щоб бот міг відповісти на оригінал."
+            )
+            resp = requests.post(API_URL, data={
+                "chat_id": FALLBACK_CHAT_ID,
+                "text": msg
+            })
+            log(f"📤 Telegram (fallback) response: {resp.status_code} {resp.text}")
     except Exception as e:
         log(f"❌ Не вдалося надіслати повідомлення в Telegram: {e}")
 
+# === Основна логіка взаємодії з файлами ===
 last_dir = os.getcwd()
 
 while True:
@@ -111,46 +122,27 @@ while True:
 
         try:
             if ext == ".pdf":
-                print("🔄 Відкриваємо PDF у редакторі...")
-                viewer = subprocess.Popen([
-                    r"C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe",
-                    source_path
-                ])
+                viewer = subprocess.Popen([r"C:\\Program Files\\Tracker Software\\PDF Editor\\PDFXEdit.exe", source_path])
             elif ext in (".xls", ".xlsx"):
-                print("🔄 Відкриваємо Excel у редакторі...")
-                viewer = subprocess.Popen([
-                    r"C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE",
-                    source_path
-                ])
+                viewer = subprocess.Popen([r"C:\\Program Files\\Microsoft Office\\root\\Office16\\EXCEL.EXE", source_path])
             elif ext in (".jpg", ".jpeg", ".png", ".bmp", ".tiff"):
-                print("🔄 Відкриваємо зображення...")
-                viewer = subprocess.Popen([
-                    r"C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe",
-                    source_path
-                ])
+                viewer = subprocess.Popen([r"C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe", source_path])
             elif ext == ".txt":
-                print("🔄 Відкриваємо текстовий файл...")
-                viewer = subprocess.Popen([
-                    "notepad.exe",
-                    source_path
-                ])
+                viewer = subprocess.Popen(["notepad.exe", source_path])
             else:
-                print("❌ Непідтримуваний тип файлу.")
                 log(f"IGNORED: Непідтримуваний файл {source_path}")
                 continue
 
             viewer.wait()
-            print("✅ Редактор закрито.")
 
-            answer = messagebox.askyesno("Підтвердження", f"Внести штамп 'PAID'?\nФайл {i} із {len(file_paths)}")
+            filename = os.path.basename(source_path)
+            answer = messagebox.askyesno("Підтвердження", f"Обробити файл «{filename}» як оплачений 'PAID'?\nФайл {i} із {len(file_paths)}")
             if not answer:
-                print("❌ Внесення штампа скасовано.")
-                log(f"SKIPPED: {os.path.basename(source_path)} — без змін")
+                log(f"SKIPPED: {filename} — без змін")
                 continue
 
             os.makedirs(target_folder, exist_ok=True)
             ts = datetime.now().strftime("%Y-%m-%d %H-%M")
-            filename = os.path.basename(source_path)
             base_name, original_ext = os.path.splitext(filename)
             new_name = f"{ts} {base_name}{ext if ext != '.xls' else '.xlsx'}"
             new_path = os.path.join(target_folder, new_name)
@@ -204,10 +196,8 @@ while True:
                     f.write(f"PAID {timestamp}\n\n{original_content}")
                 os.remove(source_path)
 
-            print(f"✅ Штамп додано і файл переміщено до: {new_path}")
             log(f"✔ OPLACHENO | {filename} → {new_name}")
             send_telegram_reply(filename, new_name)
 
         except Exception as err:
-            print(f"❌ ПОМИЛКА: {err}")
             log(f"❌ ERROR обробки {os.path.basename(source_path)}: {err}")
