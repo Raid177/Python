@@ -5,24 +5,58 @@ from tkinter import messagebox
 from datetime import datetime
 import os
 import shutil
+import pandas as pd
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
-pdf_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.pdf"
-editor_path = r"C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe"
+# === Вхідні дані ===
+source_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\test.xls"
 target_folder = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\Оплачено"
 
-print("🔄 Відкриваємо PDF у редакторі...")
-viewer = subprocess.Popen([editor_path, pdf_path])
+# === Визначення типу ===
+ext = os.path.splitext(source_path)[1].lower()
+
+# === Відкриваємо відповідний редактор ===
+if ext == ".pdf":
+    print("🔄 Відкриваємо PDF у редакторі...")
+    viewer = subprocess.Popen([
+        r"C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe",
+        source_path
+    ])
+elif ext in (".xls", ".xlsx"):
+    print("🔄 Відкриваємо Excel у редакторі...")
+    viewer = subprocess.Popen([
+        r"C:\Program Files\Microsoft Office\root\Office16\EXCEL.EXE",
+        source_path
+    ])
+else:
+    print("❌ Непідтримуваний тип файлу.")
+    exit()
+
 viewer.wait()
 print("✅ Редактор закрито.")
 
+# === Підтвердження ===
 root = tk.Tk()
 root.withdraw()
 root.attributes("-topmost", True)
 answer = messagebox.askyesno("Підтвердження", "Внести штамп 'PAID'?")
 
-if answer:
-    print("✍️ Вносимо штамп...")
-    doc = fitz.open(pdf_path)
+if not answer:
+    print("❌ Внесення штампа скасовано.")
+    exit()
+
+# === Створення цільової папки ===
+os.makedirs(target_folder, exist_ok=True)
+ts = datetime.now().strftime("%Y-%m-%d %H-%M")
+filename = os.path.basename(source_path)
+base_name, original_ext = os.path.splitext(filename)
+new_name = f"{ts} {base_name}.xlsx"
+new_path = os.path.join(target_folder, new_name)
+
+if ext == ".pdf":
+    print("✍️ Вносимо штамп у PDF...")
+    doc = fitz.open(source_path)
     page = doc[0]
 
     stamp_text = "PAID"
@@ -35,22 +69,33 @@ if answer:
     page.insert_text((x, y), stamp_text, fontsize=fontsize, color=color)
     page.insert_text((x, y + 25), timestamp, fontsize=fontsize, color=color)
 
-    # Створюємо папку, якщо потрібно
-    os.makedirs(target_folder, exist_ok=True)
-
-    # Формуємо нове ім’я з датою
-    filename = os.path.basename(pdf_path)
-    ts = datetime.now().strftime("%Y-%m-%d %H-%M")
-    new_name = f"{ts} {filename}"
-    new_path = os.path.join(target_folder, new_name)
-
-    # Зберігаємо одразу у фінальне місце
     doc.save(new_path, garbage=4, deflate=True)
     doc.close()
-
-    # Видаляємо оригінал
-    os.remove(pdf_path)
-
+    os.remove(source_path)
     print(f"✅ Штамп додано і файл переміщено до:\n{new_path}")
-else:
-    print("❌ Внесення штампа скасовано.")
+
+elif ext == ".xls":
+    print("ℹ Конвертуємо .xls → .xlsx")
+    try:
+        df = pd.read_excel(source_path, engine="xlrd")
+        df.to_excel(new_path, index=False)
+        print("✅ Конвертація успішна")
+    except Exception as e:
+        print(f"❌ Не вдалося конвертувати .xls: {e}")
+        exit()
+
+elif ext == ".xlsx":
+    shutil.copy2(source_path, new_path)
+
+if ext in (".xls", ".xlsx"):
+    print("✍️ Вносимо штамп у Excel...")
+    wb = load_workbook(new_path)
+    sheet = wb.active
+    stamp = f"PAID {datetime.now().strftime('%Y-%m-%d %H:%M')}"
+    sheet.insert_rows(1)
+    sheet["A1"] = stamp
+    sheet["A1"].fill = PatternFill(start_color="00FF00", end_color="00FF00", fill_type="solid")
+    wb.save(new_path)
+    wb.close()
+    os.remove(source_path)
+    print(f"✅ Штамп додано і Excel-файл переміщено до:\n{new_path}")
