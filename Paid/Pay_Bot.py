@@ -8,11 +8,8 @@ import pymysql
 from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ApplicationBuilder, MessageHandler, CallbackQueryHandler, filters, ContextTypes
-import psutil
-import threading
-import time
 
-# === Блокування запуску другого екземпляра через lock-файл ===
+# === Блокування запуску другого екземпляра ===
 script_name = os.path.basename(sys.argv[0])
 lockfile_name = f"{os.path.splitext(script_name)[0]}.lock"
 lockfile_path = os.path.join(tempfile.gettempdir(), lockfile_name)
@@ -32,21 +29,6 @@ def cleanup():
         pass
 atexit.register(cleanup)
 
-# === Додатковий захист: kill дублікати процесів через 2 секунди ===
-def kill_duplicates():
-    time.sleep(2)
-    current_pid = os.getpid()
-    name = os.path.basename(sys.argv[0])
-    for proc in psutil.process_iter(['pid', 'name']):
-        try:
-            if proc.info['name'] == name and proc.info['pid'] != current_pid:
-                proc.kill()
-                print(f"🛑 Вбито дубльований процес {name} (PID {proc.info['pid']})")
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            pass
-
-threading.Thread(target=kill_duplicates, daemon=True).start()
-
 # === Конфігурація ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -56,6 +38,7 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_DATABASE = os.getenv("DB_DATABASE")
 SAVE_DIR = "C:/Users/la/OneDrive/Рабочий стол/На оплату!"
 LOG_FILE = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt"
+SUPPORTED_EXT = [".pdf", ".xls", ".xlsx", ".txt", ".jpg", ".jpeg", ".png", ".bmp", ".tiff"]
 
 # === Підключення до БД ===
 conn = pymysql.connect(
@@ -69,51 +52,12 @@ conn = pymysql.connect(
 cursor = conn.cursor()
 sessions = {}
 
-# === Логування ===
 def log(msg: str):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     line = f"[{timestamp}] {msg}"
     print(line)
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
-
-# === Основна логіка ===
-async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    msg = update.message
-    caption = msg.caption.lower() if msg.caption else ""
-
-    if "/оплата" not in caption and "/pay" not in caption:
-        return
-
-    if not msg.document:
-        await msg.reply_text("⚠️ Надішліть файл як документ із командою /оплата")
-        return
-
-    file = msg.document
-    orig_name = file.file_name
-    user = msg.from_user.username or "anon"
-
-    cursor.execute("""
-        SELECT timestamp FROM telegram_files
-        WHERE file_name = %s AND username = %s
-        ORDER BY id DESC LIMIT 1
-    """, (orig_name, user))
-    duplicate = cursor.fetchone()
-
-    if duplicate:
-        prev_time = duplicate[0].strftime("%Y-%m-%d %H:%M:%S")
-        sessions[user] = (file, msg)
-        keyboard = [[
-            InlineKeyboardButton("✅ Так, зберегти повторно", callback_data="save_again"),
-            InlineKeyboardButton("❌ Ні, скасувати", callback_data="cancel")
-        ]]
-        await msg.reply_text(
-            f"⚠️ Файл '{orig_name}' вже надсилався {prev_time}. Зберегти повторно?",
-            reply_markup=InlineKeyboardMarkup(keyboard)
-        )
-        return
-
-    await save_and_record(file, msg, context, user, is_duplicate=False)
 
 async def save_and_record(file, msg, context, user, is_duplicate):
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
@@ -160,10 +104,62 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("❌ Повторне збереження скасовано")
         log(f"🚫 Користувач {user} скасував дубль")
 
-# === Запуск бота ===
+async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    if not msg:
+        return
+
+    user = msg.from_user.username or "anon"
+    caption = msg.caption or ""
+    text = msg.text or ""
+    has_pay = "/оплата" in caption.lower() or "/pay" in caption.lower() or "/оплата" in text.lower()
+
+    # 1️⃣ /оплата з файлом
+    if has_pay and msg.document:
+        await process_document(msg.document, msg, context, user)
+        return
+
+    # 2️⃣ /оплата у reply на файл
+    if has_pay and msg.reply_to_message and msg.reply_to_message.document:
+        reply_doc = msg.reply_to_message.document
+        await process_document(reply_doc, msg.reply_to_message, context, user)
+        return
+
+    # 3️⃣ /оплата з фото, відео, іншим — попередження
+    if has_pay:
+        await msg.reply_text("⚠️ Цей тип повідомлення не підтримується. Надсилайте файл як документ (PDF, Excel, TXT або зображення).")
+
+async def process_document(file, msg, context, user):
+    ext = os.path.splitext(file.file_name)[1].lower()
+    if ext not in SUPPORTED_EXT:
+        await msg.reply_text("⚠️ Цей тип файлу не підтримується. Надсилайте PDF, Excel, TXT або зображення як файл.")
+        return
+
+    cursor.execute("""
+        SELECT timestamp FROM telegram_files
+        WHERE file_name = %s AND username = %s
+        ORDER BY id DESC LIMIT 1
+    """, (file.file_name, user))
+    duplicate = cursor.fetchone()
+
+    if duplicate:
+        prev_time = duplicate[0].strftime("%Y-%m-%d %H:%M:%S")
+        sessions[user] = (file, msg)
+        keyboard = [[
+            InlineKeyboardButton("✅ Так, зберегти повторно", callback_data="save_again"),
+            InlineKeyboardButton("❌ Ні, скасувати", callback_data="cancel")
+        ]]
+        await msg.reply_text(
+            f"⚠️ Файл '{file.file_name}' вже надсилався {prev_time}. Зберегти повторно?",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+        return
+
+    await save_and_record(file, msg, context, user, is_duplicate=False)
+
 if __name__ == "__main__":
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
+    app.add_handler(MessageHandler(filters.ALL, handle_message))
     app.add_handler(CallbackQueryHandler(handle_callback))
     log("🤖 Бот запущено...")
     app.run_polling()
