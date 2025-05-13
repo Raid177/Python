@@ -1,12 +1,11 @@
 # === telegram_bot_payments.py ===
-# Включає: антидубль, обробку файлів з /оплата, БД, кнопки, баланс, моніторинг статусу, видалення
+# Включає: обробку файлів з /оплата, БД, кнопки, баланс, моніторинг статусу, видалення
 
 import os
 import sys
 import time
 import tempfile
 import atexit
-import msvcrt
 import pymysql
 import psutil
 import requests
@@ -17,42 +16,34 @@ from dotenv import load_dotenv
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity, ReplyKeyboardMarkup
 from telegram.ext import (
     ApplicationBuilder, MessageHandler, CallbackQueryHandler,
-    CommandHandler, ContextTypes, filters, DeletedMessageHandler
+    CommandHandler, ContextTypes, filters
 )
 
-# === 🔒 Вбивання дублюючих процесів ===
-def kill_duplicates():
-    time.sleep(2)
-    current_pid = os.getpid()
-    this_name = os.path.basename(sys.argv[0])
-    for p in psutil.process_iter(['pid', 'name', 'exe', 'cmdline']):
-        try:
-            cmdline = p.info.get('cmdline') or []
-            if isinstance(cmdline, list) and this_name in ' '.join(cmdline) and p.pid != current_pid:
-                p.kill()
-                print(f"🛑 Вбито дубльований процес {this_name} (PID {p.pid})")
-        except Exception as e:
-            print(f"⚠️ Не вдалося завершити PID {p.pid}: {e}")
-kill_duplicates()
+from dotenv import dotenv_values
+env = dotenv_values("/root/Python/.env")
 
-# === 🌱 Змінні середовища ===
-load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-FALLBACK_CHAT_ID = int(os.getenv("FALLBACK_CHAT_ID"))
-ADMIN_USER = int(os.getenv("ADMIN_USER", FALLBACK_CHAT_ID))
-ALLOWED_USERS = os.getenv("ALLOWED_USERS", str(FALLBACK_CHAT_ID))
+BOT_TOKEN = env["BOT_TOKEN"]
+FALLBACK_CHAT_ID = int(env["FALLBACK_CHAT_ID"])
+ADMIN_USER = int(env.get("ADMIN_USER", FALLBACK_CHAT_ID))
+ALLOWED_USERS = env.get("ALLOWED_USERS", str(FALLBACK_CHAT_ID))
+
 if ALLOWED_USERS == "*":
     ALLOWED_USERS_SET = "*"
 else:
     ALLOWED_USERS_SET = set(map(int, ALLOWED_USERS.split(",")))
 
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_DATABASE = os.getenv("DB_DATABASE")
-SAVE_DIR = "C:/Users/la/OneDrive/Рабочий стол/На оплату!"
+DB_HOST = env["DB_HOST"]
+DB_USER = env["DB_USER"]
+DB_PASSWORD = env["DB_PASSWORD"]
+DB_DATABASE = env["DB_DATABASE"]
+SAVE_DIR = env.get("SAVE_DIR", "C:/Users/la/OneDrive/Рабочий стол/На оплату!")
 DELETED_DIR = os.path.join(SAVE_DIR, "Deleted")
-LOG_FILE = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt"
+LOG_FILE = env.get("LOG_FILE", "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt")
+
+print("ENV BOT_TOKEN:", repr(env.get("BOT_TOKEN")))
+print("SAVE_DIR:", env.get("SAVE_DIR"))
+print("LOG_FILE:", env.get("LOG_FILE"))
+
 
 # === 💾 БД ===
 conn = pymysql.connect(
@@ -66,6 +57,21 @@ conn = pymysql.connect(
 cursor = conn.cursor()
 sessions = {}
 payment_notified = set()
+
+# === ❌ Вимкнено кілер процесів ===
+# def kill_duplicates():
+#     time.sleep(2)
+#     current_pid = os.getpid()
+#     this_name = os.path.basename(sys.argv[0])
+#     for p in psutil.process_iter(['pid', 'name', 'exe', 'cmdline']):
+#         try:
+#             cmdline = p.info.get('cmdline') or []
+#             if isinstance(cmdline, list) and this_name in ' '.join(cmdline) and p.pid != current_pid:
+#                 p.kill()
+#                 print(f"🛑 Вбито дубльований процес {this_name} (PID {p.pid})")
+#         except Exception as e:
+#             print(f"⚠️ Не вдалося завершити PID {p.pid}: {e}")
+# kill_duplicates()
 
 # === 📋 Баланси ===
 API_URL = "https://acp.privatbank.ua/api/statements/balance"
@@ -96,7 +102,7 @@ def get_today_balance(account, token):
 def format_amount(value):
     try:
         parts = f"{value:,.2f}".split(".")
-        int_part = parts[0].replace(",", "\u00a0")
+        int_part = parts[0].replace(",", " ")
         return f"{int_part},{parts[1]}"
     except:
         return str(value)
@@ -125,6 +131,7 @@ def build_balance_report():
         report_lines.append(f"\n📊 *Загальна сума (UAH)*: *{format_amount(total_uah)} грн*")
     return "\n\n".join(report_lines)
 
+
 # === 🔐 Перевірка доступу ===
 def is_allowed(uid):
     return ALLOWED_USERS_SET == "*" or uid in ALLOWED_USERS_SET
@@ -136,6 +143,7 @@ def log(msg):
     print(line)
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(line + "\n")
+
 
 # === 🧠 Моніторинг оплати ===
 async def check_paid_loop(app):
@@ -246,7 +254,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await query.edit_message_text("✅ Повторне збереження виконано")
     else:
         await query.edit_message_text("❌ Скасовано")
-        log(f"🚫 Користувач {user} скасував дубль")] ...
+        log(f"🚫 Користувач {user} скасував дубль")
 
 # === 📊 Команда /balance ===
 async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -262,7 +270,11 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(CommandHandler("balance", balance))
-    app.add_handler(DeletedMessageHandler(handle_deleted))
-    asyncio.create_task(check_paid_loop(app))
+    # app.add_handler(DeletedMessageHandler(handle_deleted))  # Видалено — не підтримується у PTB
     log("🤖 Бот запущено...")
+
+    async def post_start(app):
+        asyncio.create_task(check_paid_loop(app))
+
+    app.post_init = post_start
     app.run_polling()
