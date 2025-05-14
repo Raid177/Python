@@ -166,12 +166,11 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not msg:
         return
 
-    # === Команда в caption
     caption = msg.caption.lower() if msg.caption else ""
     is_pay_command = "/оплата" in caption or "/pay" in caption
-
-    # === Якщо команда не знайдена, але є reply на документ
     file_msg = None
+
+    # Якщо reply на повідомлення з caption-командою
     if not is_pay_command and msg.reply_to_message:
         replied = msg.reply_to_message
         rep_caption = replied.caption.lower() if replied.caption else ""
@@ -179,31 +178,46 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
             is_pay_command = True
             file_msg = replied
 
-    # === Основний файл — або сам документ, або з reply
-    if is_pay_command:
-        file_msg = file_msg or msg
-        user = file_msg.from_user.username or "anon"
+    # Якщо просто reply на документ (навіть без caption)
+    if not is_pay_command and msg.reply_to_message and msg.reply_to_message.document:
+        is_pay_command = True
+        file_msg = msg.reply_to_message
 
-        if file_msg.document:
-            file = file_msg.document
-            orig_name = file.file_name
-            cursor.execute("SELECT timestamp, status FROM telegram_files WHERE file_name=%s AND username=%s ORDER BY id DESC LIMIT 1", (orig_name, user))
-            prev = cursor.fetchone()
-            if prev:
-                prev_time, prev_status = prev
-                if prev_status == "paid":
-                    await msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
-                    return
-                sessions[user] = (file, file_msg)
-                keyboard = [
-                    [InlineKeyboardButton("✅ Зберегти ще раз", callback_data="save_again"),
-                     InlineKeyboardButton("❌ Скасувати", callback_data="cancel")]
-                ]
-                await msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
-            else:
-                await save_and_record(file, file_msg, context, user, is_duplicate=False)
+    # Якщо це основне повідомлення з документом
+    file_msg = file_msg or msg
+
+    if not is_pay_command:
+        return  # ні прямого caption, ні reply на /оплата — ігноруємо
+
+    user = file_msg.from_user.username or "anon"
+
+    if file_msg.document:
+        file = file_msg.document
+        orig_name = file.file_name
+        ext = os.path.splitext(orig_name)[1].lower()
+
+        allowed_exts = ['.pdf', '.xlsx', '.xls', '.csv', '.txt']
+        if ext not in allowed_exts:
+            await msg.reply_text(f"🚫 Файл *{orig_name}* не підтримується. Дозволені типи: PDF, Excel, TXT, CSV", parse_mode="Markdown")
+            return
+
+        cursor.execute("SELECT timestamp, status FROM telegram_files WHERE file_name=%s AND username=%s ORDER BY id DESC LIMIT 1", (orig_name, user))
+        prev = cursor.fetchone()
+        if prev:
+            prev_time, prev_status = prev
+            if prev_status == "paid":
+                await msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
+                return
+            sessions[user] = (file, file_msg)
+            keyboard = [
+                [InlineKeyboardButton("✅ Зберегти ще раз", callback_data="save_again"),
+                 InlineKeyboardButton("❌ Скасувати", callback_data="cancel")]
+            ]
+            await msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
         else:
-            await msg.reply_text("🚫 Повідомлення не містить документа. Надішліть PDF, Excel, TXT або зображення як *документ*, а не фото/вкладення.", parse_mode="Markdown")
+            await save_and_record(file, file_msg, context, user, is_duplicate=False)
+    else:
+        await msg.reply_text("🚫 Повідомлення не містить документа. Надішліть PDF, Excel, TXT або зображення як *документ*, а не фото.", parse_mode="Markdown")
 
 # === 💾 Збереження файлу ===
 async def save_and_record(file, msg, context, user, is_duplicate):
