@@ -251,7 +251,7 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # === 🚀 Старт ===
 if __name__ == "__main__":
-    from telegram import BotCommand
+    from telegram import BotCommand, BotCommandScopeChat, BotCommandScopeDefault
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -260,10 +260,10 @@ if __name__ == "__main__":
     app.add_handler(CommandHandler("balance", balance))
     log("🤖 Бот запущено...")
 
-    # ✅ post_start з усім необхідним
+    # === ✅ Об'єднаний post_start
     async def post_start(app):
-        # 🧠 Цикл перевірки оплат
-        asyncio.create_task(check_paid_loop(app))
+        print("👉 post_start запущено")
+        log("🚀 post_start запущено")
 
         # 🕙 Автобаланс
         scheduler = AsyncIOScheduler()
@@ -282,13 +282,19 @@ if __name__ == "__main__":
         scheduler.add_job(send_daily_balance, "cron", hour=10, minute=0)
         scheduler.start()
 
+        # 🧠 Цикл перевірки оплат
+        asyncio.create_task(check_paid_loop(app))
+
         # 📎 Команди
         try:
             await app.bot.set_my_commands([
+                BotCommand("pay", "Надіслати файл для оплати")
+            ], scope=BotCommandScopeDefault())
+            await app.bot.set_my_commands([
                 BotCommand("pay", "Надіслати файл для оплати"),
-                BotCommand("balance", "Залишки на рахунках"),
-            ])
-            log("✅ Команди бота встановлено")
+                BotCommand("balance", "Залишки на рахунках")
+            ], scope=BotCommandScopeChat(chat_id=ADMIN_USER))
+            log("✅ Команди успішно встановлено")
         except Exception as e:
             log(f"⚠️ Помилка при встановленні команд: {e}")
             print(f"[ERROR] Команди: {e}")
