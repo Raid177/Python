@@ -232,7 +232,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         orig_name = file.file_name
         ext = os.path.splitext(orig_name)[1].lower()
 
-        allowed_exts = ['.pdf', '.xlsx', '.xls', '.csv', '.txt']
+        allowed_exts = ['.pdf', '.xlsx', '.xls', '.csv', '.txt', '.jpg', '.jpeg', '.png']
         if ext not in allowed_exts:
             await file_msg.reply_text(f"🚫 Файл *{orig_name}* не підтримується. Дозволені типи: PDF, Excel, TXT, CSV", parse_mode="Markdown")
             return
