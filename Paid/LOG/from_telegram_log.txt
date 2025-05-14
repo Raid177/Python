@@ -110,3 +110,22 @@
 [2025-05-14 16:23:20] 📎 reply_to_message raw: {'caption': 'ывапмфым', 'channel_chat_created': False, 'delete_chat_photo': False, 'document': {'file_name': 'Критерії_асистентів_ветклініка.xlsx', 'mime_type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'file_id': 'BQACAgIAAyEFAASXr2IwAANkaCSZO8gtE3stoYBm20kNDDMXcAsAAj9_AALxPiFJrTrZZ7Obh7I2BA', 'file_size': 11909, 'file_unique_id': 'AgADP38AAvE-IUk'}, 'group_chat_created': False, 'supergroup_chat_created': False, 'chat': {'id': -1002544853552, 'title': 'Оплати Pet Wealth', 'type': <ChatType.SUPERGROUP>}, 'date': 1747228987, 'message_id': 100, 'from': {'first_name': 'Олексій', 'id': 161197876, 'is_bot': False, 'is_premium': True, 'language_code': 'ru', 'last_name': 'Льодін', 'username': 'Alexey_Raid'}}
 [2025-05-14 16:23:20] ✅ Команду визначено через документ у reply
 [2025-05-14 16:23:24] 🚫 Користувач Alexey_Raid скасував дубль
+[2025-05-14 16:24:36] 🤖 Бот запущено...
+[2025-05-14 16:24:36] 🚀 post_start запущено
+[2025-05-14 16:24:36] ✅ Команди успішно встановлено
+[2025-05-14 16:24:41] 🛠️ handle_file запущено
+[2025-05-14 16:24:41] 📩 msg.caption = /оплата
+[2025-05-14 16:24:41] ⚠️ reply_to_message = None
+[2025-05-14 16:24:41] 📩 msg.caption = /оплата
+[2025-05-14 16:24:41] ⚠️ reply_to_message = None
+[2025-05-14 16:26:48] 🤖 Бот запущено...
+[2025-05-14 16:26:48] 🚀 post_start запущено
+[2025-05-14 16:26:48] ✅ Команди успішно встановлено
+[2025-05-14 16:26:55] 🛠️ handle_file запущено
+[2025-05-14 16:26:55] 📩 msg.caption = None
+[2025-05-14 16:26:55] 📎 reply_to_message: caption = /оплата, document = yes
+[2025-05-14 16:26:55] 📩 msg.caption = None
+[2025-05-14 16:26:55] 📎 reply_to_message: caption = /оплата, document = yes
+[2025-05-14 16:26:55] 📎 reply_to_message raw: {'caption': '/оплата', 'channel_chat_created': False, 'delete_chat_photo': False, 'document': {'file_name': 'План Гагарина,13.jpg', 'mime_type': 'image/jpeg', 'thumbnail': {'height': 240, 'width': 320, 'file_id': 'AAMCAgADIQUABJevYjAAA2doJJmYyh0D5GVDJDq9vnAqphT1IgACSH8AAvE-IUk8RHHTPuWmDAEAB20AAzYE', 'file_size': 12511, 'file_unique_id': 'AQADSH8AAvE-IUly'}, 'file_id': 'BQACAgIAAyEFAASXr2IwAANnaCSZmModA-RlQyQ6vb5wKqYU9SIAAkh_AALxPiFJPERx0z7lpgw2BA', 'file_size': 209333, 'file_unique_id': 'AgADSH8AAvE-IUk', 'thumb': {'file_id': 'AAMCAgADIQUABJevYjAAA2doJJmYyh0D5GVDJDq9vnAqphT1IgACSH8AAvE-IUk8RHHTPuWmDAEAB20AAzYE', 'file_unique_id': 'AQADSH8AAvE-IUly', 'file_size': 12511, 'width': 320, 'height': 240}}, 'group_chat_created': False, 'supergroup_chat_created': False, 'chat': {'id': -1002544853552, 'title': 'Оплати Pet Wealth', 'type': <ChatType.SUPERGROUP>}, 'date': 1747229081, 'message_id': 103, 'from': {'first_name': 'Олексій', 'id': 161197876, 'is_bot': False, 'is_premium': True, 'language_code': 'ru', 'last_name': 'Льодін', 'username': 'Alexey_Raid'}}
+[2025-05-14 16:26:55] ✅ Команду визначено через caption у reply
+[2025-05-14 16:27:04] ✔️ План Гагарина,13.jpg збережено  (дубль)
