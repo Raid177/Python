@@ -1,45 +1,68 @@
-import requests
-from dotenv import dotenv_values
-from datetime import datetime
+import os
+import logging
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes, filters
 
-env = dotenv_values("/root/Python/.env")
+# ==== Змінні ====
+BOT_TOKEN = "7129977699:AAFBM0oV8H3pYhj7T9uhbzI5d3dLPr3ICsE"
 
-API_URL = "https://acp.privatbank.ua/api/statements/balance"
+# ==== Логування ====
+logging.basicConfig(
+    format='[%(asctime)s] %(message)s', level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S'
+)
+log = logging.getLogger(__name__)
 
-def get_balance(acc, token, date=None):
-    if date is None:
-        date = datetime.now().date()
-    headers = {
-        "User-Agent": "PythonClient",
-        "token": token,
-        "Content-Type": "application/json;charset=cp1251"
-    }
-    params = {
-        "acc": acc,
-        "startDate": date.strftime("%d-%m-%Y"),
-        "endDate": date.strftime("%d-%m-%Y")
-    }
-    try:
-        response = requests.get(API_URL, headers=headers, params=params)
-        print(f"\n=== Запит на {acc} ({date}) ===")
-        print(f"Код відповіді: {response.status_code}")
-        print(f"Відповідь:\n{response.text}")
-    except Exception as e:
-        print(f"❗ Виняток: {e}")
+# ==== Обробник ====
+async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    msg = update.message
+    log.info("🛠️ handle_file запущено")
 
-# Зчитування токенів та рахунків з env
-accounts = []
-for var in env:
-    if var.startswith("API_TOKEN_"):
-        fop = var.replace("API_TOKEN_", "")
-        token = env[var]
-        acc_list = env.get(f"API_АСС_" + fop, "").split(",")
-        for acc in acc_list:
-            acc = acc.strip()
-            if acc:
-                accounts.append((fop, acc, token))
+    if not msg:
+        log.info("❌ msg = None")
+        return
 
-# Тестовий запуск
-for fop, acc, token in accounts:
-    print(f"\n>>> Перевіряємо {fop} — {acc}")
-    get_balance(acc, token)
+    log.info(f"📩 msg.text = {msg.text}")
+    log.info(f"📩 msg.caption = {msg.caption}")
+
+    is_pay_command = False
+    file_msg = None
+
+    caption = msg.caption.lower() if msg.caption else ""
+    if "/оплата" in caption or "/pay" in caption:
+        is_pay_command = True
+        file_msg = msg
+        log.info("✅ Команду визначено через caption")
+
+    # Перевірка reply
+    if not is_pay_command and msg.reply_to_message:
+        replied = msg.reply_to_message
+        log.info(f"📎 reply_to_message.caption = {replied.caption}")
+        log.info(f"📎 reply_to_message.document = {replied.document is not None}")
+        rep_caption = replied.caption.lower() if replied.caption else ""
+
+        if "/оплата" in rep_caption or "/pay" in rep_caption:
+            is_pay_command = True
+            file_msg = replied
+            log.info("✅ Команду визначено через caption у reply")
+        elif replied.document:
+            is_pay_command = True
+            file_msg = replied
+            log.info("✅ Команду визначено через документ у reply")
+
+    # Якщо не знайдено команду — вийти
+    if not is_pay_command:
+        log.info("⚠️ Команда не визначена. Пропускаємо.")
+        return
+
+    if file_msg and file_msg.document:
+        log.info(f"📥 Прийнято документ: {file_msg.document.file_name}")
+        await file_msg.reply_text("✅ Прийнято документ з командою /оплата")
+    else:
+        await msg.reply_text("⚠️ Очікується документ як файл")
+
+# ==== Запуск ====
+if __name__ == "__main__":
+    app = ApplicationBuilder().token(BOT_TOKEN).build()
+    app.add_handler(MessageHandler(filters.ALL, handle_file))
+    log.info("🤖 Тестовий бот запущено")
+    app.run_polling()

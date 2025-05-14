@@ -163,6 +163,29 @@ async def handle_deleted(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === 📥 Прийом документів, збереження, дублікати ===
 async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
+    log("🛠️ handle_file запущено")
+    if msg:
+        log(f"📩 msg.caption = {msg.caption}")
+        if msg.reply_to_message:
+            rep = msg.reply_to_message
+            rep_log = f"📎 reply_to_message: "
+            rep_log += f"caption = {rep.caption}, "
+            rep_log += f"document = {'yes' if rep.document else 'no'}"
+            log(rep_log)
+        else:
+            log("⚠️ reply_to_message = None")
+    else:
+        log("❌ msg = None")
+
+
+    if msg:
+        log(f"📩 msg.caption = {msg.caption}")
+        if msg.reply_to_message:
+            rep = msg.reply_to_message
+            rep_log = f"📎 reply_to_message: "
+            rep_log += f"caption = {rep.caption}, document = {'yes' if rep.document else 'no'}"
+            log(rep_log)
+
     if not msg:
         return
 
@@ -170,21 +193,34 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     is_pay_command = "/оплата" in caption or "/pay" in caption
     file_msg = None
 
-    # Якщо reply на повідомлення з caption-командою
-    if not is_pay_command and msg.reply_to_message:
+    # Обробка reply
+    if msg.reply_to_message:
         replied = msg.reply_to_message
+        log(f"📎 reply_to_message raw: {replied.to_dict()}")
+
         rep_caption = replied.caption.lower() if replied.caption else ""
+
         if "/оплата" in rep_caption or "/pay" in rep_caption:
             is_pay_command = True
             file_msg = replied
+            log("✅ Команду визначено через caption у reply")
+        elif hasattr(replied, "document") and replied.document:
+            is_pay_command = True
+            file_msg = replied
+            log("✅ Команду визначено через документ у reply")
+        else:
+            log("❌ reply_to_message є, але без caption і document")
+    else:
+        log("⚠️ reply_to_message = None")
 
-    # Якщо просто reply на документ (навіть без caption)
-    if not is_pay_command and msg.reply_to_message and msg.reply_to_message.document:
-        is_pay_command = True
-        file_msg = msg.reply_to_message
+
 
     # Якщо це основне повідомлення з документом
     file_msg = file_msg or msg
+
+    if not is_pay_command:
+        log("⚠️ Команда не визначена, файл проігноровано")
+        return
 
     if not is_pay_command:
         return  # ні прямого caption, ні reply на /оплата — ігноруємо
@@ -198,7 +234,7 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         allowed_exts = ['.pdf', '.xlsx', '.xls', '.csv', '.txt']
         if ext not in allowed_exts:
-            await msg.reply_text(f"🚫 Файл *{orig_name}* не підтримується. Дозволені типи: PDF, Excel, TXT, CSV", parse_mode="Markdown")
+            await file_msg.reply_text(f"🚫 Файл *{orig_name}* не підтримується. Дозволені типи: PDF, Excel, TXT, CSV", parse_mode="Markdown")
             return
 
         cursor.execute("SELECT timestamp, status FROM telegram_files WHERE file_name=%s AND username=%s ORDER BY id DESC LIMIT 1", (orig_name, user))
@@ -206,21 +242,21 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if prev:
             prev_time, prev_status = prev
             if prev_status == "paid":
-                await msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
+                await file_msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
                 return
             sessions[user] = (file, file_msg)
             keyboard = [
                 [InlineKeyboardButton("✅ Зберегти ще раз", callback_data="save_again"),
                  InlineKeyboardButton("❌ Скасувати", callback_data="cancel")]
             ]
-            await msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
+            await file_msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
         else:
             await save_and_record(file, file_msg, context, user, is_duplicate=False)
     else:
-        await msg.reply_text("🚫 Повідомлення не містить документа. Надішліть PDF, Excel, TXT або зображення як *документ*, а не фото.", parse_mode="Markdown")
+        await file_msg.reply_text("🚫 Повідомлення не містить документа. Надішліть PDF, Excel, TXT або зображення як *документ*, а не фото.", parse_mode="Markdown")
 
 # === 💾 Збереження файлу ===
-async def save_and_record(file, msg, context, user, is_duplicate):
+async def save_and_record(file, file_msg, context, user, is_duplicate):    
     ts = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     base_name = file.file_name
     if is_duplicate:
@@ -237,10 +273,10 @@ async def save_and_record(file, msg, context, user, is_duplicate):
     cursor.execute("""
         INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status)
         VALUES (%s, %s, %s, %s, %s, %s, 'pending')
-    """, (base_name, file_path, msg.chat.id, msg.message_id, user, now))
+    """, (base_name, file_path, file_msg.chat.id, file_msg.message_id, user, now))
 
     note = " (дубль)" if is_duplicate else ""
-    await msg.reply_text(f"📥 Файл «{base_name}»{note} передано на оплату")
+    await file_msg.reply_text(f"📥 Файл «{base_name}»{note} передано на оплату")
     log(f"✔️ {base_name} збережено {note}")
 
 # === 🔘 Кнопки дубля ===
@@ -278,7 +314,7 @@ if __name__ == "__main__":
     from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
+    app.add_handler(MessageHandler(filters.ALL, handle_file))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(CommandHandler("balance", balance))
     log("🤖 Бот запущено...")
