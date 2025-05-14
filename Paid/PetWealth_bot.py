@@ -1,5 +1,5 @@
 # === telegram_bot_payments.py ===
-# Включає: обробку файлів з /оплата, БД, кнопки, баланс, моніторинг статусу, видалення
+# Telegram-бот для прийому файлів, моніторингу оплат і виводу балансів по рахунках ПриватБанку
 
 import os
 import sys
@@ -11,125 +11,105 @@ import psutil
 import requests
 import shutil
 import asyncio
-from datetime import datetime
-from dotenv import load_dotenv
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity, ReplyKeyboardMarkup
+from datetime import datetime, timedelta
+from dotenv import load_dotenv, dotenv_values
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, MessageEntity
 from telegram.ext import (
     ApplicationBuilder, MessageHandler, CallbackQueryHandler,
     CommandHandler, ContextTypes, filters
 )
 
-from dotenv import dotenv_values
+# === 🌱 Змінні середовища ===
 env = dotenv_values("/root/Python/.env")
-
 BOT_TOKEN = env["BOT_TOKEN"]
 FALLBACK_CHAT_ID = int(env["FALLBACK_CHAT_ID"])
 ADMIN_USER = int(env.get("ADMIN_USER", FALLBACK_CHAT_ID))
 ALLOWED_USERS = env.get("ALLOWED_USERS", str(FALLBACK_CHAT_ID))
-
-if ALLOWED_USERS == "*":
-    ALLOWED_USERS_SET = "*"
-else:
-    ALLOWED_USERS_SET = set(map(int, ALLOWED_USERS.split(",")))
+ALLOWED_USERS_SET = "*" if ALLOWED_USERS == "*" else set(map(int, ALLOWED_USERS.split(",")))
 
 DB_HOST = env["DB_HOST"]
 DB_USER = env["DB_USER"]
 DB_PASSWORD = env["DB_PASSWORD"]
 DB_DATABASE = env["DB_DATABASE"]
-SAVE_DIR = env.get("SAVE_DIR", "C:/Users/la/OneDrive/Рабочий стол/На оплату!")
+SAVE_DIR = env.get("SAVE_DIR", "/root/Python/data/incoming")
 DELETED_DIR = os.path.join(SAVE_DIR, "Deleted")
-LOG_FILE = env.get("LOG_FILE", "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Paid/from_telegram_log.txt")
+LOG_FILE = env.get("LOG_FILE", "/root/Python/data/logs/from_telegram_log.txt")
 
-print("ENV BOT_TOKEN:", repr(env.get("BOT_TOKEN")))
-print("SAVE_DIR:", env.get("SAVE_DIR"))
-print("LOG_FILE:", env.get("LOG_FILE"))
-
-
-# === 💾 БД ===
+# === 📃 Підключення до БД ===
 conn = pymysql.connect(
-    host=DB_HOST,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    database=DB_DATABASE,
-    charset='utf8mb4',
-    autocommit=True
+    host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_DATABASE,
+    charset='utf8mb4', autocommit=True
 )
 cursor = conn.cursor()
 sessions = {}
 payment_notified = set()
 
-# === ❌ Вимкнено кілер процесів ===
-# def kill_duplicates():
-#     time.sleep(2)
-#     current_pid = os.getpid()
-#     this_name = os.path.basename(sys.argv[0])
-#     for p in psutil.process_iter(['pid', 'name', 'exe', 'cmdline']):
-#         try:
-#             cmdline = p.info.get('cmdline') or []
-#             if isinstance(cmdline, list) and this_name in ' '.join(cmdline) and p.pid != current_pid:
-#                 p.kill()
-#                 print(f"🛑 Вбито дубльований процес {this_name} (PID {p.pid})")
-#         except Exception as e:
-#             print(f"⚠️ Не вдалося завершити PID {p.pid}: {e}")
-# kill_duplicates()
-
-# === 📋 Баланси ===
+# === 💳 Баланси ПриватБанк ===
 API_URL = "https://acp.privatbank.ua/api/statements/balance"
 accounts = {}
-for var in os.environ:
+for var in env:
     if var.startswith("API_TOKEN_"):
         fop = var.replace("API_TOKEN_", "")
-        token = os.getenv(var)
-        acc_list = os.getenv(f"API_АСС_{fop}", "").split(",")
-        acc_list = [acc.strip() for acc in acc_list if acc.strip()]
-        accounts[fop] = [{"acc": acc, "token": token} for acc in acc_list]
+        token = env[var]
+        acc_list = env.get(f"API_АСС_{fop}", "").split(",")
+        accounts[fop] = [{"acc": acc.strip(), "token": token} for acc in acc_list if acc.strip()]
 
-def get_today_balance(account, token):
+
+def get_latest_balance(account, token):
     today = datetime.now().date()
     headers = {"User-Agent": "PythonClient", "token": token, "Content-Type": "application/json;charset=cp1251"}
-    params = {"acc": account, "startDate": today.strftime("%d-%m-%Y"), "endDate": today.strftime("%d-%m-%Y")}
-    try:
-        response = requests.get(API_URL, headers=headers, params=params)
-        if response.status_code != 200:
-            return None, f"❌ Помилка {response.status_code}: {response.text}"
-        data = response.json()
-        if data["status"] != "SUCCESS" or "balances" not in data:
-            return None, "⚠️ Дані відсутні або статус не SUCCESS."
-        return data["balances"][0], None
-    except Exception as e:
-        return None, f"❗ Виняток: {str(e)}"
+
+    def fetch(date):
+        params = {"acc": account, "startDate": date.strftime("%d-%m-%Y"), "endDate": date.strftime("%d-%m-%Y")}
+        try:
+            response = requests.get(API_URL, headers=headers, params=params)
+            if response.status_code != 200:
+                return None, f"❌ {response.status_code}: {response.text}", None
+            data = response.json()
+            if data["status"] == "SUCCESS" and data.get("balances"):
+                return data["balances"][0], None, datetime.combine(date, datetime.max.time().replace(microsecond=0))
+        except Exception as e:
+            return None, str(e), None
+        return None, None, None
+
+    bal, err, used = fetch(today)
+    if bal: return bal, None, used
+    yesterday = today - timedelta(days=1)
+    bal, err, used = fetch(yesterday)
+    if bal: return bal, None, used
+    return None, err or "❌ Баланс не знайдено", None
 
 def format_amount(value):
     try:
         parts = f"{value:,.2f}".split(".")
-        int_part = parts[0].replace(",", " ")
+        int_part = parts[0].replace(",", "\xa0")  # не-розривний пробіл
         return f"{int_part},{parts[1]}"
     except:
         return str(value)
 
+
 def build_balance_report():
     total_uah = 0
-    report_lines = []
+    lines = []
     for fop, acc_list in accounts.items():
         for acc_info in acc_list:
-            bal, err = get_today_balance(acc_info["acc"], acc_info["token"])
+            bal, err, dt_used = get_latest_balance(acc_info["acc"], acc_info["token"])
             if err:
-                report_lines.append(f"*{fop}*: {err}")
+                lines.append(f"*{fop}*: {err}")
             elif bal:
                 try:
                     value = float(bal["balanceOut"])
                     if value == 0:
                         continue
                     formatted = format_amount(value)
-                    line = f"*{fop}*\n💳 `{bal['acc']}`\n💰 *{formatted} {bal['currency']}*"
-                    report_lines.append(line)
+                    lines.append(f"*{fop}* (🕓 {dt_used.strftime('%d.%m.%Y %H:%M')})\n💳 `{bal['acc']}`\n💰 *{formatted} {bal['currency']}*")
                     if bal["currency"] == "UAH":
                         total_uah += value
                 except Exception as e:
-                    report_lines.append(f"*{fop}*: ⚠️ Помилка при обробці: {e}")
+                    lines.append(f"*{fop}*: ⚠️ {e}")
     if total_uah:
-        report_lines.append(f"\n📊 *Загальна сума (UAH)*: *{format_amount(total_uah)} грн*")
-    return "\n\n".join(report_lines)
+        lines.append(f"\n📊 *Загальна сума (UAH)*: *{format_amount(total_uah)} грн*")
+    return "\n\n".join(lines)
 
 
 # === 🔐 Перевірка доступу ===
@@ -259,22 +239,59 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === 📊 Команда /balance ===
 async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     uid = update.effective_user.id
+    print(f"[DEBUG] balance від {uid}")
     if uid != ADMIN_USER:
         return await update.message.reply_text("⛔ Доступ лише для адміністратора.")
     msg = build_balance_report()
+    print(f"[DEBUG] звіт балансу:\n{msg}")
+    if not msg.strip():
+        msg = "⚠️ Балансів не знайдено або відповідь була порожня."
     await update.message.reply_text(msg, parse_mode="Markdown")
+
 
 # === 🚀 Старт ===
 if __name__ == "__main__":
+    from telegram import BotCommand
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.Document.ALL, handle_file))
     app.add_handler(CallbackQueryHandler(handle_callback))
     app.add_handler(CommandHandler("balance", balance))
-    # app.add_handler(DeletedMessageHandler(handle_deleted))  # Видалено — не підтримується у PTB
     log("🤖 Бот запущено...")
 
+    # ✅ post_start з усім необхідним
     async def post_start(app):
+        # 🧠 Цикл перевірки оплат
         asyncio.create_task(check_paid_loop(app))
+
+        # 🕙 Автобаланс
+        scheduler = AsyncIOScheduler()
+
+        async def send_daily_balance():
+            msg = build_balance_report()
+            if not msg.strip():
+                msg = "⚠️ Балансів не знайдено або відповідь була порожня."
+            try:
+                await app.bot.send_message(chat_id=ADMIN_USER, text=msg, parse_mode="Markdown")
+                log("📤 Автобаланс надіслано адміну")
+            except Exception as e:
+                log(f"⚠️ Помилка при надсиланні автобалансу: {e}")
+                print(f"[ERROR] Автобаланс: {e}")
+
+        scheduler.add_job(send_daily_balance, "cron", hour=10, minute=0)
+        scheduler.start()
+
+        # 📎 Команди
+        try:
+            await app.bot.set_my_commands([
+                BotCommand("pay", "Надіслати файл для оплати"),
+                BotCommand("balance", "Залишки на рахунках"),
+            ])
+            log("✅ Команди бота встановлено")
+        except Exception as e:
+            log(f"⚠️ Помилка при встановленні команд: {e}")
+            print(f"[ERROR] Команди: {e}")
 
     app.post_init = post_start
     app.run_polling()
