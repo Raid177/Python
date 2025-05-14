@@ -165,36 +165,45 @@ async def handle_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.message
     if not msg:
         return
+
+    # === Команда в caption
     caption = msg.caption.lower() if msg.caption else ""
     is_pay_command = "/оплата" in caption or "/pay" in caption
-    if not is_pay_command and msg.reply_to_message:
-        for ent in msg.reply_to_message.entities or []:
-            if ent.type == MessageEntity.BOT_COMMAND:
-                command = msg.reply_to_message.text[ent.offset: ent.offset + ent.length]
-                if command.lower() in ("/оплата", "/pay"):
-                    is_pay_command = True
-                    break
-    if not is_pay_command:
-        return
 
-    user = msg.from_user.username or "anon"
-    if msg.document:
-        file = msg.document
-        orig_name = file.file_name
-        cursor.execute("SELECT timestamp, status FROM telegram_files WHERE file_name=%s AND username=%s ORDER BY id DESC LIMIT 1", (orig_name, user))
-        prev = cursor.fetchone()
-        if prev:
-            prev_time, prev_status = prev
-            if prev_status == "paid":
-                await msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
-                return
-            sessions[user] = (file, msg)
-            keyboard = [[InlineKeyboardButton("✅ Зберегти ще раз", callback_data="save_again"), InlineKeyboardButton("❌ Скасувати", callback_data="cancel")]]
-            await msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
+    # === Якщо команда не знайдена, але є reply на документ
+    file_msg = None
+    if not is_pay_command and msg.reply_to_message:
+        replied = msg.reply_to_message
+        rep_caption = replied.caption.lower() if replied.caption else ""
+        if "/оплата" in rep_caption or "/pay" in rep_caption:
+            is_pay_command = True
+            file_msg = replied
+
+    # === Основний файл — або сам документ, або з reply
+    if is_pay_command:
+        file_msg = file_msg or msg
+        user = file_msg.from_user.username or "anon"
+
+        if file_msg.document:
+            file = file_msg.document
+            orig_name = file.file_name
+            cursor.execute("SELECT timestamp, status FROM telegram_files WHERE file_name=%s AND username=%s ORDER BY id DESC LIMIT 1", (orig_name, user))
+            prev = cursor.fetchone()
+            if prev:
+                prev_time, prev_status = prev
+                if prev_status == "paid":
+                    await msg.reply_text("🔒 Цей файл вже оплачено. Повторне надсилання заборонено.")
+                    return
+                sessions[user] = (file, file_msg)
+                keyboard = [
+                    [InlineKeyboardButton("✅ Зберегти ще раз", callback_data="save_again"),
+                     InlineKeyboardButton("❌ Скасувати", callback_data="cancel")]
+                ]
+                await msg.reply_text(f"⚠️ Файл «{orig_name}» вже надсилався {prev_time.strftime('%Y-%m-%d %H:%M:%S')}. Повторити збереження?", reply_markup=InlineKeyboardMarkup(keyboard))
+            else:
+                await save_and_record(file, file_msg, context, user, is_duplicate=False)
         else:
-            await save_and_record(file, msg, context, user, is_duplicate=False)
-    else:
-        await msg.reply_text("🚫 Тип файлу не підтримується. Надсилайте лише як документ (PDF, Excel, JPG, TXT тощо).")
+            await msg.reply_text("🚫 Повідомлення не містить документа. Надішліть PDF, Excel, TXT або зображення як *документ*, а не фото/вкладення.", parse_mode="Markdown")
 
 # === 💾 Збереження файлу ===
 async def save_and_record(file, msg, context, user, is_duplicate):
