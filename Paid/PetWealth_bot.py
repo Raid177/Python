@@ -125,20 +125,30 @@ def log(msg):
         f.write(line + "\n")
 
 
-# === 🧠 Моніторинг оплати ===
-async def check_paid_loop(app):
-    while True:
-        cursor.execute("SELECT id, file_name, chat_id, message_id FROM telegram_files WHERE status = 'paid' ORDER BY updated_at DESC LIMIT 20")
-        for row in cursor.fetchall():
-            fid, fname, chat_id, msg_id = row
-            if fid not in payment_notified:
-                try:
-                    await app.bot.send_message(chat_id=chat_id, reply_to_message_id=msg_id, text=f"✅ Файл *{fname}* оплачено.", parse_mode="Markdown")
-                    payment_notified.add(fid)
-                    log(f"💸 Повідомлено про оплату: {fname}")
-                except Exception as e:
-                    log(f"⚠️ Не вдалося надіслати повідомлення про оплату {fname}: {e}")
-        await asyncio.sleep(10)
+# # === 🧠 Моніторинг оплати ===
+# async def check_paid_loop(app):
+#     while True:
+#         cursor.execute("""
+#             SELECT id, file_name, chat_id, message_id
+#             FROM telegram_files
+#             WHERE status = 'paid' AND notified_paid = FALSE
+#             ORDER BY updated_at DESC LIMIT 20
+#         """)
+#         for row in cursor.fetchall():
+#             fid, fname, chat_id, msg_id = row
+#             try:
+#                 await app.bot.send_message(
+#                     chat_id=chat_id,
+#                     reply_to_message_id=msg_id,
+#                     text=f"✅ Файл *{fname}* оплачено.",
+#                     parse_mode="Markdown"
+#                 )
+#                 cursor.execute("UPDATE telegram_files SET notified_paid = TRUE WHERE id = %s", (fid,))
+#                 log(f"💸 Повідомлено про оплату: {fname}")
+#             except Exception as e:
+#                 log(f"⚠️ Не вдалося надіслати повідомлення про оплату {fname}: {e}")
+#         await asyncio.sleep(10)
+
 
 # === 🗑️ Обробка видалення повідомлення ===
 async def handle_deleted(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -341,8 +351,8 @@ if __name__ == "__main__":
         scheduler.add_job(send_daily_balance, "cron", hour=10, minute=0)
         scheduler.start()
 
-        # 🧠 Цикл перевірки оплат
-        asyncio.create_task(check_paid_loop(app))
+        # # 🧠 Цикл перевірки оплат
+        # asyncio.create_task(check_paid_loop(app))
 
         # 📎 Команди
         try:
