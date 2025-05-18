@@ -226,7 +226,7 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"{pb_result}{odata_result}{summary}"
     await update.message.reply_text(msg)
 
-    # === 📎 Обробка файлів /pay або /оплата ===
+# === 📎 Обробка файлів /pay або /оплата ===
 async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_permission(update, {"admin", "manager"}, group_only=True):
         return
@@ -240,12 +240,18 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
     original_message = message
     file = None
 
+    # Випадок 1: caption містить тригер
     if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
         is_triggered = True
         file = message.document
+
+    # Випадок 2: текст містить тригер, і є reply_to_message
     elif message.reply_to_message:
         reply = message.reply_to_message
-        if any(x in (message.text or "").lower() for x in ["/pay", "/оплата"]):
+        logger.info(f"📨 reply_to_message: {reply}")
+        # Тригер у тексті повідомлення
+        if message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
+            # Файл у reply
             if reply.document:
                 is_triggered = True
                 file = reply.document
@@ -254,6 +260,17 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
                 is_triggered = True
                 file = reply
                 original_message = reply
+        # Тригер у caption reply (на всякий випадок)
+        elif reply.caption and any(x in reply.caption.lower() for x in ["/pay", "/оплата"]):
+            if reply.document:
+                is_triggered = True
+                file = reply.document
+                original_message = reply
+            elif reply.photo:
+                is_triggered = True
+                file = reply
+                original_message = reply
+
 
     logger.info(f"📎 Тригер: {is_triggered}, файл: {file.file_name if hasattr(file, 'file_name') else 'None'}")
 
@@ -290,7 +307,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         text += "\n\nВідправити повторно на оплату?"
 
         unique_id = f"{chat.id}_{original_message.message_id}"
-        keyboard = InlineKeyboardMarkup([[
+        keyboard = InlineKeyboardMarkup([[ 
             InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
             InlineKeyboardButton("❌ Ні", callback_data="cancel")
         ]])
@@ -306,9 +323,10 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         await update.message.reply_text(text, reply_markup=keyboard)
         return
 
-    # Якщо не дублікат — одразу зберігаємо
+    # 🟢 Якщо не дублікат — зберігаємо одразу
     await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
     await update.message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+
 
 
 # === ✅ Обробка кнопки Так / Ні ===
@@ -409,9 +427,15 @@ def main():
 
     # 📎 Обробка файлів із тригерами /pay або /оплата
     app.add_handler(MessageHandler(
-        filters.Document.ALL & (filters.CaptionRegex(r"(?i)/pay|/оплата") | filters.REPLY),
+    filters.TEXT & filters.Regex(r"(?i)/pay|/оплата"),
+    handle_payment_file
+    ))
+
+    app.add_handler(MessageHandler(
+        filters.Document.ALL & filters.CaptionRegex(r"(?i)/pay|/оплата"),
         handle_payment_file
     ))
+
 
     # ✅ Підтвердження дубліката (inline-кнопки)
     app.add_handler(CallbackQueryHandler(confirm_duplicate_handler))
