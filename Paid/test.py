@@ -11,6 +11,10 @@ from telegram.ext import (
 )
 import requests
 import pymysql
+from telegram.error import BadRequest, Forbidden, TelegramError
+from telegram.constants import ParseMode
+
+
 
 # === 🔐 Конфігурація ===
 env = dotenv_values("/root/Python/.env")
@@ -90,10 +94,78 @@ async def check_permission(update: Update, allowed_roles: set[str], private_only
 
     return True
 
+
+# === 💾 З'єднання з БД ===
+def get_db_connection():
+    return pymysql.connect(
+        host=env["DB_HOST"],
+        user=env["DB_USER"],
+        password=env["DB_PASSWORD"],
+        database=env["DB_DATABASE"],
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+# === 📎 /pending ===
+async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_permission(update, {"admin", "manager"}):
+        return
+
+    logger.info("🔍 Обробка /pending...")
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        logger.info("📥 SQL: Вибірка pending файлів")
+        cursor.execute("""
+            SELECT id, file_name, chat_id, message_id, created_at
+            FROM telegram_files
+            WHERE status = 'pending'
+            ORDER BY created_at ASC
+        """)
+        rows = cursor.fetchall()
+    conn.close()
+    logger.info(f"📄 Знайдено {len(rows)} запис(ів) зі статусом 'pending'")
+
+    if not rows:
+        await update.message.reply_text("✅ Немає файлів, що очікують оплату.")
+        return
+
+    for row in rows:
+        try:
+            logger.info(f"📨 Обробка: {row['file_name']} (ID: {row['id']}, Chat: {row['chat_id']}, MsgID: {row['message_id']})")
+            text = (
+                f"📎 Очікує оплати: *{row['file_name']}*\n"
+                f"🕒 {row['created_at'].strftime('%Y-%m-%d %H:%M')}"
+            )
+            await context.bot.send_message(
+                chat_id=row["chat_id"],
+                text=text,
+                reply_to_message_id=row["message_id"],
+                parse_mode=ParseMode.MARKDOWN
+            )
+        except (BadRequest, Forbidden) as e:
+            logger.warning(f"❌ Повідомлення недоступне: {e}")
+            await update.message.reply_text(
+                f"❗ Неможливо відповісти на *{row['file_name']}*\n"
+                f"📭 Ймовірно, повідомлення було видалено або бот не має доступу до чату.",
+                parse_mode=ParseMode.MARKDOWN
+            )
+            try:
+                logger.info(f"📝 Спроба оновити статус на 'invalid' для ID {row['id']}")
+                conn = get_db_connection()
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        "UPDATE telegram_files SET status = 'invalid', updated_at = NOW() WHERE id = %s",
+                        (row["id"],)
+                    )
+                conn.commit()
+                conn.close()
+                logger.info("✅ Статус оновлено успішно")
+            except Exception as db_err:
+                logger.error(f"⚠️ Помилка при оновленні статусу: {db_err}")
+
 # === 📋 Команди за ролями ===
 ROLE_COMMANDS = {
-    "admin":    ["start", "checkbot", "help", "balance", "pay", "menu"],
-    "manager":  ["start", "checkbot", "help", "balance"],
+    "admin":    ["start", "checkbot", "help", "balance", "pay", "menu", "pending"],
+    "manager":  ["start", "checkbot", "help", "balance", "pending"],
     "employee": ["start", "checkbot", "help"]
 }
 
@@ -362,15 +434,6 @@ async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAUL
     await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
 
 
-# === 💾 Збереження файлу та запис в БД ===
-def get_db_connection():
-    return pymysql.connect(
-        host=env["DB_HOST"],
-        user=env["DB_USER"],
-        password=env["DB_PASSWORD"],
-        database=env["DB_DATABASE"],
-        cursorclass=pymysql.cursors.DictCursor
-    )
 
 async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
     os.makedirs(SAVE_DIR, exist_ok=True)
@@ -424,33 +487,32 @@ def main():
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
+    app.add_handler(CommandHandler("pending", pending_command))
+
 
     # 📎 Обробка файлів із тригерами /pay або /оплата
     app.add_handler(MessageHandler(
-    filters.TEXT & filters.Regex(r"(?i)/pay|/оплата"),
-    handle_payment_file
+        filters.TEXT & filters.Regex(r"(?i)/pay|/оплата"),
+        handle_payment_file
     ))
-
     app.add_handler(MessageHandler(
         filters.Document.ALL & filters.CaptionRegex(r"(?i)/pay|/оплата"),
         handle_payment_file
     ))
 
-
     # ✅ Підтвердження дубліката (inline-кнопки)
     app.add_handler(CallbackQueryHandler(confirm_duplicate_handler))
 
-    # 🧾 Логування всіх повідомлень (в самому кінці — найнижчий пріоритет)
+    # 🧾 Логування всіх повідомлень
     app.add_handler(MessageHandler(filters.ALL, log_everything))
 
-    # ❌ Глобальний обробник помилок
+    # ❌ Обробник помилок
     app.add_error_handler(error_handler)
 
     try:
         app.run_polling()
     except Exception as e:
         logger.critical(f"🔥 Бот аварійно зупинився: {e}")
-
 
 # ▶️ Запуск
 if __name__ == "__main__":
