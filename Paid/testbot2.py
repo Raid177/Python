@@ -2,6 +2,7 @@
 
 import os
 import logging
+logging.getLogger("httpx").setLevel(logging.WARNING)
 from datetime import datetime
 from dotenv import dotenv_values
 from telegram import (
@@ -227,7 +228,6 @@ ALLOWED_EXTENSIONS = {'.pdf', '.xls', '.xlsx', '.txt', '.jpeg', '.jpg', '.png'}
 # === SAVE_DIR ===
 SAVE_DIR = env.get("SAVE_DIR_test", "/root/Automation/Paid/test")
 
-
 # === 🧾 Префікс для обробки дубліката файлу ===
 CONFIRM_PREFIX = "confirm_duplicate_"
 
@@ -242,24 +242,44 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
     # 🔐 Перевірка ролі
     role = get_user_role(user.id)
     if role not in {"admin", "manager"}:
-        logger.warning(f"⛔ Недостатньо прав: {user.id} ({username})")
+        logger.warning(f"⛔️ Недостатньо прав: {user.id} ({username})")
+        await update.message.reply_text("⛔️ У вас немає прав для цієї дії.")
         return
 
-    # 📌 Перевірка чи є команда /pay або /оплата (в caption або reply)
+    # 📌 Перевірка чи є команда /pay або /оплата (caption, reply, reply.caption, reply.document)
     is_triggered = False
-    if message.caption:
-        is_triggered = any(x in message.caption.lower() for x in ["/pay", "/оплата"])
-    if message.reply_to_message and message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
-        is_triggered = True
-        message = message.reply_to_message
+    original_message = message
+    file = None
 
-    if not is_triggered or not message.document:
+    if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
+        is_triggered = True
+        file = message.document
+    elif message.reply_to_message:
+        reply = message.reply_to_message
+        if any(x in (message.text or "").lower() for x in ["/pay", "/оплата"]):
+            if reply.document:
+                is_triggered = True
+                file = reply.document
+                original_message = reply
+            elif reply.photo:
+                is_triggered = True
+                file = reply
+                original_message = reply
+
+    logger.info(f"📎 Тригер: {is_triggered}, файл: {file.file_name if hasattr(file, 'file_name') else 'None'}")
+
+    if not is_triggered or not file or not hasattr(file, 'file_id'):
         logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
         return
 
     # 📂 Перевірка дозволеного розширення
-    file = message.document
-    original_filename = file.file_name
+    original_filename = getattr(file, 'file_name', None)
+    if not original_filename:
+        reply = "⚠️ Файл повинен мати назву. Неможливо обробити."
+        await update.message.reply_text(reply)
+        logger.warning("⚠️ Відсутнє ім'я файлу")
+        return
+
     ext = os.path.splitext(original_filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
         reply = "⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG"
@@ -267,7 +287,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
         return
 
-    # 🧾 Перевірка в БД по назві файлу
+    # 🦾 Перевірка в БД по назві файлу
     conn = get_db_connection()
     with conn.cursor() as cursor:
         sql = "SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1"
@@ -285,7 +305,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
             text += f"\n✅ Оплачено: {existing['updated_at'].strftime('%Y-%m-%d %H:%M')}"
         text += "\n\nВідправити повторно на оплату?"
 
-        unique_id = f"{chat.id}_{message.message_id}"
+        unique_id = f"{chat.id}_{original_message.message_id}"
         keyboard = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
@@ -296,7 +316,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         context.user_data[unique_id] = {
             "file": file,
             "file_name": original_filename,
-            "message_id": message.message_id,
+            "message_id": original_message.message_id,
             "chat_id": chat.id,
             "username": username
         }
@@ -305,9 +325,12 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # 🟢 Якщо дубліката нема — одразу зберігаємо
-    await save_file_and_record(file, original_filename, chat.id, message.message_id, username, context)
+    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
     await update.message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
+    # 🔕 Якщо дія виконана в групі — не надсилаємо копію в особисті повідомлення
+    if chat.type != "private":
+        return
 
 # === ✅ Обробка callback Так / Ні (для дубліката) ===
 async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
