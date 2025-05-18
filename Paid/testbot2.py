@@ -12,6 +12,8 @@ from telegram.ext import (
     ContextTypes, filters
 )
 import requests
+import mimetypes
+import pymysql
 
 # === 🕒 Час запуску
 start_time = datetime.now()
@@ -207,6 +209,109 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"💰 /balance — від {user.id} ({user.username}) — сума: {total:,.2f} грн")
     await update.message.reply_text(msg)
 
+# === Підключення до БД ===
+def get_db_connection():
+    return pymysql.connect(
+        host=env["DB_HOST"],
+        user=env["DB_USER"],
+        password=env["DB_PASSWORD"],
+        database=env["DB_DATABASE"],
+        cursorclass=pymysql.cursors.DictCursor
+    )
+
+# === Дозволені типи файлів ===
+ALLOWED_EXTENSIONS = {'.pdf', '.xls', '.xlsx', '.txt', '.jpeg', '.jpg', '.png'}
+
+# === SAVE_DIR ===
+SAVE_DIR = env.get("SAVE_DIR_test", "/root/Automation/Paid/test")
+
+# === Обробка /pay через файл (caption або reply) ===
+async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    chat = update.effective_chat
+    message = update.effective_message
+    username = user.username or "unknown"
+
+    # 🔐 Перевірка ролі
+    role = get_user_role(user.id)
+    if role not in {"admin", "manager"}:
+        logger.warning(f"⛔ Недостатньо прав: {user.id} ({username})")
+        return
+
+    # 📌 Перевірка чи є команда /pay або /оплата
+    is_triggered = False
+    if message.caption:
+        is_triggered = any(x in message.caption.lower() for x in ["/pay", "/оплата"])
+    if message.reply_to_message and message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
+        is_triggered = True
+        message = message.reply_to_message  # беремо файл з reply
+
+    if not is_triggered or not message.document:
+        logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
+        return
+
+    file = message.document
+    original_filename = file.file_name
+    ext = os.path.splitext(original_filename)[1].lower()
+
+    # 📎 Перевірка дозволеного формату
+    if ext not in ALLOWED_EXTENSIONS:
+        reply = "⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG"
+        await update.message.reply_text(reply)
+        logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
+        return
+
+    # 🧾 Перевірка в БД
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1"
+        cursor.execute(sql, (original_filename,))
+        existing = cursor.fetchone()
+
+    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    save_name = original_filename
+    if existing:
+        base, ext = os.path.splitext(original_filename)
+        save_name = f"{base}_copy_{now_str}{ext}"
+
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    file_path = os.path.join(SAVE_DIR, save_name)
+
+    # 💾 Збереження файлу
+    tg_file = await context.bot.get_file(file.file_id)
+    await tg_file.download_to_drive(file_path)
+    logger.info(f"📥 Збережено файл: {file_path}")
+
+    # 🧮 Вставка в БД
+    with conn.cursor() as cursor:
+        sql = """
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        """
+        cursor.execute(sql, (
+            original_filename,
+            file_path,
+            chat.id,
+            message.message_id,
+            username
+        ))
+    conn.commit()
+    conn.close()
+
+    # 📩 Відповідь у Telegram
+    if existing:
+        sent_at = existing['created_at'].strftime("%Y-%m-%d %H:%M")
+        reply = (
+            f"⚠️ Файл з такою назвою вже надсилався {sent_at} "
+            f"користувачем @{existing['username']}.\n"
+            f"✅ Відправлено повторно з новою назвою: {save_name}"
+        )
+    else:
+        reply = "✅ Прийнято до сплати. Очікуйте повідомлення про оплату."
+
+    await update.message.reply_text(reply)
+    logger.info(f"✅ /pay — {user.id} ({username}) — файл: {original_filename}")
+
 # === 🧾 Лог усiх
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
@@ -235,6 +340,8 @@ def main():
     app.add_handler(MessageHandler(filters.ALL, log_everything))
 
     app.add_error_handler(error_handler)
+    app.add_handler(MessageHandler(filters.Document.ALL & filters.ChatType.GROUPS | filters.ChatType.PRIVATE, handle_payment_file))
+
 
     try:
         app.run_polling()
