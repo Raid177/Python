@@ -1,4 +1,4 @@
-# === testbot.py (оновлено: /balance через ACP API) ===
+# === testbot.py (оновлено: /balance через ACP API + OData) ===
 
 import os
 import logging
@@ -36,6 +36,11 @@ PB_ACCOUNTS = {
 ODATA_URL = env.get("ODATA_URL")
 ODATA_USER = env.get("ODATA_USER")
 ODATA_PASSWORD = env.get("ODATA_PASSWORD")
+ODATA_ACCOUNTS = {
+    "Інкассація (транзитний)": "7e87f26e-eaad-11ef-9d9b-2ae983d8a0f0",
+    "Реєстратура каса": "a7dda748-86d1-11ef-839c-2ae983d8a0f0",
+    "Каса Організації": "f179f3be-4e84-11ef-83bb-2ae983d8a0f0"
+}
 
 # === 📜 Логування
 logging.basicConfig(
@@ -147,6 +152,8 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
 
     today = datetime.now().strftime("%d-%m-%Y")
+    now_iso = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
     pb_total = 0.0
     pb_result = "🏦 Безготівкові рахунки:\n"
 
@@ -175,9 +182,23 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception as e:
                 logger.error(f"💥 ПриватБанк {name} ({acc}): {e}")
 
-    # OData залишаємо як є (тимчасово)
     odata_total = 0.0
-    odata_result = "\n💵 Готівкові рахунки:\n(тимчасово вимкнено)\n"
+    odata_result = "\n💵 Готівкові рахунки:\n"
+
+    for name, key in ODATA_ACCOUNTS.items():
+        try:
+            url = f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance?Period=datetime'{now_iso}'&$format=json&Condition=ДенежныйСчет_Key eq guid'{key}'"
+            r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
+            r.raise_for_status()
+            data = r.json()
+            rows = data.get("value", [])
+            if rows:
+                amount = float(rows[0].get("СуммаBalance", 0))
+                if amount:
+                    odata_total += amount
+                    odata_result += f"- {name}: {amount:,.2f} грн\n"
+        except Exception as e:
+            logger.error(f"💥 OData {name}: {e}")
 
     total = pb_total + odata_total
     summary = f"\n📊 Разом:\n- Безготівкові: {pb_total:,.2f} грн\n- Готівкові: {odata_total:,.2f} грн\n- 💰 Всього: {total:,.2f} грн"
