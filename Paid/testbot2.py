@@ -328,25 +328,33 @@ async def error_handler(update, context):
             pass
 
 # === 🚀 MAIN
-
 def main():
     logger.info("🚀 Запуск бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
+    # 📌 Команди
     app.add_handler(CommandHandler("start", start))
-    app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("help", help_command))
+    app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
+
+    # 📎 Обробка файлів /pay або /оплата
+    app.add_handler(MessageHandler(
+        filters.Document.ALL & (filters.CaptionRegex(r"(?i)/pay|/оплата") | filters.REPLY),
+        handle_payment_file
+    ))
+
+    # 🧾 Лог усіх інших повідомлень (останнім!)
     app.add_handler(MessageHandler(filters.ALL, log_everything))
 
+    # ❌ Обробка помилок
     app.add_error_handler(error_handler)
-    app.add_handler(MessageHandler(filters.Document.ALL & filters.ChatType.GROUPS | filters.ChatType.PRIVATE, handle_payment_file))
-
 
     try:
         app.run_polling()
     except Exception as e:
         logger.critical(f"🔥 Бот аварійно зупинився: {e}")
+
 
 if __name__ == "__main__":
     main()
