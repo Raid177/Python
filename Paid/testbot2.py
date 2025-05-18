@@ -14,6 +14,9 @@ from telegram.ext import (
 import requests
 import mimetypes
 import pymysql
+# 📦 Імпорти для кнопок підтвердження
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
 
 # === 🕒 Час запуску
 start_time = datetime.now()
@@ -70,7 +73,6 @@ ROLE_COMMANDS = {
 }
 
 # === 🎯 Отримати роль
-
 def get_user_role(user_id: int) -> str:
     if user_id in ROLE_ADMIN:
         return "admin"
@@ -225,8 +227,13 @@ ALLOWED_EXTENSIONS = {'.pdf', '.xls', '.xlsx', '.txt', '.jpeg', '.jpg', '.png'}
 # === SAVE_DIR ===
 SAVE_DIR = env.get("SAVE_DIR_test", "/root/Automation/Paid/test")
 
-# === Обробка /pay через файл (caption або reply) ===
+
+# === 🧾 Префікс для обробки дубліката файлу ===
+CONFIRM_PREFIX = "confirm_duplicate_"
+
+# === 📎 Обробка файлів /pay або /оплата ===
 async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 👤 Дані користувача
     user = update.effective_user
     chat = update.effective_chat
     message = update.effective_message
@@ -238,51 +245,124 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         logger.warning(f"⛔ Недостатньо прав: {user.id} ({username})")
         return
 
-    # 📌 Перевірка чи є команда /pay або /оплата
+    # 📌 Перевірка чи є команда /pay або /оплата (в caption або reply)
     is_triggered = False
     if message.caption:
         is_triggered = any(x in message.caption.lower() for x in ["/pay", "/оплата"])
     if message.reply_to_message and message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
         is_triggered = True
-        message = message.reply_to_message  # беремо файл з reply
+        message = message.reply_to_message
 
     if not is_triggered or not message.document:
         logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
         return
 
+    # 📂 Перевірка дозволеного розширення
     file = message.document
     original_filename = file.file_name
     ext = os.path.splitext(original_filename)[1].lower()
-
-    # 📎 Перевірка дозволеного формату
     if ext not in ALLOWED_EXTENSIONS:
         reply = "⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG"
         await update.message.reply_text(reply)
         logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
         return
 
-    # 🧾 Перевірка в БД
+    # 🧾 Перевірка в БД по назві файлу
     conn = get_db_connection()
     with conn.cursor() as cursor:
         sql = "SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1"
         cursor.execute(sql, (original_filename,))
         existing = cursor.fetchone()
+    conn.close()
 
-    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    save_name = original_filename
+    # 🟡 Якщо файл уже надсилався раніше — показуємо підтвердження
     if existing:
-        base, ext = os.path.splitext(original_filename)
-        save_name = f"{base}_copy_{now_str}{ext}"
+        text = (
+            f"⚠️ Файл з такою назвою вже надсилався {existing['created_at'].strftime('%Y-%m-%d %H:%M')} "
+            f"користувачем @{existing['username']}"
+        )
+        if existing['status'] == 'paid':
+            text += f"\n✅ Оплачено: {existing['updated_at'].strftime('%Y-%m-%d %H:%M')}"
+        text += "\n\nВідправити повторно на оплату?"
 
+        unique_id = f"{chat.id}_{message.message_id}"
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
+                InlineKeyboardButton("❌ Ні", callback_data="cancel")
+            ]
+        ])
+
+        context.user_data[unique_id] = {
+            "file": file,
+            "file_name": original_filename,
+            "message_id": message.message_id,
+            "chat_id": chat.id,
+            "username": username
+        }
+
+        await update.message.reply_text(text, reply_markup=keyboard)
+        return
+
+    # 🟢 Якщо дубліката нема — одразу зберігаємо
+    await save_file_and_record(file, original_filename, chat.id, message.message_id, username, context)
+    await update.message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+
+
+# === ✅ Обробка callback Так / Ні (для дубліката) ===
+async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    # ❌ Відмова користувача
+    if data == "cancel":
+        await query.edit_message_text("🚫 Надсилання файлу на оплату скасовано.")
+        return
+
+    # 🔐 Перевірка на валідний формат callback_data
+    if not data.startswith(CONFIRM_PREFIX):
+        return
+
+    unique_id = data.replace(CONFIRM_PREFIX, "")
+    info = context.user_data.get(unique_id)
+    if not info:
+        await query.edit_message_text("⚠️ Дані для обробки не знайдено.")
+        return
+
+    file = info["file"]
+    original_filename = info["file_name"]
+    chat_id = info["chat_id"]
+    message_id = info["message_id"]
+    username = info["username"]
+
+    # 📝 Створюємо нову назву для копії файлу
+    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    base, ext = os.path.splitext(original_filename)
+    save_name = f"{base}_copy_{now_str}{ext}"
+
+    # 💾 Зберігаємо файл з новою назвою
+    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
+
+    # ✅ Відповідь після підтвердження
+    await query.edit_message_text(
+        f"✅ Відправлено повторно з новою назвою: {save_name}"
+    )
+
+
+# === 💾 Збереження файлу та запис в БД ===
+async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
     os.makedirs(SAVE_DIR, exist_ok=True)
+    save_name = save_as or original_filename
     file_path = os.path.join(SAVE_DIR, save_name)
 
-    # 💾 Збереження файлу
+    # ⬇️ Завантаження з Telegram
     tg_file = await context.bot.get_file(file.file_id)
     await tg_file.download_to_drive(file_path)
     logger.info(f"📥 Збережено файл: {file_path}")
 
-    # 🧮 Вставка в БД
+    # 🧮 Запис у таблицю telegram_files
+    conn = get_db_connection()
     with conn.cursor() as cursor:
         sql = """
         INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
@@ -291,26 +371,12 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         cursor.execute(sql, (
             original_filename,
             file_path,
-            chat.id,
-            message.message_id,
+            chat_id,
+            message_id,
             username
         ))
     conn.commit()
     conn.close()
-
-    # 📩 Відповідь у Telegram
-    if existing:
-        sent_at = existing['created_at'].strftime("%Y-%m-%d %H:%M")
-        reply = (
-            f"⚠️ Файл з такою назвою вже надсилався {sent_at} "
-            f"користувачем @{existing['username']}.\n"
-            f"✅ Відправлено повторно з новою назвою: {save_name}"
-        )
-    else:
-        reply = "✅ Прийнято до сплати. Очікуйте повідомлення про оплату."
-
-    await update.message.reply_text(reply)
-    logger.info(f"✅ /pay — {user.id} ({username}) — файл: {original_filename}")
 
 # === 🧾 Лог усiх
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -327,27 +393,30 @@ async def error_handler(update, context):
         except Exception:
             pass
 
-# === 🚀 MAIN
+# === 🚀 MAIN ===
 def main():
     logger.info("🚀 Запуск бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
-    # 📌 Команди
+    # === 📌 Реєстрація команд ===
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("help", help_command))
     app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
 
-    # 📎 Обробка файлів /pay або /оплата
+    # === 📎 Обробка документів із /pay або /оплата
     app.add_handler(MessageHandler(
         filters.Document.ALL & (filters.CaptionRegex(r"(?i)/pay|/оплата") | filters.REPLY),
         handle_payment_file
     ))
 
-    # 🧾 Лог усіх інших повідомлень (останнім!)
+    # === ✅ Обробка підтвердження дубліката через кнопки
+    app.add_handler(CallbackQueryHandler(confirm_duplicate_handler))
+
+    # === 🧾 Логування всіх повідомлень
     app.add_handler(MessageHandler(filters.ALL, log_everything))
 
-    # ❌ Обробка помилок
+    # === ❌ Глобальний обробник помилок
     app.add_error_handler(error_handler)
 
     try:
@@ -356,5 +425,6 @@ def main():
         logger.critical(f"🔥 Бот аварійно зупинився: {e}")
 
 
+# === ▶️ Точка входу ===
 if __name__ == "__main__":
     main()
