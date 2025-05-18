@@ -1,4 +1,4 @@
-# === testbot.py (простий варіант з ReplyKeyboardMarkup + /balance) ===
+# === testbot.py (оновлено: /balance через ACP API) ===
 
 import os
 import logging
@@ -136,7 +136,7 @@ async def checkbot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     logger.info(f"✅ /checkbot від {user.id} ({user.username}) — {uptime_str}, чат: {chat.type}")
     await update.message.reply_text(f"✅ Бот онлайн\n⏱ Аптайм: {uptime_str}")
 
-# === 💰 /balance
+# === 💰 /balance (оновлено)
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
@@ -146,51 +146,39 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         logger.warning(f"⛔ /balance — доступ заборонено для {user.id} ({user.username})")
         return
 
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-    headers = {"Accept": "application/json"}
-
-    # ПриватБанк
+    today = datetime.now().strftime("%d-%m-%Y")
     pb_total = 0.0
     pb_result = "🏦 Безготівкові рахунки:\n"
 
     for name, token in PB_TOKENS.items():
         for acc in PB_ACCOUNTS.get(name, []):
             try:
-                r = requests.get(
-                    f"https://api.privatbank.ua/p24api/rest_fop_balance?card={acc}",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
+                url = "https://acp.privatbank.ua/api/statements/balance"
+                headers = {
+                    "User-Agent": "PythonClient",
+                    "token": token,
+                    "Content-Type": "application/json;charset=cp1251"
+                }
+                params = {
+                    "acc": acc,
+                    "startDate": today,
+                    "endDate": today
+                }
+                r = requests.get(url, headers=headers, params=params)
                 data = r.json()
-                balance = float(data.get("balance", 0))
-                if balance:
-                    pb_total += balance
-                    pb_result += f"- {name}: {balance:,.2f} грн\n"
+
+                for bal in data.get("balances", []):
+                    balance = float(bal.get("balanceOutEq", 0))
+                    if balance:
+                        pb_total += balance
+                        pb_result += f"- {bal.get('nameACC', name)}: {balance:,.2f} грн\n"
             except Exception as e:
                 logger.error(f"💥 ПриватБанк {name} ({acc}): {e}")
 
-    # OData
+    # OData залишаємо як є (тимчасово)
     odata_total = 0.0
-    odata_result = "\n💵 Готівкові рахунки:\n"
-    odata_keys = {
-        "f179f3be-4e84-11ef-83bb-2ae983d8a0f0": "Каса Організації",
-        "a7dda748-86d1-11ef-839c-2ae983d8a0f0": "Реєстратура каса",
-        "7e87f26e-eaad-11ef-9d9b-2ae983d8a0f0": "Інкассація (транзитний)"
-    }
-    cond = " or ".join([f"ДенежныйСчет_Key eq guid'{k}'" for k in odata_keys.keys()])
+    odata_result = "\n💵 Готівкові рахунки:\n(тимчасово вимкнено)\n"
 
-    try:
-        url = f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance(Period=datetime'{now}', Condition='{cond}')?$format=json"
-        r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD), headers=headers)
-        for row in r.json().get("value", []):
-            key = row.get("ДенежныйСчет_Key")
-            amount = row.get("Amount", 0)
-            if amount and key in odata_keys:
-                odata_total += amount
-                odata_result += f"- {odata_keys[key]}: {amount:,.2f} грн\n"
-    except Exception as e:
-        logger.error(f"💥 OData баланс: {e}")
-
-    # Вивід
     total = pb_total + odata_total
     summary = f"\n📊 Разом:\n- Безготівкові: {pb_total:,.2f} грн\n- Готівкові: {odata_total:,.2f} грн\n- 💰 Всього: {total:,.2f} грн"
 

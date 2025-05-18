@@ -1,31 +1,64 @@
-import logging
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
+import os
+import requests
+from dotenv import dotenv_values
+from datetime import datetime
 
-# Налаштування логування
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# Завантаження .env
+env = dotenv_values("/root/Python/.env")
 
-# Команда /status
-async def status(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user.first_name
-    logger.info(f"Команда /status отримана від {user}")
-    await update.message.reply_text(f"🔧 Статус бота: запущено для {user}!")
+PB_TOKENS = {
+    "LOV": env.get("API_TOKEN_LOV"),
+    "ZVO": env.get("API_TOKEN_ZVO")
+}
+PB_ACCOUNTS = {
+    "LOV": [env.get("API_АСС_LOV", "")],
+    "ZVO": env.get("API_АСС_ZVO", "").split(",")
+}
 
-async def main():
-    # Створюємо об'єкт бота
-    app = ApplicationBuilder().token('7129977699:AAFBM0oV8H3pYhj7T9uhbzI5d3dLPr3ICsE').build()
+API_URL = "https://acp.privatbank.ua/api/statements/balance"
 
-    # Додаємо обробник команди /status
-    app.add_handler(CommandHandler("status", status))
+# Дата запиту — сьогодні
+today = datetime.now().strftime("%d-%m-%Y")
 
-    # Запускаємо бота
-    await app.run_polling()
+print("🔍 Тест ACP-балансу ПриватБанку\n")
 
-if __name__ == "__main__":
-    # Перевіряємо чи існує поточний цикл подій
-    try:
-        import asyncio
-        asyncio.run(main())  # Використовуємо asyncio для запуску основного коду
-    except RuntimeError as e:
-        logger.error(f"Помилка запуску бота: {e}")
+for name, token in PB_TOKENS.items():
+    for acc in PB_ACCOUNTS.get(name, []):
+        print(f"➡️ {name}: {acc}")
+        headers = {
+            "User-Agent": "PythonClient",
+            "token": token,
+            "Content-Type": "application/json;charset=cp1251"
+        }
+        params = {
+            "acc": acc,
+            "startDate": today,
+            "endDate": today
+        }
+
+        try:
+            response = requests.get(API_URL, headers=headers, params=params)
+            print(f"Status: {response.status_code}")
+            if response.status_code != 200:
+                print(f"❌ Помилка: {response.text}\n")
+                continue
+
+            data = response.json()
+            print("📦 JSON keys:", data.keys())
+            print("🧾 status:", data.get("status"))
+
+            balances = data.get("balances", [])
+            if not balances:
+                print("⚠️ Немає даних balances")
+                continue
+
+            for bal in balances:
+                print("🔹 ПОЛЯ:")
+                for k, v in bal.items():
+                    print(f"{k}: {v}")
+                print("-" * 40)
+
+        except Exception as e:
+            print(f"❌ Виняток: {e}")
+
+        print("=" * 60)
