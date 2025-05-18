@@ -1,64 +1,45 @@
-import os
 import requests
-from dotenv import dotenv_values
 from datetime import datetime
+from dotenv import dotenv_values
 
-# Завантаження .env
+# === Завантаження змінних оточення
 env = dotenv_values("/root/Python/.env")
 
-PB_TOKENS = {
-    "LOV": env.get("API_TOKEN_LOV"),
-    "ZVO": env.get("API_TOKEN_ZVO")
+ODATA_URL = env["ODATA_URL"]
+ODATA_USER = env["ODATA_USER"]
+ODATA_PASSWORD = env["ODATA_PASSWORD"]
+
+ODATA_ACCOUNTS = {
+    "Інкассація (транзитний)": "7e87f26e-eaad-11ef-9d9b-2ae983d8a0f0",
+    "Реєстратура каса": "a7dda748-86d1-11ef-839c-2ae983d8a0f0",
+    "Каса Організації": "f179f3be-4e84-11ef-83bb-2ae983d8a0f0"
 }
-PB_ACCOUNTS = {
-    "LOV": [env.get("API_АСС_LOV", "")],
-    "ZVO": env.get("API_АСС_ZVO", "").split(",")
-}
 
-API_URL = "https://acp.privatbank.ua/api/statements/balance"
+now_iso = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
 
-# Дата запиту — сьогодні
-today = datetime.now().strftime("%d-%m-%Y")
+print("🔍 Перевірка залишків OData:\n")
 
-print("🔍 Тест ACP-балансу ПриватБанку\n")
+for name, key in ODATA_ACCOUNTS.items():
+    url = (
+        f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance"
+        f"?Period=datetime'{now_iso}'"
+        f"&$format=json"
+        f"&Condition=ДенежныйСчет_Key eq guid'{key}'"
+    )
 
-for name, token in PB_TOKENS.items():
-    for acc in PB_ACCOUNTS.get(name, []):
-        print(f"➡️ {name}: {acc}")
-        headers = {
-            "User-Agent": "PythonClient",
-            "token": token,
-            "Content-Type": "application/json;charset=cp1251"
-        }
-        params = {
-            "acc": acc,
-            "startDate": today,
-            "endDate": today
-        }
-
-        try:
-            response = requests.get(API_URL, headers=headers, params=params)
-            print(f"Status: {response.status_code}")
-            if response.status_code != 200:
-                print(f"❌ Помилка: {response.text}\n")
-                continue
-
-            data = response.json()
-            print("📦 JSON keys:", data.keys())
-            print("🧾 status:", data.get("status"))
-
-            balances = data.get("balances", [])
-            if not balances:
-                print("⚠️ Немає даних balances")
-                continue
-
-            for bal in balances:
-                print("🔹 ПОЛЯ:")
-                for k, v in bal.items():
-                    print(f"{k}: {v}")
-                print("-" * 40)
-
-        except Exception as e:
-            print(f"❌ Виняток: {e}")
-
-        print("=" * 60)
+    print(f"➡️ {name}")
+    print(f"🔗 Запит: {url}")
+    try:
+        r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
+        print(f"Status: {r.status_code}")
+        r.raise_for_status()
+        data = r.json()
+        rows = data.get("value", [])
+        if rows:
+            amount = float(rows[0].get("СуммаBalance", 0))
+            print(f"✅ Залишок: {amount:,.2f} грн")
+        else:
+            print("⚠️ Відповідь пуста")
+    except Exception as e:
+        print(f"❌ Помилка: {e}")
+    print("-" * 60)
