@@ -1,3 +1,4 @@
+# Це бойова версія 1.2 Працює лише на сервері (спробуємо додати розпізнавання картинок з телефону та логування АПІ відповідей)
 import os
 import logging
 from datetime import datetime
@@ -33,9 +34,11 @@ async def set_bot_commands(app):
 
 # === 🔐 Конфігурація ===
 env = dotenv_values("/root/Python/.env")
-BOT_TOKEN = env["TESTBOT_TOKEN"]
-FALLBACK_CHAT_ID = int(env["FALLBACK_TESTCHAT_ID"])
-LOG_FILE = env.get("LOG_FILE_Test", "/root/Python/Paid/test_log.py")
+BOT_TOKEN = env["BOT_TOKEN"]
+FALLBACK_CHAT_ID = int(env["FALLBACK_CHAT_ID"])
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_FILE = os.path.join(BASE_DIR, "log.txt")
+
 
 PB_TOKENS = {
     "LOV": env.get("API_TOKEN_LOV"),
@@ -55,7 +58,7 @@ ODATA_ACCOUNTS = {
     "Каса Організації": "f179f3be-4e84-11ef-83bb-2ae983d8a0f0"
 }
 
-SAVE_DIR = env.get("SAVE_DIR_test", "/root/Automation/Paid/test")
+SAVE_DIR = env.get("SAVE_DIR", "/root/Automation/Paid")
 CONFIRM_PREFIX = "confirm_duplicate_"
 ALLOWED_EXTENSIONS = {'.pdf', '.xls', '.xlsx', '.txt', '.jpeg', '.jpg', '.png'}
 
@@ -191,11 +194,11 @@ def get_available_commands(user_id: int, chat_type: str) -> list[str]:
     group_cmds = ["start", "checkbot", "help"]
     return [cmd for cmd in all_cmds if chat_type == "private" or cmd in group_cmds]
 
-# === 🧮 Клавiатура ===
-def get_keyboard_for_chat(user_id: int, chat_type: str):
-    commands = get_available_commands(user_id, chat_type)
-    buttons = [[f"/{cmd}" for cmd in commands[i:i+2]] for i in range(0, len(commands), 2)]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+# # === 🧮 Клавiатура ===
+# def get_keyboard_for_chat(user_id: int, chat_type: str):
+#     commands = get_available_commands(user_id, chat_type)
+#     buttons = [[f"/{cmd}" for cmd in commands[i:i+2]] for i in range(0, len(commands), 2)]
+#     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 # === 🟢 /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -208,7 +211,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"👋 Привіт, {user.first_name}!\nВаша роль: *{role}*\n\n📋 Доступні команди:\n"
     msg += "\n".join(f"/{cmd}" for cmd in cmds)
 
-    await update.message.reply_text(msg, parse_mode="Markdown", reply_markup=get_keyboard_for_chat(user.id, chat.type))
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
 
 
 # === 🆘 /help ===

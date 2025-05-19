@@ -1,4 +1,4 @@
-# Це бойова версія 1.1
+# Це бойова версія 1.1 Працює лише на сервері
 import os
 import logging
 from datetime import datetime
