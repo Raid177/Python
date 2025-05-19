@@ -641,7 +641,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # === 🚀 MAIN ===
 def main():
-    logger.info("🚀 Запуск DEV_бота...")
+    logger.info("🚀 Запуск бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     #Обробник команд
