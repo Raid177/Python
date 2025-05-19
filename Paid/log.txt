@@ -14,3 +14,181 @@
 [2025-05-19 03:56:28,173] INFO: Application started
 [2025-05-19 04:02:03,370] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 0 год 5 хв 35 с, чат: supergroup
 [2025-05-19 04:02:07,048] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: supergroup
+[2025-05-19 04:05:31,796] INFO: Application is stopping. This might take a moment.
+[2025-05-19 04:05:31,797] INFO: Application.stop() complete
+[2025-05-19 04:05:32,396] INFO: 🚀 Запуск бота...
+[2025-05-19 04:05:32,732] INFO: Application started
+[2025-05-19 04:06:10,148] INFO: [ALL] 161197876 (Alexey_Raid): /about@paidPW_bot
+[2025-05-19 04:06:22,362] INFO: 📖 /help від 161197876 (Alexey_Raid) — роль: admin, чат: supergroup
+[2025-05-19 04:12:32,006] INFO: [ALL] 161197876 (Alexey_Raid): ну, рестарт нового боту
+з БОГОМ!
+[2025-05-19 04:12:44,194] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: supergroup
+[2025-05-19 04:12:50,640] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 0 год 7 хв 18 с, чат: supergroup
+[2025-05-19 04:13:03,614] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-05-19 04:13:34,646] INFO: 📎 Тригер: True, файл: IMG_0127.JPG
+[2025-05-19 04:13:35,707] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0127.JPG
+[2025-05-19 04:13:44,104] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-05-19 04:13:49,673] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 1, 13, 44, tzinfo=datetime.timezone.utc), delete_chat_photo=False, document=Document(file_id='BQACAgIAAyEFAASXr2IwAAPVaCqFyHLbzZC-SanL4fmARN4qBqIAAlJ7AAJaXlFJfZn1YYqX7QABNgQ', file_name='№ 2401 от 15 мая 2025 г..xls', file_size=22016, file_unique_id='AgADUnsAAlpeUUk', mime_type='application/vnd.ms-excel'), from_user=User(first_name='Олексій', id=161197876, is_bot=False, is_premium=True, language_code='ru', last_name='Льодін', username='Alexey_Raid'), group_chat_created=False, message_id=213, supergroup_chat_created=False)
+[2025-05-19 04:13:49,673] INFO: 📎 Тригер: True, файл: № 2401 от 15 мая 2025 г..xls
+[2025-05-19 04:13:50,468] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 2401 от 15 мая 2025 г..xls
+[2025-05-19 04:13:59,452] INFO: 📎 Тригер: True, файл: № 3505 от 15 мая 2025 г..xls
+[2025-05-19 04:14:00,291] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 3505 от 15 мая 2025 г..xls
+[2025-05-19 04:14:11,366] INFO: 📎 Тригер: True, файл: № 3505 от 15 мая 2025 г..xls
+[2025-05-19 04:14:25,078] INFO: 📎 Тригер: True, файл: № 5016 от 15 мая 2025 г..xls
+[2025-05-19 04:14:25,920] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5016 от 15 мая 2025 г..xls
+[2025-05-19 04:24:34,340] INFO: 🔍 Обробка /pending...
+[2025-05-19 04:24:34,844] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 04:24:34,909] INFO: 📄 Знайдено 0 запис(ів) зі статусом 'pending'
+[2025-05-19 04:27:00,335] INFO: 📎 Тригер: False, файл: None
+[2025-05-19 04:27:00,335] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-05-19 04:27:44,359] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 04:28:49,424] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 04:28:56,458] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 04:44:52,664] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-19 04:44:52,665] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-19 06:00:01,972] INFO: Application is stopping. This might take a moment.
+[2025-05-19 06:00:01,973] INFO: Application.stop() complete
+[2025-05-19 06:00:02,750] INFO: 🚀 Запуск бота...
+[2025-05-19 06:00:03,139] INFO: Application started
+[2025-05-19 08:17:20,767] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: private
+[2025-05-19 08:17:27,629] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 08:49:56,685] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 12:00:04,908] INFO: Application is stopping. This might take a moment.
+[2025-05-19 12:00:04,908] INFO: Application.stop() complete
+[2025-05-19 12:00:05,624] INFO: 🚀 Запуск бота...
+[2025-05-19 12:00:06,012] INFO: Application started
+[2025-05-19 13:58:23,908] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 13:58:31,927] WARNING: ⛔️ Недостатньо прав: 7173765324 (None)
+[2025-05-19 13:58:46,307] ERROR: ❌ ПОМИЛКА: 'NoneType' object has no attribute 'reply_text'
+[2025-05-19 14:00:15,528] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 14:09:33,484] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 10, 58, 23, tzinfo=datetime.timezone.utc), delete_chat_photo=False, from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=230, photo=(PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPmaCsOz2RuztL2hc_raV7gd5C8aNoAAr__MRtaXllJG4qZhLmCWAgBAAMCAANzAAM2BA', file_size=1295, file_unique_id='AQADv_8xG1peWUl4', height=90, width=60), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPmaCsOz2RuztL2hc_raV7gd5C8aNoAAr__MRtaXllJG4qZhLmCWAgBAAMCAANtAAM2BA', file_size=15995, file_unique_id='AQADv_8xG1peWUly', height=320, width=213), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPmaCsOz2RuztL2hc_raV7gd5C8aNoAAr__MRtaXllJG4qZhLmCWAgBAAMCAAN4AAM2BA', file_size=96208, file_unique_id='AQADv_8xG1peWUl9', height=800, width=533), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPmaCsOz2RuztL2hc_raV7gd5C8aNoAAr__MRtaXllJG4qZhLmCWAgBAAMCAAN5AAM2BA', file_size=138892, file_unique_id='AQADv_8xG1peWUl-', height=1280, width=853)), supergroup_chat_created=False)
+[2025-05-19 14:09:33,484] INFO: 📎 Тригер: True, файл: None
+[2025-05-19 14:09:33,485] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-05-19 14:10:22,952] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-05-19 14:10:34,416] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 2 год 10 хв 28 с, чат: supergroup
+[2025-05-19 16:07:23,657] INFO: 🔍 Обробка /pending...
+[2025-05-19 16:07:24,167] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 16:07:24,233] INFO: 📄 Знайдено 0 запис(ів) зі статусом 'pending'
+[2025-05-19 17:36:03,786] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:37:48,895] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:37:56,362] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:38:02,120] WARNING: ⛔️ Недостатньо прав: 7173765324 (None)
+[2025-05-19 17:38:52,891] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:43:26,431] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:43:43,401] WARNING: ⛔️ Недостатньо прав: 7173765324 (None)
+[2025-05-19 17:45:29,947] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 17:45:37,458] WARNING: ⛔️ Недостатньо прав: 7173765324 (None)
+[2025-05-19 18:00:01,878] INFO: Application is stopping. This might take a moment.
+[2025-05-19 18:00:01,879] INFO: Application.stop() complete
+[2025-05-19 18:00:02,613] INFO: 🚀 Запуск бота...
+[2025-05-19 18:00:03,022] INFO: Application started
+[2025-05-19 20:31:15,702] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 20:31:17,884] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-19 22:00:46,057] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-19 22:00:46,058] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-19 22:36:48,248] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: private
+[2025-05-19 22:36:50,865] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 4 год 36 хв 48 с, чат: private
+[2025-05-19 22:41:28,102] INFO: Application is stopping. This might take a moment.
+[2025-05-19 22:41:28,102] INFO: Application.stop() complete
+[2025-05-19 22:41:28,740] INFO: 🚀 Запуск бота...
+[2025-05-19 22:41:29,108] INFO: Application started
+[2025-05-19 22:46:00,978] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 0 год 4 хв 32 с, чат: supergroup
+[2025-05-19 22:46:02,080] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:46:08,977] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: supergroup
+[2025-05-19 22:46:18,631] INFO: [ALL] 161197876 (Alexey_Raid): єто вот нажми
+[2025-05-19 22:46:26,117] INFO: ➡️ /start від 7173765324 (None) — роль: manager, чат: supergroup
+[2025-05-19 22:46:40,529] INFO: ➡️ /start від 7173765324 (None) — роль: manager, чат: supergroup
+[2025-05-19 22:46:42,361] INFO: [ALL] 161197876 (Alexey_Raid): Ваша роль: manager
+должно работат
+[2025-05-19 22:46:47,311] INFO: [ALL] 7173765324 (None): Да
+[2025-05-19 22:46:48,669] INFO: ✅ /checkbot від 7173765324 (None) — 0 год 5 хв 19 с, чат: supergroup
+[2025-05-19 22:46:59,857] INFO: [ALL] 161197876 (Alexey_Raid): кинь чей то на оплату
+[2025-05-19 22:47:05,861] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:47:13,750] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 47, 5, tzinfo=datetime.timezone.utc), delete_chat_photo=False, from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=266, photo=(PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAANzAAM2BA', file_size=905, file_unique_id='AQADzAEyG1peWUl4', height=51, width=90), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAANtAAM2BA', file_size=15392, file_unique_id='AQADzAEyG1peWUly', height=180, width=320), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAAN4AAM2BA', file_size=82760, file_unique_id='AQADzAEyG1peWUl9', height=450, width=800), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAAN5AAM2BA', file_size=119633, file_unique_id='AQADzAEyG1peWUl-', height=720, width=1280)), supergroup_chat_created=False)
+[2025-05-19 22:47:13,751] INFO: 📎 Тригер: True, файл: None
+[2025-05-19 22:47:13,751] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-05-19 22:47:49,791] INFO: [ALL] 7173765324 (None): Работает ?
+[2025-05-19 22:48:31,373] INFO: 📎 Тригер: False, файл: None
+[2025-05-19 22:48:31,373] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-05-19 22:48:38,644] INFO: [ALL] 161197876 (Alexey_Raid): я с телефона не пробовал.
+сек
+[2025-05-19 22:49:03,486] INFO: 🔍 Обробка /pending...
+[2025-05-19 22:49:03,991] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 22:49:04,056] INFO: 📄 Знайдено 0 запис(ів) зі статусом 'pending'
+[2025-05-19 22:49:09,552] INFO: [ALL] 161197876 (Alexey_Raid): стоп
+[2025-05-19 22:49:14,017] INFO: [ALL] 161197876 (Alexey_Raid): это же ж не файл
+[2025-05-19 22:49:18,294] INFO: [ALL] 161197876 (Alexey_Raid): это с галереи?
+[2025-05-19 22:49:22,771] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 47, 5, tzinfo=datetime.timezone.utc), delete_chat_photo=False, from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=266, photo=(PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAANzAAM2BA', file_size=905, file_unique_id='AQADzAEyG1peWUl4', height=51, width=90), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAANtAAM2BA', file_size=15392, file_unique_id='AQADzAEyG1peWUly', height=180, width=320), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAAN4AAM2BA', file_size=82760, file_unique_id='AQADzAEyG1peWUl9', height=450, width=800), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAP4aCtECXeldDAUMc40QAxeQa7NQPcAAswBMhtaXllJf2oTtXC6uosBAAMCAAN5AAM2BA', file_size=119633, file_unique_id='AQADzAEyG1peWUl-', height=720, width=1280)), supergroup_chat_created=False)
+[2025-05-19 22:49:22,772] INFO: 📎 Тригер: True, файл: None
+[2025-05-19 22:49:22,772] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-05-19 22:49:39,905] INFO: [ALL] 7173765324 (None): А сорь
+[2025-05-19 22:49:53,245] INFO: 📎 Тригер: True, файл: IMG_0138.JPG
+[2025-05-19 22:49:54,298] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0138.JPG
+[2025-05-19 22:49:57,259] INFO: [ALL] 161197876 (Alexey_Raid): с галереи сделаю когда то.
+наверное
+[2025-05-19 22:50:03,190] INFO: [ALL] 161197876 (Alexey_Raid): :))))
+[2025-05-19 22:50:08,701] INFO: [ALL] 7173765324 (None): Ура
+[2025-05-19 22:50:26,805] INFO: 🔍 Обробка /pending...
+[2025-05-19 22:50:27,301] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 22:50:27,363] INFO: 📄 Знайдено 1 запис(ів) зі статусом 'pending'
+[2025-05-19 22:50:27,364] INFO: 📨 Обробка: IMG_0138.JPG (ID: 5, Chat: -1002544853552, MsgID: 278)
+[2025-05-19 22:50:30,437] INFO: [ALL] 7173765324 (None): Выше платежи нужно дублировать ?
+[2025-05-19 22:50:33,595] INFO: [ALL] 161197876 (Alexey_Raid): lf
+[2025-05-19 22:50:35,418] INFO: [ALL] 161197876 (Alexey_Raid): да
+[2025-05-19 22:50:45,922] INFO: [ALL] 161197876 (Alexey_Raid): тебе будет интересна эта команда
+[2025-05-19 22:50:47,700] INFO: [ALL] 161197876 (Alexey_Raid): ?
+[2025-05-19 22:51:11,480] INFO: [ALL] 161197876 (Alexey_Raid): список всех неоплаченных счетов на сейчас
+[2025-05-19 22:51:16,011] INFO: [ALL] 7173765324 (None): Да
+[2025-05-19 22:51:44,964] INFO: [ALL] 161197876 (Alexey_Raid): да
+[2025-05-19 22:53:55,742] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:54:09,417] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:54:18,537] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 54, 9, tzinfo=datetime.timezone.utc), delete_chat_photo=False, document=Document(api_kwargs={'thumb': {'file_id': 'AAMCAgADIQUABJevYjAAAgEmaCuMYRrtMcv-hQsLHErHTVIHHYgAAk58AAJaXllJjGVbqkGE_6QBAAdtAAM2BA', 'file_unique_id': 'AQADTnwAAlpeWUly', 'file_size': 16328, 'width': 240, 'height': 320}}, file_id='BQACAgIAAyEFAASXr2IwAAIBJmgrjGEa7THL_oULCxxKx01SBx2IAAJOfAACWl5ZSYxlW6pBhP-kNgQ', file_name='IMG_0141.JPG', file_size=142124, file_unique_id='AgADTnwAAlpeWUk', mime_type='image/jpeg', thumbnail=PhotoSize(file_id='AAMCAgADIQUABJevYjAAAgEmaCuMYRrtMcv-hQsLHErHTVIHHYgAAk58AAJaXllJjGVbqkGE_6QBAAdtAAM2BA', file_size=16328, file_unique_id='AQADTnwAAlpeWUly', height=320, width=240)), from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=294, supergroup_chat_created=False)
+[2025-05-19 22:54:18,537] INFO: 📎 Тригер: True, файл: IMG_0141.JPG
+[2025-05-19 22:54:19,544] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0141.JPG
+[2025-05-19 22:54:30,783] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:54:38,209] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 54, 30, tzinfo=datetime.timezone.utc), delete_chat_photo=False, document=Document(api_kwargs={'thumb': {'file_id': 'AAMCAgADIQUABJevYjAAAgEpaCuMdihx4BNRtdSWcjszsf0ts_EAAk98AAJaXllJrJx54DOwnKsBAAdtAAM2BA', 'file_unique_id': 'AQADT3wAAlpeWUly', 'file_size': 15497, 'width': 240, 'height': 320}}, file_id='BQACAgIAAyEFAASXr2IwAAIBKWgrjHYoceATUbXUlnI7M7H9LbPxAAJPfAACWl5ZSayceeAzsJyrNgQ', file_name='IMG_0137.JPG', file_size=143645, file_unique_id='AgADT3wAAlpeWUk', mime_type='image/jpeg', thumbnail=PhotoSize(file_id='AAMCAgADIQUABJevYjAAAgEpaCuMdihx4BNRtdSWcjszsf0ts_EAAk98AAJaXllJrJx54DOwnKsBAAdtAAM2BA', file_size=15497, file_unique_id='AQADT3wAAlpeWUly', height=320, width=240)), from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=297, supergroup_chat_created=False)
+[2025-05-19 22:54:38,209] INFO: 📎 Тригер: True, файл: IMG_0137.JPG
+[2025-05-19 22:54:39,236] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0137.JPG
+[2025-05-19 22:55:16,896] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:55:24,336] INFO: [ALL] 7173765324 (None): N/A
+[2025-05-19 22:55:37,532] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 55, 16, tzinfo=datetime.timezone.utc), delete_chat_photo=False, edit_date=datetime.datetime(2025, 5, 19, 19, 55, 24, tzinfo=datetime.timezone.utc), from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=300, photo=(PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPxaCtCRCjLaDmr8KOhj7CEcEsVgbAAAgHvMRt24FhJtwsDbEHCvbMBAAMCAANzAAM2BA', file_size=961, file_unique_id='AQADAe8xG3bgWEl4', height=90, width=67), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPxaCtCRCjLaDmr8KOhj7CEcEsVgbAAAgHvMRt24FhJtwsDbEHCvbMBAAMCAANtAAM2BA', file_size=14938, file_unique_id='AQADAe8xG3bgWEly', height=320, width=240), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPxaCtCRCjLaDmr8KOhj7CEcEsVgbAAAgHvMRt24FhJtwsDbEHCvbMBAAMCAAN4AAM2BA', file_size=82890, file_unique_id='AQADAe8xG3bgWEl9', height=800, width=600), PhotoSize(file_id='AgACAgIAAyEFAASXr2IwAAPxaCtCRCjLaDmr8KOhj7CEcEsVgbAAAgHvMRt24FhJtwsDbEHCvbMBAAMCAAN5AAM2BA', file_size=118030, file_unique_id='AQADAe8xG3bgWEl-', height=1280, width=960)), supergroup_chat_created=False)
+[2025-05-19 22:55:37,533] INFO: 📎 Тригер: True, файл: None
+[2025-05-19 22:55:37,533] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-05-19 22:55:57,608] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:56:01,703] INFO: [ALL] 161197876 (Alexey_Raid): тяжело с телефона?
+попробую добавить эту функцию 😩((
+[2025-05-19 22:56:10,119] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 55, 57, tzinfo=datetime.timezone.utc), delete_chat_photo=False, document=Document(api_kwargs={'thumb': {'file_id': 'AAMCAgADIQUABJevYjAAAgEuaCuMzTnuSWo-Oij36bAmb78KXacAAlN8AAJaXllJ5EGN08A5RnEBAAdtAAM2BA', 'file_unique_id': 'AQADU3wAAlpeWUly', 'file_size': 11990, 'width': 240, 'height': 320}}, file_id='BQACAgIAAyEFAASXr2IwAAIBLmgrjM057klqPjoo9-mwJm-_Cl2nAAJTfAACWl5ZSeRBjdPAOUZxNgQ', file_name='IMG_0135.JPG', file_size=102707, file_unique_id='AgADU3wAAlpeWUk', mime_type='image/jpeg', thumbnail=PhotoSize(file_id='AAMCAgADIQUABJevYjAAAgEuaCuMzTnuSWo-Oij36bAmb78KXacAAlN8AAJaXllJ5EGN08A5RnEBAAdtAAM2BA', file_size=11990, file_unique_id='AQADU3wAAlpeWUly', height=320, width=240)), from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=302, supergroup_chat_created=False)
+[2025-05-19 22:56:10,119] INFO: 📎 Тригер: True, файл: IMG_0135.JPG
+[2025-05-19 22:56:11,110] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0135.JPG
+[2025-05-19 22:56:28,640] INFO: [ALL] 7173765324 (None): Блин оно иногда автоматически подтягивает
+[2025-05-19 22:56:34,032] INFO: [ALL] 161197876 (Alexey_Raid): кстати. 
+все хочу спросить.
+Почему они тебе на оплату фото шлют?
+почему не файлами?
+[2025-05-19 22:57:00,536] INFO: [ALL] 7173765324 (None): Файлами шлют редко
+[2025-05-19 22:57:13,153] INFO: [ALL] 7173765324 (None): А эти накладные завезли после поставки
+[2025-05-19 22:57:25,477] INFO: [ALL] 161197876 (Alexey_Raid): а потребовать?
+ибо и я ошибки могу допускать в реквизитах...
+[2025-05-19 22:57:33,675] INFO: [ALL] 7173765324 (None): Попробую
+[2025-05-19 22:58:01,017] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-05-19 22:58:19,076] INFO: 🔍 Обробка /pending...
+[2025-05-19 22:58:19,574] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 22:58:19,636] INFO: 📄 Знайдено 4 запис(ів) зі статусом 'pending'
+[2025-05-19 22:58:19,636] INFO: 📨 Обробка: IMG_0138.JPG (ID: 5, Chat: -1002544853552, MsgID: 278)
+[2025-05-19 22:58:19,820] INFO: 📨 Обробка: IMG_0141.JPG (ID: 6, Chat: -1002544853552, MsgID: 294)
+[2025-05-19 22:58:19,907] INFO: 📨 Обробка: IMG_0137.JPG (ID: 7, Chat: -1002544853552, MsgID: 297)
+[2025-05-19 22:58:19,988] INFO: 📨 Обробка: IMG_0135.JPG (ID: 8, Chat: -1002544853552, MsgID: 302)
+[2025-05-19 22:58:47,965] INFO: [ALL] 7173765324 (None): None
+[2025-05-19 22:58:58,562] INFO: 📨 reply_to_message: Message(channel_chat_created=False, chat=Chat(id=-1002544853552, title='Оплати Pet Wealth', type=<ChatType.SUPERGROUP>), date=datetime.datetime(2025, 5, 19, 19, 58, 47, tzinfo=datetime.timezone.utc), delete_chat_photo=False, document=Document(api_kwargs={'thumb': {'file_id': 'AAMCAgADIQUABJevYjAAAgE-aCuNdxcuTJ6anf6Wyl18i5UnEoYAAlt8AAJaXllJjrdW5ue59m4BAAdtAAM2BA', 'file_unique_id': 'AQADW3wAAlpeWUly', 'file_size': 12477, 'width': 240, 'height': 320}}, file_id='BQACAgIAAyEFAASXr2IwAAIBPmgrjXcXLkyemp3-lspdfIuVJxKGAAJbfAACWl5ZSY63VubnufZuNgQ', file_name='IMG_0136.JPG', file_size=124814, file_unique_id='AgADW3wAAlpeWUk', mime_type='image/jpeg', thumbnail=PhotoSize(file_id='AAMCAgADIQUABJevYjAAAgE-aCuNdxcuTJ6anf6Wyl18i5UnEoYAAlt8AAJaXllJjrdW5ue59m4BAAdtAAM2BA', file_size=12477, file_unique_id='AQADW3wAAlpeWUly', height=320, width=240)), from_user=User(first_name='Pet', id=7173765324, is_bot=False, last_name='Wealth business'), group_chat_created=False, message_id=318, supergroup_chat_created=False)
+[2025-05-19 22:58:58,562] INFO: 📎 Тригер: True, файл: IMG_0136.JPG
+[2025-05-19 22:58:59,522] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0136.JPG
+[2025-05-19 22:59:24,859] INFO: 🔍 Обробка /pending...
+[2025-05-19 22:59:25,366] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-19 22:59:25,431] INFO: 📄 Знайдено 5 запис(ів) зі статусом 'pending'
+[2025-05-19 22:59:25,431] INFO: 📨 Обробка: IMG_0138.JPG (ID: 5, Chat: -1002544853552, MsgID: 278)
+[2025-05-19 22:59:25,608] INFO: 📨 Обробка: IMG_0141.JPG (ID: 6, Chat: -1002544853552, MsgID: 294)
+[2025-05-19 22:59:25,696] INFO: 📨 Обробка: IMG_0137.JPG (ID: 7, Chat: -1002544853552, MsgID: 297)
+[2025-05-19 22:59:25,780] INFO: 📨 Обробка: IMG_0135.JPG (ID: 8, Chat: -1002544853552, MsgID: 302)
+[2025-05-19 22:59:25,860] INFO: 📨 Обробка: IMG_0136.JPG (ID: 9, Chat: -1002544853552, MsgID: 318)
+[2025-05-19 22:59:43,241] INFO: [ALL] 7173765324 (None): С телефона работаем
+[2025-05-19 22:59:48,058] INFO: [ALL] 7173765324 (None): N/A
