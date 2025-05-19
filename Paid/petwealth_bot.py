@@ -1,3 +1,4 @@
+# Це бойова версія 1.1
 import os
 import logging
 from datetime import datetime
@@ -33,9 +34,11 @@ async def set_bot_commands(app):
 
 # === 🔐 Конфігурація ===
 env = dotenv_values("/root/Python/.env")
-BOT_TOKEN = env["TESTBOT_TOKEN"]
-FALLBACK_CHAT_ID = int(env["FALLBACK_TESTCHAT_ID"])
-LOG_FILE = env.get("LOG_FILE_Test", "/root/Python/Paid/test_log.py")
+BOT_TOKEN = env["BOT_TOKEN"]
+FALLBACK_CHAT_ID = int(env["FALLBACK_CHAT_ID"])
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+LOG_FILE = os.path.join(BASE_DIR, "log.txt")
+
 
 PB_TOKENS = {
     "LOV": env.get("API_TOKEN_LOV"),
@@ -55,7 +58,7 @@ ODATA_ACCOUNTS = {
     "Каса Організації": "f179f3be-4e84-11ef-83bb-2ae983d8a0f0"
 }
 
-SAVE_DIR = env.get("SAVE_DIR_test", "/root/Automation/Paid/test")
+SAVE_DIR = env.get("SAVE_DIR", "/root/Automation/Paid")
 CONFIRM_PREFIX = "confirm_duplicate_"
 ALLOWED_EXTENSIONS = {'.pdf', '.xls', '.xlsx', '.txt', '.jpeg', '.jpg', '.png'}
 
