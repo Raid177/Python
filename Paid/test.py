@@ -454,6 +454,20 @@ async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAUL
     await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
     await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
 
+# === 🖼️ Обробка фото (як платіжка) ===
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    if not await check_permission(update, {"admin", "manager"}, group_only=True):
+        return
+
+    if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
+        photo = message.photo[-1]  # Найякісніше зображення
+        file = await context.bot.get_file(photo.file_id)
+        filename = f"photo_{photo.file_unique_id}.jpg"
+        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user.username, context)
+        await message.reply_text("✅ Фото платіжки збережено і додано до обробки.")
+    else:
+        await message.reply_text("⚠️ Додайте /pay або /оплата в підпис до фото, щоб зареєструвати платіжку.")
 
 
 async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
@@ -513,6 +527,9 @@ def main():
     app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("pending", pending_command))
+
+    # Обробка фото телефону
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
 
     # 📎 Обробка файлів із тригерами /pay або /оплата
