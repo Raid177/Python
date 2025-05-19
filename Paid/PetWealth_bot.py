@@ -194,11 +194,11 @@ def get_available_commands(user_id: int, chat_type: str) -> list[str]:
     group_cmds = ["start", "checkbot", "help"]
     return [cmd for cmd in all_cmds if chat_type == "private" or cmd in group_cmds]
 
-# === 🧮 Клавiатура ===
-def get_keyboard_for_chat(user_id: int, chat_type: str):
-    commands = get_available_commands(user_id, chat_type)
-    buttons = [[f"/{cmd}" for cmd in commands[i:i+2]] for i in range(0, len(commands), 2)]
-    return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
+# # === 🧮 Клавiатура ===
+# def get_keyboard_for_chat(user_id: int, chat_type: str):
+#     commands = get_available_commands(user_id, chat_type)
+#     buttons = [[f"/{cmd}" for cmd in commands[i:i+2]] for i in range(0, len(commands), 2)]
+#     return ReplyKeyboardMarkup(buttons, resize_keyboard=True)
 
 # === 🟢 /start ===
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -211,7 +211,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"👋 Привіт, {user.first_name}!\nВаша роль: *{role}*\n\n📋 Доступні команди:\n"
     msg += "\n".join(f"/{cmd}" for cmd in cmds)
 
-    await update.message.reply_text(msg, parse_mode="Markdown", reply_markup=get_keyboard_for_chat(user.id, chat.type))
+    await update.message.reply_text(msg, parse_mode="Markdown")
+
 
 
 # === 🆘 /help ===
