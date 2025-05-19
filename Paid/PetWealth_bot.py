@@ -1,4 +1,5 @@
-# Це бойова версія 1.1 Працює лише на сервері
+# Це бойова версія 1.2 Працює лише на сервері
+# 1.2 Додано - обробку файлів фото з телефону як файл по загальним правилам
 import os
 import logging
 from datetime import datetime
@@ -122,6 +123,34 @@ def get_db_connection():
         database=env["DB_DATABASE"],
         cursorclass=pymysql.cursors.DictCursor
     )
+
+# === 💾 Збереження файлу ===
+async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    save_name = save_as or original_filename
+    file_path = os.path.join(SAVE_DIR, save_name)
+
+    tg_file = await context.bot.get_file(file.file_id)
+    await tg_file.download_to_drive(file_path)
+    logger.info(f"📥 Збережено файл: {file_path}")
+
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = """
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        """
+        cursor.execute(sql, (
+            original_filename,
+            file_path,
+            chat_id,
+            message_id,
+            username
+        ))
+    conn.commit()
+    conn.close()
+    logger.info(f"✅ Запис про файл додано до БД: {original_filename}")
+    
 
 # === 📎 /pending ===
 async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -319,6 +348,47 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = f"{pb_result}{odata_result}{summary}"
     await update.message.reply_text(msg)
 
+
+
+
+# === ✅ Обробка кнопки Так / Ні ===
+async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    if data == "cancel":
+        await query.edit_message_text("🚫 Надсилання файлу на оплату скасовано.")
+        return
+
+    if not data.startswith(CONFIRM_PREFIX):
+        return
+
+    unique_id = data.replace(CONFIRM_PREFIX, "")
+    info = context.user_data.get(unique_id)
+    if not info:
+        await query.edit_message_text("⚠️ Дані для обробки не знайдено.")
+        return
+
+    file = info["file"]
+    original_filename = info["file_name"]
+    chat_id = info["chat_id"]
+    message_id = info["message_id"]
+    username = info["username"]
+
+    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+# 📸 Для фото (немає розширення явно):
+    if original_filename.startswith("photo_"):
+        save_name = original_filename.replace(".jpg", f"_copy_{now_str}.jpg")
+    else:
+        base, ext = os.path.splitext(original_filename)
+        save_name = f"{base}_copy_{now_str}{ext}"
+
+    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
+    await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
+
+
 # === 📎 Обробка файлів /pay або /оплата ===
 async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_permission(update, {"admin", "manager"}, group_only=True):
@@ -329,57 +399,164 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
     message = update.effective_message
     username = user.username or "unknown"
 
-    is_triggered = False
-    original_message = message
-    file = None
+    is_triggered, file = extract_file_from_message(message)
+    original_message = message.reply_to_message or message
 
-    # Випадок 1: caption містить тригер
-    if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
-        is_triggered = True
-        file = message.document
-
-    # Випадок 2: текст містить тригер, і є reply_to_message
-    elif message.reply_to_message:
-        reply = message.reply_to_message
-        logger.info(f"📨 reply_to_message: {reply}")
-        # Тригер у тексті повідомлення
-        if message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
-            # Файл у reply
-            if reply.document:
-                is_triggered = True
-                file = reply.document
-                original_message = reply
-            elif reply.photo:
-                is_triggered = True
-                file = reply
-                original_message = reply
-        # Тригер у caption reply (на всякий випадок)
-        elif reply.caption and any(x in reply.caption.lower() for x in ["/pay", "/оплата"]):
-            if reply.document:
-                is_triggered = True
-                file = reply.document
-                original_message = reply
-            elif reply.photo:
-                is_triggered = True
-                file = reply
-                original_message = reply
-
-
-    logger.info(f"📎 Тригер: {is_triggered}, файл: {file.file_name if hasattr(file, 'file_name') else 'None'}")
+    logger.info(f"📎 Тригер: {is_triggered}, файл: {file.file_id if file else 'None'}")
 
     if not is_triggered or not file or not hasattr(file, 'file_id'):
         logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
         return
 
-    original_filename = getattr(file, 'file_name', None)
-    if not original_filename:
-        await update.message.reply_text("⚠️ Файл повинен мати назву. Неможливо обробити.")
-        logger.warning("⚠️ Відсутнє ім'я файлу")
+    if hasattr(file, "file_name"):
+        original_filename = file.file_name
+    elif hasattr(file, "file_unique_id"):
+        original_filename = f"photo_{file.file_unique_id}.jpg"
+    else:
+        await message.reply_text("⚠️ Неможливо визначити назву файлу.")
         return
 
     ext = os.path.splitext(original_filename)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        await update.message.reply_text("⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG")
+        await message.reply_text("⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG")
+        logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
+        return
+
+    # === Перевірка на дубль ===
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1"
+        cursor.execute(sql, (original_filename,))
+        existing = cursor.fetchone()
+    conn.close()
+
+    if existing:
+        text = (
+            f"⚠️ Файл з такою назвою вже надсилався {existing['created_at'].strftime('%Y-%m-%d %H:%M')} "
+            f"користувачем @{existing['username']}"
+        )
+        if existing['status'] == 'paid':
+            text += f"\n✅ Оплачено: {existing['updated_at'].strftime('%Y-%m-%d %H:%M')}"
+        text += "\n\nВідправити повторно на оплату?"
+
+        unique_id = f"{chat.id}_{original_message.message_id}"
+        keyboard = InlineKeyboardMarkup([[ 
+            InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
+            InlineKeyboardButton("❌ Ні", callback_data="cancel")
+        ]])
+
+        context.user_data[unique_id] = {
+            "file": file,
+            "file_name": original_filename,
+            "message_id": original_message.message_id,
+            "chat_id": chat.id,
+            "username": username
+        }
+
+        await message.reply_text(text, reply_markup=keyboard)
+        return
+
+    # 🟢 Якщо не дубль — зберегти
+    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
+    await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+
+
+# === 🖼️ Обробка фото (як платіжка) ===
+async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.message
+    if not await check_permission(update, {"admin", "manager"}, group_only=True):
+        return
+
+    if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
+        photo = message.photo[-1]  # Найякісніше зображення
+        file = await context.bot.get_file(photo.file_id)
+        filename = f"photo_{photo.file_unique_id}.jpg"
+
+        # === Перевірка на дублікат ===
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1", (filename,))
+            existing = cursor.fetchone()
+        conn.close()
+
+        if existing:
+            text = (
+                f"⚠️ Це зображення вже надсилалось {existing['created_at'].strftime('%Y-%m-%d %H:%M')} користувачем @{existing['username']}\n"
+                f"Відправити повторно на оплату?"
+            )
+            unique_id = f"{message.chat.id}_{message.message_id}"
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
+                InlineKeyboardButton("❌ Ні", callback_data="cancel")
+            ]])
+
+            context.user_data[unique_id] = {
+                "file": photo,
+                "file_name": filename,
+                "message_id": message.message_id,
+                "chat_id": message.chat.id,
+                "username": message.from_user.username
+            }
+
+            await message.reply_text(text, reply_markup=keyboard)
+            return
+
+        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user.username, context)
+        await message.reply_text("✅ Фото платіжки збережено і додано до обробки.")
+    else:
+        await message.reply_text("⚠️ Додайте /pay або /оплата в підпис до фото, щоб зареєструвати платіжку.")
+
+# === 🧩 Універсальна перевірка тригера /pay + отримання файлу ===
+def extract_file_from_message(message) -> tuple[bool, object]:
+    is_triggered = False
+    file = None
+
+    if message.caption and any(x in message.caption.lower() for x in ["/pay", "/оплата"]):
+        is_triggered = True
+        file = message.document or (message.photo[-1] if message.photo else None)
+
+    elif message.reply_to_message:
+        reply = message.reply_to_message
+        if message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
+            if reply.document:
+                is_triggered = True
+                file = reply.document
+            elif reply.photo:
+                is_triggered = True
+                file = reply.photo[-1]
+
+    return is_triggered, file
+
+# === 📎 Обробка файлів /pay або /оплата ===
+async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await check_permission(update, {"admin", "manager"}, group_only=True):
+        return
+
+    user = update.effective_user
+    chat = update.effective_chat
+    message = update.effective_message
+    username = user.username or "unknown"
+
+    is_triggered, file = extract_file_from_message(message)
+    original_message = message.reply_to_message or message
+
+    logger.info(f"📎 Тригер: {is_triggered}, файл: {file.file_id if file else 'None'}")
+
+    if not is_triggered or not file or not hasattr(file, 'file_id'):
+        logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
+        return
+
+    if hasattr(file, "file_name"):
+        original_filename = file.file_name
+    elif hasattr(file, "file_unique_id"):
+        original_filename = f"photo_{file.file_unique_id}.jpg"
+    else:
+        await message.reply_text("⚠️ Неможливо визначити назву файлу.")
+        return
+
+    ext = os.path.splitext(original_filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        await message.reply_text("⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG")
         logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
         return
 
@@ -413,73 +590,12 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
             "username": username
         }
 
-        await update.message.reply_text(text, reply_markup=keyboard)
+        await message.reply_text(text, reply_markup=keyboard)
         return
 
-    # 🟢 Якщо не дублікат — зберігаємо одразу
     await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
-    await update.message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+    await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
-
-
-# === ✅ Обробка кнопки Так / Ні ===
-async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-
-    if data == "cancel":
-        await query.edit_message_text("🚫 Надсилання файлу на оплату скасовано.")
-        return
-
-    if not data.startswith(CONFIRM_PREFIX):
-        return
-
-    unique_id = data.replace(CONFIRM_PREFIX, "")
-    info = context.user_data.get(unique_id)
-    if not info:
-        await query.edit_message_text("⚠️ Дані для обробки не знайдено.")
-        return
-
-    file = info["file"]
-    original_filename = info["file_name"]
-    chat_id = info["chat_id"]
-    message_id = info["message_id"]
-    username = info["username"]
-
-    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    base, ext = os.path.splitext(original_filename)
-    save_name = f"{base}_copy_{now_str}{ext}"
-
-    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
-    await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
-
-
-
-async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    save_name = save_as or original_filename
-    file_path = os.path.join(SAVE_DIR, save_name)
-
-    tg_file = await context.bot.get_file(file.file_id)
-    await tg_file.download_to_drive(file_path)
-    logger.info(f"📥 Збережено файл: {file_path}")
-
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        sql = """
-        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
-        """
-        cursor.execute(sql, (
-            original_filename,
-            file_path,
-            chat_id,
-            message_id,
-            username
-        ))
-    conn.commit()
-    conn.close()
 
 # === 🧾 Логування всіх повідомлень ===
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -500,7 +616,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # === 🚀 MAIN ===
 def main():
-    logger.info("🚀 Запуск бота...")
+    logger.info("🚀 Запуск DEV_бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     #Обробник команд
@@ -513,6 +629,9 @@ def main():
     app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("pending", pending_command))
+
+    # Обробка фото телефону
+    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
 
 
     # 📎 Обробка файлів із тригерами /pay або /оплата

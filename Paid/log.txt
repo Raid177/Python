@@ -316,3 +316,12 @@
 [2025-05-20 00:22:07,125] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
 [2025-05-20 00:22:24,293] INFO: Application is stopping. This might take a moment.
 [2025-05-20 00:22:24,293] INFO: Application.stop() complete
+[2025-05-20 00:29:23,325] INFO: 🚀 Запуск DEV_бота...
+[2025-05-20 00:29:23,698] INFO: Application started
+[2025-05-20 00:29:40,260] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-20 00:32:37,779] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:32:37,779] INFO: Application.stop() complete
+[2025-05-20 00:37:06,628] INFO: 🚀 Запуск DEV_бота...
+[2025-05-20 00:37:07,032] INFO: Application started
+[2025-05-20 00:39:55,276] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:39:55,277] INFO: Application.stop() complete
