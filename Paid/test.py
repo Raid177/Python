@@ -123,6 +123,34 @@ def get_db_connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
+# === 💾 Збереження файлу ===
+async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    save_name = save_as or original_filename
+    file_path = os.path.join(SAVE_DIR, save_name)
+
+    tg_file = await context.bot.get_file(file.file_id)
+    await tg_file.download_to_drive(file_path)
+    logger.info(f"📥 Збережено файл: {file_path}")
+
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = """
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        """
+        cursor.execute(sql, (
+            original_filename,
+            file_path,
+            chat_id,
+            message_id,
+            username
+        ))
+    conn.commit()
+    conn.close()
+    logger.info(f"✅ Запис про файл додано до БД: {original_filename}")
+    
+
 # === 📎 /pending ===
 async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_permission(update, {"admin", "manager"}):
@@ -448,11 +476,17 @@ async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAUL
     username = info["username"]
 
     now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    base, ext = os.path.splitext(original_filename)
-    save_name = f"{base}_copy_{now_str}{ext}"
+
+# 📸 Для фото (немає розширення явно):
+    if original_filename.startswith("photo_"):
+        save_name = original_filename.replace(".jpg", f"_copy_{now_str}.jpg")
+    else:
+        base, ext = os.path.splitext(original_filename)
+        save_name = f"{base}_copy_{now_str}{ext}"
 
     await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
     await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
+
 
 # === 🖼️ Обробка фото (як платіжка) ===
 async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -464,36 +498,42 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
         photo = message.photo[-1]  # Найякісніше зображення
         file = await context.bot.get_file(photo.file_id)
         filename = f"photo_{photo.file_unique_id}.jpg"
+
+        # === Перевірка на дублікат ===
+        conn = get_db_connection()
+        with conn.cursor() as cursor:
+            cursor.execute("SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1", (filename,))
+            existing = cursor.fetchone()
+        conn.close()
+
+        if existing:
+            text = (
+                f"⚠️ Це зображення вже надсилалось {existing['created_at'].strftime('%Y-%m-%d %H:%M')} користувачем @{existing['username']}\n"
+                f"Відправити повторно на оплату?"
+            )
+            unique_id = f"{message.chat.id}_{message.message_id}"
+            keyboard = InlineKeyboardMarkup([[
+                InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + unique_id),
+                InlineKeyboardButton("❌ Ні", callback_data="cancel")
+            ]])
+
+            context.user_data[unique_id] = {
+                "file": photo,
+                "file_name": filename,
+                "message_id": message.message_id,
+                "chat_id": message.chat.id,
+                "username": message.from_user.username
+            }
+
+            await message.reply_text(text, reply_markup=keyboard)
+            return
+
         await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user.username, context)
         await message.reply_text("✅ Фото платіжки збережено і додано до обробки.")
     else:
         await message.reply_text("⚠️ Додайте /pay або /оплата в підпис до фото, щоб зареєструвати платіжку.")
 
 
-async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
-    os.makedirs(SAVE_DIR, exist_ok=True)
-    save_name = save_as or original_filename
-    file_path = os.path.join(SAVE_DIR, save_name)
-
-    tg_file = await context.bot.get_file(file.file_id)
-    await tg_file.download_to_drive(file_path)
-    logger.info(f"📥 Збережено файл: {file_path}")
-
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        sql = """
-        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
-        """
-        cursor.execute(sql, (
-            original_filename,
-            file_path,
-            chat_id,
-            message_id,
-            username
-        ))
-    conn.commit()
-    conn.close()
 
 # === 🧾 Логування всіх повідомлень ===
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -514,7 +554,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # === 🚀 MAIN ===
 def main():
-    logger.info("🚀 Запуск бота...")
+    logger.info("🚀 Запуск DEV_бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     #Обробник команд
