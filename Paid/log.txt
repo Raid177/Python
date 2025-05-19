@@ -263,3 +263,56 @@
 [2025-05-19 23:52:52,188] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
 [2025-05-19 23:58:54,380] INFO: Application is stopping. This might take a moment.
 [2025-05-19 23:58:54,381] INFO: Application.stop() complete
+[2025-05-20 00:00:02,271] INFO: 🚀 Запуск бота...
+[2025-05-20 00:00:02,814] INFO: Application started
+[2025-05-20 00:17:41,496] INFO: 🚀 Запуск DEV_бота...
+[2025-05-20 00:17:41,914] INFO: Application started
+[2025-05-20 00:17:42,069] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:42,070] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:46,124] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:46,125] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:47,180] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:47,180] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:51,735] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:51,736] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:53,291] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:53,291] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:58,580] ERROR: Error while getting Updates: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:17:58,580] ERROR: ❌ ПОМИЛКА: Conflict: terminated by other getUpdates request; make sure that only one bot instance is running
+[2025-05-20 00:18:01,577] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:18:01,577] INFO: Application.stop() complete
+[2025-05-20 00:18:25,678] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:18:25,679] INFO: Application.stop() complete
+[2025-05-20 00:18:28,348] INFO: 🚀 Запуск DEV_бота...
+[2025-05-20 00:18:28,719] INFO: Application started
+[2025-05-20 00:18:53,381] INFO: ➡️ /start від 161197876 (Alexey_Raid) — роль: admin, чат: supergroup
+[2025-05-20 00:18:57,838] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 0 год 0 хв 29 с, чат: supergroup
+[2025-05-20 00:19:06,983] INFO: 🔍 Обробка /pending...
+[2025-05-20 00:19:07,484] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-20 00:19:07,549] INFO: 📄 Знайдено 11 запис(ів) зі статусом 'pending'
+[2025-05-20 00:19:07,549] INFO: 📨 Обробка: IMG_0138.JPG (ID: 5, Chat: -1002544853552, MsgID: 278)
+[2025-05-20 00:19:07,780] INFO: 📨 Обробка: IMG_0141.JPG (ID: 6, Chat: -1002544853552, MsgID: 294)
+[2025-05-20 00:19:07,949] INFO: 📨 Обробка: IMG_0137.JPG (ID: 7, Chat: -1002544853552, MsgID: 297)
+[2025-05-20 00:19:08,068] INFO: 📨 Обробка: IMG_0135.JPG (ID: 8, Chat: -1002544853552, MsgID: 302)
+[2025-05-20 00:19:08,208] INFO: 📨 Обробка: IMG_0136.JPG (ID: 9, Chat: -1002544853552, MsgID: 318)
+[2025-05-20 00:19:08,319] INFO: 📨 Обробка: photo_AQADCQUyG1peWUl-.jpg (ID: 10, Chat: -1002544853552, MsgID: 330)
+[2025-05-20 00:19:08,410] INFO: 📨 Обробка: photo_AQADCgUyG1peWUl-.jpg (ID: 11, Chat: -1002544853552, MsgID: 332)
+[2025-05-20 00:19:13,416] ERROR: ❌ ПОМИЛКА: Timed out
+[2025-05-20 00:19:23,598] INFO: ✅ /checkbot від 161197876 (Alexey_Raid) — 0 год 0 хв 55 с, чат: supergroup
+[2025-05-20 00:19:51,813] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIBhWgroHcXKppuU8-ywSMaaehlWqwNAAJ9cQACduBgSe_u4P0tt4L1NgQ
+[2025-05-20 00:19:52,593] INFO: 📥 Збережено файл: /root/Automation/Paid/petwealth_bot_systemctl_guide.pdf
+[2025-05-20 00:19:53,217] INFO: ✅ Запис про файл додано до БД: petwealth_bot_systemctl_guide.pdf
+[2025-05-20 00:20:15,291] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIBh2groI89zkThvd8HBSF-1BQyu6wUAAJWfQACWl5ZST0CQ_oSMaMpNgQ
+[2025-05-20 00:20:18,365] INFO: 📥 Збережено файл: /root/Automation/Paid/petwealth_bot_systemctl_guide_copy_2025-05-20_00-20-18.pdf
+[2025-05-20 00:20:18,874] INFO: ✅ Запис про файл додано до БД: petwealth_bot_systemctl_guide.pdf
+[2025-05-20 00:21:09,794] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADXAUyG1peWUl-.jpg
+[2025-05-20 00:21:10,419] INFO: ✅ Запис про файл додано до БД: photo_AQADXAUyG1peWUl-.jpg
+[2025-05-20 00:21:27,698] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIBiWgroMQpoiNQcX5SZVcCY1RflxOTAAJcBTIbWl5ZSSSwsqCu0RWSAQADAgADeQADNgQ
+[2025-05-20 00:21:40,010] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:21:40,010] INFO: Application.stop() complete
+[2025-05-20 00:21:52,043] INFO: 🚀 Запуск DEV_бота...
+[2025-05-20 00:21:52,397] INFO: Application started
+[2025-05-20 00:21:58,653] WARNING: ⚠️ 161197876 (Alexey_Raid) — команда лише в приваті
+[2025-05-20 00:22:07,125] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-20 00:22:24,293] INFO: Application is stopping. This might take a moment.
+[2025-05-20 00:22:24,293] INFO: Application.stop() complete
