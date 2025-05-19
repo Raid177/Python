@@ -1,5 +1,10 @@
 # Це бойова версія 1.2 Працює лише на сервері
-# 1.2 Додано - обробку файлів фото з телефону як файл по загальним правилам
+# Додано:
+#   - обробка фото з телефона, в тому числі і репі
+#   - уніфіковано блоки запису файлів, перевірки на дублі, перевірки на реплі
+#   - Логування відповідей від АПІ при помилках (не перевірено)
+#   - Виведення адміну в приват чат помилок при логуванні (не перевірено)
+
 import os
 import logging
 from datetime import datetime
@@ -79,6 +84,7 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 ROLE_ADMIN = list(map(int, env.get("ROLE_ADMIN", "").split(",")))
 ROLE_MANAGER = list(map(int, env.get("ROLE_MANAGER", "").split(",")))
 
+
 # === 🕒 Час запуску ===
 start_time = datetime.now()
 
@@ -123,6 +129,15 @@ def get_db_connection():
         database=env["DB_DATABASE"],
         cursorclass=pymysql.cursors.DictCursor
     )
+
+# === 📬 Надсилання повідомлення адміну ===
+async def notify_admin(context: ContextTypes.DEFAULT_TYPE, message: str):
+    try:
+        text = f"⚠️ *ПОМИЛКА:*\n{message}"
+        await context.bot.send_message(chat_id=FALLBACK_CHAT_ID, text=text, parse_mode=ParseMode.MARKDOWN)
+    except Exception as e:
+        logger.error(f"📭 Неможливо надіслати повідомлення адміну: {e}")
+
 
 # === 💾 Збереження файлу ===
 async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
@@ -314,15 +329,21 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "endDate": today
                 }
                 r = requests.get(url, headers=headers, params=params)
-                data = r.json()
+                r.raise_for_status()
+                try:
+                    data = r.json()
+                except Exception as json_err:
+                    logger.error(f"❌ JSON помилка ПриватБанк {name}: {json_err}")
+                    logger.error(f"⚠️ Вміст відповіді: {r.text}")
+                    continue
 
                 for bal in data.get("balances", []):
                     balance = float(bal.get("balanceOutEq", 0))
                     if balance:
                         pb_total += balance
                         pb_result += f"- {bal.get('nameACC', name)}: {balance:,.2f} грн\n"
-            except Exception as e:
-                logger.error(f"💥 ПриватБанк {name} ({acc}): {e}")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"💥 ПриватБанк {name} ({acc}) — помилка запиту: {e}")
 
     odata_total = 0.0
     odata_result = "\n💵 Готівкові рахунки:\n"
@@ -332,23 +353,27 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
             url = f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance?Period=datetime'{now_iso}'&$format=json&Condition=ДенежныйСчет_Key eq guid'{key}'"
             r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
             r.raise_for_status()
-            data = r.json()
+            try:
+                data = r.json()
+            except Exception as json_err:
+                logger.error(f"❌ JSON помилка OData {name}: {json_err}")
+                logger.error(f"⚠️ Вміст відповіді: {r.text}")
+                continue
+
             rows = data.get("value", [])
             if rows:
                 amount = float(rows[0].get("СуммаBalance", 0))
                 if amount:
                     odata_total += amount
                     odata_result += f"- {name}: {amount:,.2f} грн\n"
-        except Exception as e:
-            logger.error(f"💥 OData {name}: {e}")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"💥 OData {name} — помилка запиту: {e}")
 
     total = pb_total + odata_total
     summary = f"\n📊 Разом:\n- Безготівкові: {pb_total:,.2f} грн\n- Готівкові: {odata_total:,.2f} грн\n- 💰 Всього: {total:,.2f} грн"
 
     msg = f"{pb_result}{odata_result}{summary}"
     await update.message.reply_text(msg)
-
-
 
 
 # === ✅ Обробка кнопки Так / Ні ===
