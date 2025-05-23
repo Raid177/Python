@@ -1,9 +1,14 @@
-# Це бойова версія 1.2 Працює лише на сервері
+# Це бойова версія 1.3 Працює лише на сервері
 # Додано:
-#   - обробка фото з телефона, в тому числі і репі
-#   - уніфіковано блоки запису файлів, перевірки на дублі, перевірки на реплі
-#   - Логування відповідей від АПІ при помилках (не перевірено)
-#   - Виведення адміну в приват чат помилок при логуванні (не перевірено)
+#  Паузу 0,5 сек між запитами на pending щоб ТГ АПІ не тормозило при великій кількості
+#   Вивід в чат адміну всіх помилок
+# Додано обробку юзернейм для занесення в БД, якщо юзери не мають нікнейм в ТГ
+
+#sudo systemctl stop petwealth_bot
+# sudo systemctl status petwealth_bot
+
+
+
 
 import os
 import logging
@@ -21,8 +26,8 @@ import pymysql
 from telegram.error import BadRequest, Forbidden, TelegramError
 from telegram.constants import ParseMode
 from telegram import BotCommandScopeDefault
-
 from telegram import BotCommand
+import asyncio
 
 
 #Меню команд
@@ -149,22 +154,32 @@ async def save_file_and_record(file, original_filename, chat_id, message_id, use
     await tg_file.download_to_drive(file_path)
     logger.info(f"📥 Збережено файл: {file_path}")
 
+    # Отримуємо користувача
+    user = context._user if hasattr(context, '_user') else None
+    user_id = user.id if user else None
+    resolved_username = username or (user.username if user and user.username else (user.first_name if user else "unknown"))
+
     conn = get_db_connection()
     with conn.cursor() as cursor:
         sql = """
-        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        INSERT INTO telegram_files (
+            file_name, file_path, chat_id, message_id,
+            username, user_id, timestamp, status, created_at, updated_at
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
         """
         cursor.execute(sql, (
             original_filename,
             file_path,
             chat_id,
             message_id,
-            username
+            resolved_username,
+            user_id
         ))
     conn.commit()
     conn.close()
-    logger.info(f"✅ Запис про файл додано до БД: {original_filename}")
+    logger.info(f"✅ Запис про файл додано до БД: {original_filename} (user_id: {user_id})")
+
     
 
 # === 📎 /pending ===
@@ -203,6 +218,7 @@ async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_to_message_id=row["message_id"],
                 parse_mode=ParseMode.MARKDOWN
             )
+            await asyncio.sleep(0.5)  # 🔁 запобігає таймауту Telegram API
         except (BadRequest, Forbidden) as e:
             logger.warning(f"❌ Повідомлення недоступне: {e}")
             await update.message.reply_text(
@@ -410,7 +426,8 @@ async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAUL
         base, ext = os.path.splitext(original_filename)
         save_name = f"{base}_copy_{now_str}{ext}"
 
-    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
+    user = update.effective_user
+    await save_file_and_record(file, original_filename, chat_id, message_id, user, context, save_as=save_name)
     await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
 
 
@@ -482,7 +499,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # 🟢 Якщо не дубль — зберегти
-    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
+    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, user, context)
     await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
 
@@ -526,7 +543,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text(text, reply_markup=keyboard)
             return
 
-        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user.username, context)
+        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user, context)
         await message.reply_text("✅ Фото платіжки збережено і додано до обробки.")
     else:
         await message.reply_text("⚠️ Додайте /pay або /оплата в підпис до фото, щоб зареєструвати платіжку.")
@@ -632,6 +649,13 @@ async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === ❌ Глобальна обробка помилок ===
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"❌ ПОМИЛКА: {context.error}")
+
+    # Повідомлення адміну про помилку
+    try:
+        await notify_admin(context, str(context.error))
+    except Exception as e:
+        logger.error(f"📭 Неможливо повідомити адміну про помилку: {e}")
+
     if update and hasattr(update, "message"):
         try:
             await update.message.reply_text("⚠️ Виникла внутрішня помилка.")
