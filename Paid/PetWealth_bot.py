@@ -41,6 +41,8 @@ from telegram.constants import ParseMode
 from telegram import BotCommandScopeDefault
 from telegram import BotCommand
 import asyncio
+from telegram.helpers import escape_markdown
+
 
 
 
@@ -265,29 +267,57 @@ async def delete_confirmation_handler(update: Update, context: ContextTypes.DEFA
         return
 
     try:
+        # 📁 Перемістити файл до Deleted
         deleted_dir = os.path.join(SAVE_DIR, "Deleted")
         os.makedirs(deleted_dir, exist_ok=True)
         new_path = os.path.join(deleted_dir, os.path.basename(info['file_path']))
         os.rename(info['file_path'], new_path)
         logger.info(f"🗑 Файл переміщено до Deleted/: {new_path}")
 
+        # 🛠️ Оновити статус у БД
         conn = get_db_connection()
         with conn.cursor() as cursor:
-            cursor.execute(
-                """
+            cursor.execute("""
                 UPDATE telegram_files
                 SET status = 'deleted', updated_at = NOW()
                 WHERE chat_id = %s AND message_id = %s
-                """,
-                (info['chat_id'], info['message_id'])
-            )
+            """, (info['chat_id'], info['message_id']))
         conn.commit()
         conn.close()
 
+        # 🔄 Спроба оновити повідомлення, яке бот надіслав у відповідь
+        try:
+            conn = get_db_connection()
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    SELECT bot_message_id FROM telegram_files
+                    WHERE chat_id = %s AND message_id = %s
+                """, (info['chat_id'], info['message_id']))
+                row = cursor.fetchone()
+            conn.close()
+
+            if row and row["bot_message_id"]:
+                deleter = update.effective_user
+                deleter_info_raw = f"{deleter.full_name} (@{deleter.username})" if deleter.username else deleter.full_name
+                deleter_info = escape_markdown(deleter_info_raw, version=1)
+                deletion_note = f"\n\n🗑 *Файл видалено зі списку оплат* ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n👤 {deleter_info}"
+
+                await context.bot.edit_message_text(
+                    chat_id=info["chat_id"],
+                    message_id=row["bot_message_id"],
+                    text=f"✅ Прийнято до сплати. Очікуйте повідомлення про оплату.{deletion_note}",
+                    parse_mode=ParseMode.MARKDOWN
+                )
+        except Exception as e:
+            logger.warning(f"⚠️ Не вдалося оновити повідомлення бота: {e}")
+
+        # ✅ Завершити дію з inline-кнопками
         await query.edit_message_text("✅ Файл видалено. Рекомендуємо видалити також повідомлення з чату.")
+
     except Exception as e:
         logger.error(f"❌ Помилка при видаленні файлу: {e}")
         await query.edit_message_text("❌ Не вдалося перемістити файл.")
+
 
     # Змінюємо статус повідомлення відправки на оплату...
         try:
@@ -762,8 +792,17 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
-    await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+    bot_msg = await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
+    # 🧠 Додатково зберігаємо bot_message_id
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        cursor.execute(
+            "UPDATE telegram_files SET bot_message_id = %s WHERE chat_id = %s AND message_id = %s",
+            (bot_msg.message_id, message.chat.id, message.message_id)
+        )
+    conn.commit()
+    conn.close()
 
 # === 🧾 Логування всіх повідомлень ===
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
