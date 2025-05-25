@@ -1,27 +1,9 @@
-# Це бойова версія 1.4 Працює лише на сервері
+# Це бойова версія 1.2 Працює лише на сервері
 # Додано:
-# Паузу 0,5 сек між запитами на pending щоб ТГ АПІ не тормозило при великій кількості
-# Вивід в чат адміну всіх помилок
-# обробку юзернейм для занесення в БД, якщо юзери не мають нікнейм в ТГ
-# можливість "м'якого" видалення файлу з папки оплат по команді /delete
-
-#sudo systemctl stop petwealth_bot
-# sudo systemctl status petwealth_bot
-
-# === 📦 Версія бота ===
-BOT_VERSION = "1.4"
-BOT_NOTES = (
-    "➕ Нове:\n"
-    "🕒 Затримка 0.5 сек у /pending\n"
-    "📩 Вивід помилок адміну\n"
-    "👤 Збереження user_id і username напряму\n"
-    "🗑 Команда /delete для м’якого видалення платіжки\n"
-    
-    # "➖ Видалено: —\n"
-   
-    # "🛠 Виправлено: —"
-)
-
+#   - обробка фото з телефона, в тому числі і репі
+#   - уніфіковано блоки запису файлів, перевірки на дублі, перевірки на реплі
+#   - Логування відповідей від АПІ при помилках (не перевірено)
+#   - Виведення адміну в приват чат помилок при логуванні (не перевірено)
 
 import os
 import logging
@@ -39,11 +21,8 @@ import pymysql
 from telegram.error import BadRequest, Forbidden, TelegramError
 from telegram.constants import ParseMode
 from telegram import BotCommandScopeDefault
+
 from telegram import BotCommand
-import asyncio
-from telegram.helpers import escape_markdown
-
-
 
 
 #Меню команд
@@ -51,11 +30,11 @@ async def set_bot_commands(app):
     commands = [
         BotCommand("start", "показати роль"),
         BotCommand("checkbot", "статус бота"),
+        BotCommand("help", "доступні команди"),
+        BotCommand("about", "інформація про бота"),
         BotCommand("balance", "залишки по рахунках"),
         BotCommand("pay", "завантажити рахунок на оплату"),
         BotCommand("pending", "очікують оплати"),
-        BotCommand("delete", "видалити платіжку зі списку")
-        
     ]
     await app.bot.set_my_commands(commands)
 
@@ -170,171 +149,23 @@ async def save_file_and_record(file, original_filename, chat_id, message_id, use
     await tg_file.download_to_drive(file_path)
     logger.info(f"📥 Збережено файл: {file_path}")
 
-    # Отримуємо користувача
-    user = context._user if hasattr(context, '_user') else None
-    user_id = user.id if user else None
-    resolved_username = username or (user.username if user and user.username else (user.first_name if user else "unknown"))
-
     conn = get_db_connection()
     with conn.cursor() as cursor:
         sql = """
-        INSERT INTO telegram_files (
-            file_name, file_path, chat_id, message_id,
-            username, user_id, timestamp, status, created_at, updated_at
-        )
-        VALUES (%s, %s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
         """
         cursor.execute(sql, (
             original_filename,
             file_path,
             chat_id,
             message_id,
-            resolved_username,
-            user_id
+            username
         ))
     conn.commit()
     conn.close()
-    logger.info(f"✅ Запис про файл додано до БД: {original_filename} (user_id: {user_id})")
-
- # === 🗑 /delete: м’яке видалення платіжки ===
-async def delete_payment_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    message = update.effective_message
-
-    if not message.reply_to_message:
-        await message.reply_text("⚠️ Використовуйте цю команду як реплай на повідомлення з файлом на оплату.")
-        return
-
-    original = message.reply_to_message
-    chat_id = original.chat.id
-    message_id = original.message_id
-
-    # Пошук у БД
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        cursor.execute("""
-            SELECT file_name, file_path, status
-            FROM telegram_files
-            WHERE chat_id = %s AND message_id = %s
-        """, (chat_id, message_id))
-        record = cursor.fetchone()
-    conn.close()
-
-    if not record:
-        await message.reply_text("❌ Цей файл не зареєстровано як платіж.")
-        return
-
-    if record['status'] != 'pending':
-        await message.reply_text("⚠️ Видалення можливе лише для файлів, які очікують оплату!.")
-        return
-
-    # Запам'ятовуємо в user_data
-    context.user_data['delete_target'] = {
-        "chat_id": chat_id,
-        "message_id": message_id,
-        "file_path": record['file_path'],
-        "file_name": record['file_name']
-    }
-
-    keyboard = InlineKeyboardMarkup([
-        [
-            InlineKeyboardButton("✅ Так", callback_data="confirm_delete"),
-            InlineKeyboardButton("❌ Ні", callback_data="cancel_delete")
-        ]
-    ])
-    await message.reply_text(
-        f"⚠️ Ви дійсно хочете видалити файл *{record['file_name']}* зі списку оплат?",
-        parse_mode=ParseMode.MARKDOWN,
-        reply_markup=keyboard
-    )
-
-# === ✅ Кнопки підтвердження /delete ===
-async def delete_confirmation_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    data = query.data
-
-    if data == "cancel_delete":
-        await query.edit_message_text("🚫 Видалення скасовано.")
-        return
-
-    if data != "confirm_delete":
-        return
-
-    info = context.user_data.get("delete_target")
-    if not info:
-        await query.edit_message_text("⚠️ Дані не знайдено.")
-        return
-
-    try:
-        # 📁 Перемістити файл до Deleted
-        deleted_dir = os.path.join(SAVE_DIR, "Deleted")
-        os.makedirs(deleted_dir, exist_ok=True)
-        new_path = os.path.join(deleted_dir, os.path.basename(info['file_path']))
-        os.rename(info['file_path'], new_path)
-        logger.info(f"🗑 Файл переміщено до Deleted/: {new_path}")
-
-        # 🛠️ Оновити статус у БД
-        conn = get_db_connection()
-        with conn.cursor() as cursor:
-            cursor.execute("""
-                UPDATE telegram_files
-                SET status = 'deleted', updated_at = NOW()
-                WHERE chat_id = %s AND message_id = %s
-            """, (info['chat_id'], info['message_id']))
-        conn.commit()
-        conn.close()
-
-        # 🔄 Спроба оновити повідомлення, яке бот надіслав у відповідь
-        try:
-            conn = get_db_connection()
-            with conn.cursor() as cursor:
-                cursor.execute("""
-                    SELECT bot_message_id FROM telegram_files
-                    WHERE chat_id = %s AND message_id = %s
-                """, (info['chat_id'], info['message_id']))
-                row = cursor.fetchone()
-            conn.close()
-
-            if row and row["bot_message_id"]:
-                deleter = update.effective_user
-                deleter_info_raw = f"{deleter.full_name} (@{deleter.username})" if deleter.username else deleter.full_name
-                deleter_info = escape_markdown(deleter_info_raw, version=1)
-                deletion_note = f"\n\n🗑 *Файл видалено зі списку оплат* ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n👤 {deleter_info}"
-
-                await context.bot.edit_message_text(
-                    chat_id=info["chat_id"],
-                    message_id=row["bot_message_id"],
-                    text=f"✅ Прийнято до сплати. Очікуйте повідомлення про оплату.{deletion_note}",
-                    parse_mode=ParseMode.MARKDOWN
-                )
-        except Exception as e:
-            logger.warning(f"⚠️ Не вдалося оновити повідомлення бота: {e}")
-
-        # ✅ Завершити дію з inline-кнопками
-        await query.edit_message_text("✅ Файл видалено. Рекомендуємо видалити також повідомлення з чату.")
-
-    except Exception as e:
-        logger.error(f"❌ Помилка при видаленні файлу: {e}")
-        await query.edit_message_text("❌ Не вдалося перемістити файл.")
-
-
-    # Змінюємо статус повідомлення відправки на оплату...
-        try:
-            deleter = update.effective_user
-            deleter_info = f"{deleter.first_name} (@{deleter.username})" if deleter.username else deleter.first_name
-            deletion_note = f"\n\n🗑 *Файл видалено зі списку оплат* ({datetime.now().strftime('%Y-%m-%d %H:%M')})\n👤 {deleter_info}"
-
-            await context.bot.edit_message_text(
-                chat_id=info["chat_id"],
-                message_id=info["message_id"],
-                text=f"✅ Прийнято до сплати. Очікуйте повідомлення про оплату.{deletion_note}",
-                parse_mode=ParseMode.MARKDOWN
-            )
-        except Exception as edit_err:
-            logger.warning(f"⚠️ Не вдалося оновити повідомлення про платіж: {edit_err}")
-
-   
+    logger.info(f"✅ Запис про файл додано до БД: {original_filename}")
+    
 
 # === 📎 /pending ===
 async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -372,7 +203,6 @@ async def pending_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 reply_to_message_id=row["message_id"],
                 parse_mode=ParseMode.MARKDOWN
             )
-            await asyncio.sleep(0.5)  # 🔁 запобігає таймауту Telegram API
         except (BadRequest, Forbidden) as e:
             logger.warning(f"❌ Повідомлення недоступне: {e}")
             await update.message.reply_text(
@@ -455,22 +285,20 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(text, parse_mode="Markdown")
 
 
-# === ✅ /checkbot (оновлено з відображенням версії) ===
+# === ✅ /checkbot ===
 async def checkbot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    uptime = datetime.now() - context.application.bot_data.get("start_time", datetime.now())
+    user = update.effective_user
+    chat = update.effective_chat
+
+    uptime = datetime.now() - start_time
     seconds = int(uptime.total_seconds())
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     uptime_str = f"{hours} год {minutes} хв {seconds} с"
 
-    text = (
-        f"✅ Бот онлайн\n"
-        f"⏱ Аптайм: {uptime_str}\n"
-        f"\n"
-        f"📦 Версія: {BOT_VERSION}\n"
-        f"📝 {BOT_NOTES}"
-    )
-    await update.message.reply_text(text)
+    logger.info(f"✅ /checkbot від {user.id} ({user.username}) — {uptime_str}, чат: {chat.type}")
+    await update.message.reply_text(f"✅ Бот онлайн\n⏱ Аптайм: {uptime_str}")
+
 
 # === 💰 /balance ===
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -582,8 +410,7 @@ async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAUL
         base, ext = os.path.splitext(original_filename)
         save_name = f"{base}_copy_{now_str}{ext}"
 
-    user = update.effective_user
-    await save_file_and_record(file, original_filename, chat_id, message_id, user, context, save_as=save_name)
+    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
     await query.edit_message_text(f"✅ Відправлено повторно з новою назвою: {save_name}")
 
 
@@ -655,7 +482,7 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     # 🟢 Якщо не дубль — зберегти
-    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, user, context)
+    await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
     await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
 
@@ -699,7 +526,7 @@ async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await message.reply_text(text, reply_markup=keyboard)
             return
 
-        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user, context)
+        await save_file_and_record(photo, filename, message.chat.id, message.message_id, message.from_user.username, context)
         await message.reply_text("✅ Фото платіжки збережено і додано до обробки.")
     else:
         await message.reply_text("⚠️ Додайте /pay або /оплата в підпис до фото, щоб зареєструвати платіжку.")
@@ -792,17 +619,8 @@ async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE
         return
 
     await save_file_and_record(file, original_filename, chat.id, original_message.message_id, username, context)
-    bot_msg = await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+    await message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
 
-    # 🧠 Додатково зберігаємо bot_message_id
-    conn = get_db_connection()
-    with conn.cursor() as cursor:
-        cursor.execute(
-            "UPDATE telegram_files SET bot_message_id = %s WHERE chat_id = %s AND message_id = %s",
-            (bot_msg.message_id, message.chat.id, message.message_id)
-        )
-    conn.commit()
-    conn.close()
 
 # === 🧾 Логування всіх повідомлень ===
 async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -814,13 +632,6 @@ async def log_everything(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # === ❌ Глобальна обробка помилок ===
 async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
     logger.error(f"❌ ПОМИЛКА: {context.error}")
-
-    # Повідомлення адміну про помилку
-    try:
-        await notify_admin(context, str(context.error))
-    except Exception as e:
-        logger.error(f"📭 Неможливо повідомити адміну про помилку: {e}")
-
     if update and hasattr(update, "message"):
         try:
             await update.message.reply_text("⚠️ Виникла внутрішня помилка.")
@@ -830,7 +641,7 @@ async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
 
 # === 🚀 MAIN ===
 def main():
-    logger.info("🚀 Запуск бота...")
+    logger.info("🚀 Запуск DEV_бота...")
     app = ApplicationBuilder().token(BOT_TOKEN).build()
 
     #Обробник команд
@@ -843,9 +654,6 @@ def main():
     app.add_handler(CommandHandler("checkbot", checkbot_command))
     app.add_handler(CommandHandler("balance", balance_command))
     app.add_handler(CommandHandler("pending", pending_command))
-    app.add_handler(CommandHandler("delete", delete_payment_command))  # 🆕 /delete
-    app.add_handler(CallbackQueryHandler(delete_confirmation_handler, pattern="^(confirm_delete|cancel_delete)$"))  # 🆕 кнопки
-
 
     # Обробка фото телефону
     app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
@@ -869,12 +677,11 @@ def main():
 
     # ❌ Обробник помилок
     app.add_error_handler(error_handler)
+
     try:
         app.run_polling()
     except Exception as e:
         logger.critical(f"🔥 Бот аварійно зупинився: {e}")
-
-    app.bot_data["start_time"] = datetime.now()
 
 # ▶️ Запуск
 if __name__ == "__main__":
