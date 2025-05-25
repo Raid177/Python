@@ -1,0 +1,176 @@
+Логіка платіжок.
+Загальний огляд:
+Користувач кидає файли, я їх обробляю за допомогою іншого скрипту, переміщаючи в іншу папку після оплати. Інший скрипт в групу пише, що файл оброблено і міняє статус на оплачено (pay) в базі.
+
+як я бачу роботу цього скрипту, який ми пишемо:
+- користувач з достатніми правами висилає в групу або бот файл формату ексель (як старої так і нової версії), або txt або pdf або картинку (jpeg, png тощо). Тригером для запуску обробки є /оплата або /pay в коментарі, або ж відповідь (reply) на повідомлення з файлом цих типів. 
+Якщо команда на оплату на файл других типів, або на просто текстове повідомлення, або взагалі пуста - видаємо повідомлення щось типу для оплати передайте файли наступних типів. Ваш файл не підтримується.
+
+- файл зберігається у папку SAVE_DIR=/root/Automation/Paid (беремо з енв-файла) з оригінальним ім'ям
+
+- після чого логуємо факт розміщення в БД таблиця telegram_files
+id|file_name                              |file_path                                                    |chat_id       |message_id|username   |timestamp          |status |created_at         |updated_at         |deleted_by|deleted_at|
+--+---------------------------------------+-------------------------------------------------------------+--------------+----------+-----------+-------------------+-------+-------------------+-------------------+----------+----------+
+ 1|Льодін О рах 15052025.xls              |/root/Automation/Paid/Льодін О рах 15052025.xls              |-1002544853552|       167|Alexey_Raid|2025-05-15 13:42:21|paid   |2025-05-15 13:42:21|2025-05-15 23:43:27|          |          |
+ Дані для авторизації в БД берем з енв-файлу
+ # БД
+DB_HOST=wealth0.mysql.tools
+DB_USER=wealth0_raid
+DB_PASSWORD=n5yM5ZT87z
+DB_DATABASE=wealth0_analytics
+В полі status ставимо очікування (pending).
+
+- виводимо в ТГ групу повідомлення з реплі на повідомлення з файлом Прийнято до сплати. Очікуйте повідомлення про оплату.
+
+Якщо файл з такою назвою вже на оплату відправлявся - виводимо користувачу повідомлення що такий файл вже був відправлений на оплату тоді то і тоді то (поле created_at БД) тим то і тим то (поле username БД). Чи хочете ви повторно файл з такою назвою відправити? Якщо да - зберігаємо, але до оригінального файла додаємо текст _copy+датачас наявний та пишемо файл (оригінальна назва) відправлений на оплату. Звичайно, в БД file_path пишем змінене ім'я файлу, а в поле file_name - оригінальне, щоб можна було статуси відслідковувати.
+
+все.
+
+Опціонально - окрема команда для отримання списку (в ідеалі з реплі, щоб можна було перейти по посиланню до файлу) на неоплачені файли (дивимся в БД по статусу).
+
+Опціонально - придумати схему, як не видаляти файли (або хоча б логувати видалення файлів) користувачем, які вже оплачені
+
+
+# === 📎 Обробка файлів /pay або /оплата ===
+async def handle_payment_file(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # 👤 Дані користувача
+    user = update.effective_user
+    chat = update.effective_chat
+    message = update.effective_message
+    username = user.username or "unknown"
+
+    # 🔐 Перевірка ролі
+    role = get_user_role(user.id)
+    if role not in {"admin", "manager"}:
+        logger.warning(f"⛔ Недостатньо прав: {user.id} ({username})")
+        return
+
+    # 📌 Перевірка чи є команда /pay або /оплата (в caption або reply)
+    is_triggered = False
+    if message.caption:
+        is_triggered = any(x in message.caption.lower() for x in ["/pay", "/оплата"])
+    if message.reply_to_message and message.text and any(x in message.text.lower() for x in ["/pay", "/оплата"]):
+        is_triggered = True
+        message = message.reply_to_message
+
+    if not is_triggered or not message.document:
+        logger.info(f"ℹ️ Пропуск: {user.id} ({username}) — без тригеру або без файлу")
+        return
+
+    # 📂 Перевірка дозволеного розширення
+    file = message.document
+    original_filename = file.file_name
+    ext = os.path.splitext(original_filename)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        reply = "⚠️ Для оплати передайте файл у форматі: PDF, Excel, TXT, PNG, JPEG"
+        await update.message.reply_text(reply)
+        logger.warning(f"⚠️ Непідтримуваний формат: {original_filename}")
+        return
+
+    # 🧾 Перевірка в БД по назві файлу
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = "SELECT * FROM telegram_files WHERE file_name = %s ORDER BY created_at DESC LIMIT 1"
+        cursor.execute(sql, (original_filename,))
+        existing = cursor.fetchone()
+    conn.close()
+
+    # 🟡 Якщо файл уже надсилався раніше — показуємо підтвердження
+    if existing:
+        text = (
+            f"⚠️ Файл з такою назвою вже надсилався {existing['created_at'].strftime('%Y-%m-%d %H:%M')} "
+            f"користувачем @{existing['username']}"
+        )
+        if existing['status'] == 'pay':
+            text += f"\n✅ Оплачено: {existing['updated_at'].strftime('%Y-%m-%d %H:%M')}"
+        text += "\n\nВідправити повторно на оплату?"
+
+        keyboard = InlineKeyboardMarkup([
+            [
+                InlineKeyboardButton("✅ Так", callback_data=CONFIRM_PREFIX + file.file_id),
+                InlineKeyboardButton("❌ Ні", callback_data="cancel")
+            ]
+        ])
+
+        context.user_data[file.file_id] = {
+            "file": file,
+            "file_name": original_filename,
+            "message_id": message.message_id,
+            "chat_id": chat.id,
+            "username": username
+        }
+
+        await update.message.reply_text(text, reply_markup=keyboard)
+        return
+
+    # 🟢 Якщо дубліката нема — одразу зберігаємо
+    await save_file_and_record(file, original_filename, chat.id, message.message_id, username, context)
+    await update.message.reply_text("✅ Прийнято до сплати. Очікуйте повідомлення про оплату.")
+
+# === ✅ Обробка callback Так / Ні (для дубліката) ===
+async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+    data = query.data
+
+    # ❌ Відмова користувача
+    if data == "cancel":
+        await query.edit_message_text("🚫 Надсилання файлу на оплату скасовано.")
+        return
+
+    # 🔐 Перевірка на валідний формат callback_data
+    if not data.startswith(CONFIRM_PREFIX):
+        return
+
+    file_id = data.replace(CONFIRM_PREFIX, "")
+    info = context.user_data.get(file_id)
+    if not info:
+        await query.edit_message_text("⚠️ Дані для обробки не знайдено.")
+        return
+
+    file = info["file"]
+    original_filename = info["file_name"]
+    chat_id = info["chat_id"]
+    message_id = info["message_id"]
+    username = info["username"]
+
+    # 📝 Створюємо нову назву для копії файлу
+    now_str = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    base, ext = os.path.splitext(original_filename)
+    save_name = f"{base}_copy_{now_str}{ext}"
+
+    # 💾 Зберігаємо файл з новою назвою
+    await save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=save_name)
+
+    # ✅ Відповідь після підтвердження
+    await query.edit_message_text(
+        f"✅ Відправлено повторно з новою назвою: {save_name}"
+    )
+
+# === 💾 Збереження файлу та запис в БД ===
+async def save_file_and_record(file, original_filename, chat_id, message_id, username, context, save_as=None):
+    os.makedirs(SAVE_DIR, exist_ok=True)
+    save_name = save_as or original_filename
+    file_path = os.path.join(SAVE_DIR, save_name)
+
+    # ⬇️ Завантаження з Telegram
+    tg_file = await context.bot.get_file(file.file_id)
+    await tg_file.download_to_drive(file_path)
+    logger.info(f"📥 Збережено файл: {file_path}")
+
+    # 🧮 Запис у таблицю telegram_files
+    conn = get_db_connection()
+    with conn.cursor() as cursor:
+        sql = """
+        INSERT INTO telegram_files (file_name, file_path, chat_id, message_id, username, timestamp, status, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW(), 'pending', NOW(), NOW())
+        """
+        cursor.execute(sql, (
+            original_filename,
+            file_path,
+            chat_id,
+            message_id,
+            username
+        ))
+    conn.commit()
+    conn.close()

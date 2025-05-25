@@ -59,3 +59,7 @@ dist/
 # === Personal files (optional) ===
 notes.txt
 TODO.md
+
+*.log
+*.exe
+
