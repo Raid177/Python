@@ -19,7 +19,7 @@ ODATA_USER = env["ODATA_USER"]
 ODATA_PASSWORD = env["ODATA_PASSWORD"]
 
 # ==== Вхідні дані (вручну або з іншого джерела) ====
-study_number = "1946"
+study_number = "000000735"
 valid_rentgen_type_refs = [
     "4f777428-07e8-11e5-80ce-00155dd6780b",  # Рентген
     # "додати ще типи за потреби"
