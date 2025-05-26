@@ -1,96 +1,92 @@
 import os
 import base64
+import json
 from pathlib import Path
 from dotenv import load_dotenv
 import openai
 
-# === 🔐 Завантаження API ключа ===
-load_dotenv()
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# === 🌱 Завантаження ключів ===
+load_dotenv(dotenv_path=r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\.env")
 
-# === 📌 Інформація про пацієнта ===
+api_key = os.getenv("OPENAI_API_KEY")
+if not api_key:
+    raise ValueError("❌ OPENAI_API_KEY не знайдено в .env")
+openai.api_key = api_key
+
+# === 🧠 Завантаження системного промпта з файлу ===
+system_prompt_path = Path(__file__).parent / "thorax.txt"
+if not system_prompt_path.exists():
+    raise FileNotFoundError("❌ Файл thorax.txt не знайдено в директорії скрипта")
+system_prompt = system_prompt_path.read_text(encoding="utf-8")
+
+# === 🐾 Інфо пацієнта ===
 patient_info = """
-Інформація по дослідженню № 000000211
-============================================================
-📌 Кличка:            Лесик
-📄 Номер договору:    220
-👤 Власник (ПІБ):     Бондарчук Тетяна
+📌 Кличка:            Оріон
+📄 Номер договору:    858
+👤 Власник (ПІБ):     Шеремет Дарина Сергіївна
 🧬 Вид:               Кіт
 🐾 Порода:            метис
 ⚥ Стать:             Male
-🎂 Вік:               1р 1м
-⚖️  Вага:             1.89 кг (від 2025-02-15)
-📝 Показання:         кошеня, важке дихання, в'ялість, Т-40, 32 тис лейкоцитів (нейтрофільний лейкоцитоз)
+🎂 Вік:               3р 0м
+⚖️  Вага:              4.5 кг (від 2025-05-26)
+📝 Показання:          Кашель останні 2,5 років, поступово наростає в динаміці. Контролюється, але не ефективно апоквелем. 
 """
 
-# === 📸 Шляхи до зображень ===
+# === 🖼️ Шляхи до зображень ===
 image_paths = [
-    # r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Rh\RhTest\6b8dd78a-6f0c-486e-a70d-6000827309a3.jpg",
-    r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Rh\RhTest\74ebf5a3-83d1-46a8-b65c-8a609a047711.jpg"
+    r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Rh\RhTest\RL1.jpg",
+    r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Rh\RhTest\RL2.jpg",
+    r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Rh\RhTest\VD.jpg"
 ]
 
-# === 🧠 Системний промпт ===
-system_prompt = """
-Ти ветеринарний рентгенолог. Проаналізуй рентгенівські знімки тварини.
-
-
-📝 Структура висновку:
-
-1. Характеристика знімку  
-2. Якість укладки  
-3. Трахея  
-4. Паренхіма легень  
-5. Серце та судини  
-6. Плевра  
-7. Середостіння  
-8. Діафрагма  
-9. Інші зміни в грудній клітці  
-10. Випадкові знахідки поза грудною кліткою  
-10.1 Невідповідність з клінічними даними (якщо є)  
-11. Можливі причини виявлених змін  
-12. Загальні рекомендації (в т.ч. дообстеження)  
-13. Коротке рентгенологічне заключення  
-
-"""
-
-# === 📤 Підготовка повідомлень ===
+# === 🔧 Функція для конвертації в base64 ===
 def encode_image_to_base64(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-def build_message_with_images(image_paths, patient_info):
-    messages = [
-        {"role": "system", "content": system_prompt},
-        {"role": "user", "content": [{"type": "text", "text": patient_info}]}
+# === 📤 Підготовка повідомлення ===
+def build_messages(image_paths, patient_info):
+    user_block = [
+        {"type": "text", "text": patient_info},
+        {"type": "text", "text": "Проаналізуй знімки та сформуй рентгенологічний висновок за вказаною структурою."}
     ]
-
     for path in image_paths:
+        filename = os.path.basename(path)
         base64_image = encode_image_to_base64(path)
-        messages[1]["content"].append({
+        print(f"✅ Додано зображення: {filename}")
+        user_block.append({
             "type": "image_url",
             "image_url": {
                 "url": f"data:image/jpeg;base64,{base64_image}"
             }
         })
 
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_block}
+    ]
     return messages
 
-# === 🚀 Запуск ===
+# === 🚀 Основний запуск ===
 if __name__ == "__main__":
-    print("⏳ Аналізуємо знімки GPT-4o...")
+    print("\n⏳ Аналізуємо знімки GPT-4o...\n")
+
     try:
-        messages = build_message_with_images(image_paths, patient_info)
+        messages = build_messages(image_paths, patient_info)
+
+        # Вивід всього запиту у json-форматі
+        # print(json.dumps(messages, indent=2)[:3000])
 
         response = openai.chat.completions.create(
             model="gpt-4o",
             messages=messages,
             temperature=0.3,
-            max_tokens=2000
+            max_tokens=2048
         )
 
         result = response.choices[0].message.content
-        print("\n✅ Результат:")
+        print("\n✅ Результат:\n")
         print(result)
 
     except Exception as e:
-        print(f"❌ Помилка: {e}")
+        print(f"\n❌ Помилка: {e}")
