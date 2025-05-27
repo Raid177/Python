@@ -16,7 +16,7 @@ openai.api_key = api_key
 # === 🧠 Завантаження системного промпта з файлу ===
 system_prompt_path = Path(__file__).parent / "thorax.prmt"
 if not system_prompt_path.exists():
-    raise FileNotFoundError("❌ Файл thorax.txt не знайдено в директорії скрипта")
+    raise FileNotFoundError("❌ Файл thorax.prmt не знайдено в директорії скрипта")
 system_prompt = system_prompt_path.read_text(encoding="utf-8")
 
 # === 🐾 Інфо пацієнта ===

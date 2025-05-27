@@ -39,6 +39,8 @@ if not doc_data.get("value"):
 
 doc = doc_data["value"][0]
 doc_ref = doc["Ref_Key"]
+doc_ref = doc["Ref_Key"]
+study_date = doc.get("Date", "")[:10]  # Для віку на момент дослідження
 
 # ==== Перевірка відповідності ====
 posted = doc.get("Posted", False)
@@ -81,13 +83,13 @@ if breed_key:
     breed_url = f"{ODATA_URL}Catalog_Породы(guid'{breed_key}')?$format=json"
     breed = requests.get(breed_url, auth=HTTPBasicAuth(ODATA_USER, ODATA_PASSWORD)).json().get("Description", "")
 
-# ==== 6. Вік тварини ====
+# ==== 6. Вік тварини (на момент дослідження) ====
 age = ""
-if birthdate:
+if birthdate and study_date:
     try:
         birthdate_dt = datetime.strptime(birthdate[:10], "%Y-%m-%d")
-        now = datetime.now()
-        diff = relativedelta(now, birthdate_dt)
+        study_date_dt = datetime.strptime(study_date, "%Y-%m-%d")
+        diff = relativedelta(study_date_dt, birthdate_dt)
         age = f"{diff.years}р {diff.months}м"
     except:
         age = "невідомо"
@@ -110,13 +112,14 @@ if weight_data:
 print("\n" + "=" * 60)
 print(f"🔎 Інформація по дослідженню № {study_number}")
 print("=" * 60)
+print(f"🆔 Ref_Key документа:  {doc_ref}")
 print(f"📌 Кличка:            {name}")
 print(f"📄 Номер договору:    {contract}")
 print(f"👤 Власник (ПІБ):     {owner}")
 print(f"🧬 Вид:               {species}")
 print(f"🐾 Порода:            {breed}")
-print(f"⚥ Стать:             {gender}")
-print(f"🎂 Вік:               {age}")
+print(f"⚥ Стать:              {gender}")
+print(f"🎂 Вік:               {age} (на дату {study_date})")
 print(f"⚖️  Вага:              {weight} кг (від {weight_date})")
 print(f"📝 Показання:          {open_answer}")
 print("=" * 60)
