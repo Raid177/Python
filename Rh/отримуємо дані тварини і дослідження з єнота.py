@@ -10,6 +10,7 @@ from requests.auth import HTTPBasicAuth
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from dotenv import dotenv_values
+import pymysql
 
 # ==== Завантаження конфігурації з .env ====
 env = dotenv_values("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
@@ -17,6 +18,14 @@ env = dotenv_values("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.en
 ODATA_URL = env["ODATA_URL"]
 ODATA_USER = env["ODATA_USER"]
 ODATA_PASSWORD = env["ODATA_PASSWORD"]
+conn = pymysql.connect(
+    host=env["DB_HOST"],
+    user=env["DB_USER"],
+    password=env["DB_PASSWORD"],
+    database=env["DB_DATABASE"],
+    charset='utf8mb4',
+    cursorclass=pymysql.cursors.DictCursor
+)
 
 # ==== Вхідні дані (вручну або з іншого джерела) ====
 study_number = "000001957"
@@ -123,3 +132,56 @@ print(f"🎂 Вік:               {age} (на дату {study_date})")
 print(f"⚖️  Вага:              {weight} кг (від {weight_date})")
 print(f"📝 Показання:          {open_answer}")
 print("=" * 60)
+
+with conn.cursor() as cursor:
+    sql = """
+        INSERT INTO bot_study_requests (
+            path_image, type_exam, id_patient, Ref_KeyEXAM, date_exam,
+            name, owner, kind, breed, sex, age, weight,
+            exam_context, requested_by, status, created_at, updated_at
+        )
+        VALUES (
+            %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, NOW(), NOW()
+        )
+        ON DUPLICATE KEY UPDATE
+            path_image = VALUES(path_image),
+            type_exam = VALUES(type_exam),
+            id_patient = VALUES(id_patient),
+            date_exam = VALUES(date_exam),
+            name = VALUES(name),
+            owner = VALUES(owner),
+            kind = VALUES(kind),
+            breed = VALUES(breed),
+            sex = VALUES(sex),
+            age = VALUES(age),
+            weight = VALUES(weight),
+            exam_context = VALUES(exam_context),
+            requested_by = VALUES(requested_by),
+            status = VALUES(status),
+            updated_at = NOW();
+    """
+
+    cursor.execute(sql, (
+        f'Study_Exam/{doc_ref}',  # path_image
+        'Rh_torax',              # type_exam
+        contract,                # id_patient
+        doc_ref,                 # Ref_KeyEXAM
+        study_date,              # date_exam
+
+        name,                    # name
+        owner,                   # owner
+        species,                 # kind
+        breed,                   # breed
+        gender,                  # sex
+        age,                     # age
+        weight,                  # weight
+
+        open_answer,            # exam_context
+        0,                      # requested_by (на цьому етапі не через ТГ)
+        'pending'               # status
+    ))
+
+    conn.commit()
+conn.close()
