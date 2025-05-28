@@ -62,7 +62,6 @@ async def handle_uploaded_document(message: Message, state: FSMContext):
 
     # перше зображення → отримуємо дані
     if not data.get("save_dir"):
-        await message.answer("📄 Завантажено перший знімок. Отримую дані пацієнта...")
         patient_info = get_patient_data(exam_number)
         if not patient_info.get("success"):
             await message.answer("❌ Помилка отримання пацієнта:\n" + patient_info["error"])
@@ -91,9 +90,13 @@ async def handle_uploaded_document(message: Message, state: FSMContext):
     await bot.download_file(file.file_path, destination=file_path)
     await message.answer(f"✅ Збережено: <b>{message.document.file_name}</b>")
 
-    # після останнього зображення – виводимо пацієнта один раз
     images_saved = (await state.get_data()).get("images_saved", 0) + 1
     await state.update_data(images_saved=images_saved)
+
+    if images_saved == 1:
+        await message.answer(f"📄 Завантажено {images_saved} знімок. Отримую дані пацієнта...")
+    else:
+        await message.answer(f"📄 Завантажено {images_saved} знімок.")
 
     if images_saved >= 3 and not data.get("patient_message_sent"):
         await state.update_data(patient_message_sent=True)
