@@ -4,6 +4,13 @@ import json
 from pathlib import Path
 from dotenv import load_dotenv
 import openai
+import glob
+import pydicom
+from PIL import Image
+import numpy as np
+import mimetypes
+from collections import OrderedDict
+
 
 # === 🌱 Завантаження ключів ===
 load_dotenv(dotenv_path=r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\.env")
@@ -33,12 +40,45 @@ def build_patient_info(row: dict) -> str:
 📝 Показання:          {row['exam_context']}
 """.strip()
 
-
-# === 🖼️ Шляхи до зображень ===
-import glob
-
+# === 🖼️ Шляхи до зображень (перевірка MIME) ===
 def get_image_paths(image_dir: str) -> list:
-    return sorted(glob.glob(os.path.join(image_dir, "files_*")))
+    all_files = glob.glob(os.path.join(image_dir, "files_*"))
+    image_files = []
+
+    for path in all_files:
+        ext = os.path.splitext(path)[1].lower()
+        mime_type, _ = mimetypes.guess_type(path)
+
+        # Стандартні зображення
+        if mime_type and mime_type.startswith("image/"):
+            image_files.append(path)
+
+        # DICOM → перетворити
+        elif ext == ".dcm":
+            jpg_path = path + ".jpg"
+            if not os.path.exists(jpg_path):
+                result = convert_dcm_to_jpg(path, jpg_path)
+                if result:
+                    image_files.append(result)
+            else:
+                image_files.append(jpg_path)
+
+    return sorted(image_files)
+
+# функція для конвертації .dcm у .jpg:
+def convert_dcm_to_jpg(dcm_path: str, output_path: str) -> str:
+    try:
+        ds = pydicom.dcmread(dcm_path)
+        pixel_array = ds.pixel_array
+        if len(pixel_array.shape) == 3:  # Якщо 3D або RGB
+            image = Image.fromarray(pixel_array)
+        else:  # 2D grayscale
+            image = Image.fromarray(pixel_array).convert("L")
+        image.save(output_path, "JPEG")
+        return output_path
+    except Exception as e:
+        print(f"❌ Не вдалося конвертувати {dcm_path} → JPG: {e}")
+        return None
 
 
 # === 🔧 Функція для конвертації в base64 ===
@@ -98,56 +138,38 @@ def get_study_request(ref_keyexam: str) -> dict:
         return result
     
 # 🧩 1. Парсер відповіді GPT (спрощений)
-def parse_gpt_result(raw_text: str) -> dict:
-    result = {}
-    lines = raw_text.strip().splitlines()
-    for line in lines:
-        if ":" in line:
-            key, value = line.split(":", 1)
-            result[key.strip()] = value.strip()
-    return result
+def parse_gpt_result(text: str) -> OrderedDict:
+    findings = OrderedDict()
+    
+    # Приклад парсингу (залиши свою логіку тут):
+    sections = text.split("\n\n")
+    for section in sections:
+        if section.strip():
+            lines = section.strip().split(":", 1)
+            if len(lines) == 2:
+                title = lines[0].strip()
+                body = lines[1].strip()
+                findings[title] = body
+
+    # Додай лог для перевірки порядку
+    for i, (title, answer) in enumerate(findings.items(), start=1):
+        print(f"{i}. {title[:60]}...")
+
+    return findings
 
 # 📋 2. Отримання мапи питань
 def get_question_map() -> dict:
     with conn.cursor() as cursor:
         cursor.execute("""
-            SELECT question_name, question_key, subquestion_key
-            FROM bot_study_question_map
+            SELECT gpt_answer_number, Вопрос_Key, ЭлементарныйВопрос_Key, Description_Енота
+                FROM bot_study_question_map
+                WHERE active = 1
         """)
         rows = cursor.fetchall()
-        return {row["question_name"]: row for row in rows}
+        return {row["Description_Енота"]: row for row in rows}
 
 # 🧾 3. Збереження результатів у bot_study_findings
 from datetime import datetime
-
-def save_findings_to_db(ref_keyexam: str, findings: dict, full_text: str):
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    question_map = get_question_map()
-
-    with conn.cursor() as cursor:
-        for name, answer in findings.items():
-            if name not in question_map:
-                print(f"⚠️ Пропущено: '{name}' не знайдено у question_map")
-                continue
-            q = question_map[name]
-            cursor.execute("""
-                INSERT INTO bot_study_findings
-                (Ref_KeyEXAM, question_key, subquestion_key, open_answer, full_gpt_response, created_at, updated_at)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON DUPLICATE KEY UPDATE
-                    open_answer = VALUES(open_answer),
-                    full_gpt_response = VALUES(full_gpt_response),
-                    updated_at = VALUES(updated_at)
-            """, (
-                ref_keyexam,
-                q["question_key"],
-                q["subquestion_key"],
-                answer,
-                full_text,
-                now,
-                now
-            ))
-    conn.commit()
 
 # 🔄 4. Оновлення статусу parsed
 def mark_study_as_parsed(ref_keyexam: str):
@@ -159,12 +181,85 @@ def mark_study_as_parsed(ref_keyexam: str):
         """, (ref_keyexam,))
     conn.commit()
 
+#  Формуємо файл запиту-відповіді до АПІ
+# === 💾 Збереження логів у answer.txt ===
+try:
+    # Отримуємо директорію зображень
+    image_dir = os.path.dirname(image_paths[0]) if image_paths else "."
+
+    log_path = os.path.join(image_dir, "answer.txt")
+    with open(log_path, "w", encoding="utf-8") as f:
+        f.write("=== 📌 Пацієнт ===\n")
+        f.write(patient_info + "\n\n")
+
+        f.write("=== 📤 Запит до GPT ===\n")
+        for item in messages[-1]["content"]:
+            if item["type"] == "text":
+                f.write(f"[Text]\n{item['text']}\n\n")
+            elif item["type"] == "image_url":
+                f.write(f"[Image] data:image/jpeg;base64,... (обрізано)\n\n")
+
+        f.write("=== 📥 Відповідь GPT ===\n")
+        f.write(result.strip() + "\n")
+
+    print(f"\n📝 Лог збережено у: {log_path}")
+except Exception as e:
+    print(f"\n⚠️ Не вдалося зберегти answer.txt: {e}")
+
 # 🚀 5. Повний виклик:
 def finalize_processing(ref_keyexam: str, raw_text: str):
     findings = parse_gpt_result(raw_text)
-    save_findings_to_db(ref_keyexam, findings, raw_text)
-    mark_study_as_parsed(ref_keyexam)
-    print("✅ Дані збережено у bot_study_findings та статус оновлено.")
+    question_map = get_question_map()
+    
+    successfully_saved = 0
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    with conn.cursor() as cursor:
+        for idx, (title, answer) in enumerate(findings.items(), start=1):
+            qmap = next((q for q in question_map.values() if q["gpt_answer_number"] == idx), None)
+
+            if not qmap:
+                print(f"⚠️ Пропущено: '{title}' (GPT #{idx}) — не знайдено в question_map")
+                continue
+
+            print(f"✅ Порівняння #{idx}: '{title}' → знайдено → заповнення")
+
+            cursor.execute("""
+                INSERT INTO bot_study_findings
+                (Ref_KeyEXAM, question_key, subquestion_key, open_answer, created_at, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON DUPLICATE KEY UPDATE
+                    open_answer = VALUES(open_answer),
+                    updated_at = VALUES(updated_at)
+            """, (
+                ref_keyexam,
+                qmap["Вопрос_Key"],
+                qmap["ЭлементарныйВопрос_Key"],
+                answer,
+                now,
+                now
+            ))
+
+            successfully_saved += 1
+    conn.commit()
+
+    if successfully_saved:
+        mark_study_as_parsed(ref_keyexam)
+        print(f"\n✅ Збережено {successfully_saved} відповідей. Статус оновлено.")
+    else:
+        print("\n⚠️ Жодна відповідь не збережена — статус не змінено.")
+
+# Збереження питання-відповіді в файл
+def save_answer_log(image_paths, prompt_text, gpt_response):
+    try:
+        folder_path = os.path.dirname(image_paths[0]) if image_paths else "."
+        log_text = "📤 Запит до GPT:\n" + prompt_text + "\n\n📥 Відповідь GPT:\n" + gpt_response + "\n\n📎 Зображення:\n"
+        log_text += "\n".join([os.path.basename(p) for p in image_paths])
+        with open(os.path.join(folder_path, "answer.txt"), "w", encoding="utf-8") as f:
+            f.write(log_text)
+        print("✅ answer.txt збережено.")
+    except Exception as e:
+        print(f"⚠️ Не вдалося зберегти answer.txt: {e}")
 
 
 # === 🚀 Основний запуск ===
@@ -192,6 +287,8 @@ if __name__ == "__main__":
         )
 
         result = response.choices[0].message.content
+        save_answer_log(image_paths, messages[1]['content'][0]["text"], result)
+
         print("\n✅ Результат:\n")
         print(result)
 
