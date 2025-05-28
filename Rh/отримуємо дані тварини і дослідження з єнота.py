@@ -15,7 +15,7 @@ import pymysql
 # ==== Завантаження конфігурації з .env ====
 env = dotenv_values("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
-ODATA_URL = env["ODATA_URL"]
+ODATA_URL = env["ODATA_URL_COPY"]
 ODATA_USER = env["ODATA_USER"]
 ODATA_PASSWORD = env["ODATA_PASSWORD"]
 conn = pymysql.connect(
@@ -28,7 +28,7 @@ conn = pymysql.connect(
 )
 
 # ==== Вхідні дані (вручну або з іншого джерела) ====
-study_number = "000001957"
+study_number = "000001959"
 valid_rentgen_type_refs = [
     "4f777428-07e8-11e5-80ce-00155dd6780b",  # Рентген
     # "додати ще типи за потреби"

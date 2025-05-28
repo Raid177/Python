@@ -266,7 +266,7 @@ def save_answer_log(image_paths, prompt_text, gpt_response):
 if __name__ == "__main__":
     print("\n⏳ Аналізуємо знімки GPT-4o...\n")
 
-    ref_key = "c316e9c8-3a65-11f0-8de8-2ae983d8a0f0"  # ← сюди вставляєш потрібний Ref_KeyEXAM
+    ref_key = "74061efa-3bd5-11f0-82a9-2ae983d8a0f0"  # ← сюди вставляєш потрібний Ref_KeyEXAM
 
     try:
         row = get_study_request(ref_key)
@@ -276,7 +276,7 @@ if __name__ == "__main__":
 
         # 🔎 Відладка: показати, що саме відправляється в GPT
         print("\n📤 Вміст запиту до GPT:")
-        print(json.dumps(messages, indent=2)[:3000])  # обрізаємо до 3000 символів
+        # print(json.dumps(messages, indent=2)[:3000])  # обрізаємо до 3000 символів
 
         # 🧠 GPT-запит
         response = openai.chat.completions.create(

@@ -19,7 +19,7 @@ if response.status_code != 200:
 data = response.json()
 
 # Заміна поля `Ответ` у першому елементі Состав
-data["Состав"][0]["Ответ"] = "тут щось має бути"
+data["Состав"][0]["Ответ"] = "Пarsgsfaferwqaактерні для хронічного запального процесу"
 
 # PUT
 put_response = requests.put(url_put, auth=auth, headers=headers, json=data)
