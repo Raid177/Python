@@ -42,7 +42,7 @@ def fetch_findings(ref_key_exam):
     with get_db_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute("""
-                SELECT subquestion_key, open_answer 
+                SELECT question_key, subquestion_key, open_answer 
                 FROM bot_study_findings 
                 WHERE Ref_KeyEXAM = %s
             """, (ref_key_exam,))
@@ -71,48 +71,70 @@ def main():
         log(f"🔎 Обробка дослідження {ref_key_exam}")
 
         try:
-            # 1. Отримати документ з Єнота
             url_get = f"{ODATA_URL}Document_Анализы(guid'{ref_key_exam}')?$format=json"
             response = requests.get(url_get, auth=(ODATA_USER, ODATA_PASSWORD), headers=HEADERS)
             response.raise_for_status()
             exam_full = response.json()
             log("✅ Завантажено документ з Єнота")
 
-            # 2. Отримати мапу відповідей (нижній регістр ключів)
             findings = fetch_findings(ref_key_exam)
-            finding_map = {f['subquestion_key'].lower(): f['open_answer'] for f in findings}
-            log(f"🧩 Отримано findings ({len(findings)}): {list(finding_map.keys())}")
+            log(f"🧩 Отримано findings: {len(findings)} записів")
 
-            # 3. Оновити лише ОткрытыйОтвет у відповідних полях
+            sastav = exam_full.get("Состав", [])
+            questions = exam_full.get("hiСписокВопросов", [])
+            max_line = max([int(x.get("LineNumber", 0)) for x in sastav] + [0])
+            max_cell = max([int(x.get("НомерЯчейки", 0)) for x in sastav] + [0])
             updated_count = 0
-            for item in exam_full.get("Состав", []):
-                key = item.get("ЭлементарныйВопрос_Key")
-                if key:
-                    key_lower = key.lower()
-                    keys_list = list(finding_map.keys())
-                    log(f"🔍 Перевірка {key} -> {key_lower} серед {keys_list} => {'✅ match' if key_lower in finding_map else '❌ no match'}")
-                    if key_lower in finding_map:
-                        item["ОткрытыйОтвет"] = finding_map[key_lower]
-                        updated_count += 1
-                        log(f"✍️ Оновлено ОткрытыйОтвет для ЭлементарныйВопрос_Key = {key}")
-                    else:
-                        log(f"🔎 Пропущено — відсутній у findings: {key}")
+            for row in findings:
+                qkey = row["question_key"].lower()
+                skey = row["subquestion_key"]
+                answer = row["open_answer"]
 
-            # 4. Підготувати PATCH-тіло з повним складом
+                match = None
+                for item in sastav:
+                    if item.get("ЭлементарныйВопрос_Key", "").lower() == skey.lower():
+                        match = item
+                        break
+
+                if match:
+                    log(f"🔁 Знайдено існуючий запис для {skey}, оновлюємо ОткрытыйОтвет")
+                    match["ОткрытыйОтвет"] = answer
+                    updated_count += 1
+                    continue
+
+                found_in_hi = next((q for q in questions if q["Вопрос_Key"].lower() == qkey), None)
+                if found_in_hi:
+                    max_line += 1
+                    max_cell += 1
+                    new_row = {
+                        "Ref_Key": ref_key_exam,
+                        "LineNumber": str(max_line),
+                        "Вопрос_Key": found_in_hi["Вопрос_Key"],
+                        "ЭлементарныйВопрос_Key": skey,
+                        "НомерЯчейки": str(max_cell),
+                        "Ответ": "",
+                        "Ответ_Type": "StandardODATA.Undefined",
+                        "ОткрытыйОтвет": answer,
+                        "ТипОтвета": "Текст"
+                    }
+                    sastav.append(new_row)
+                    updated_count += 1
+                    log(f"➕ Створено новий рядок для {qkey}, LineNumber = {max_line}")
+                else:
+                    log(f"❌ Не знайдено question_key {qkey} у hiСписокВопросов")
+
             patch_data = {
                 "ДатаРезультата": datetime.now().isoformat(),
                 "Комментарий": "🔎 Заключення сформоване автоматично на основі аналізу зображень GPT-4o.",
                 "ЕстьРезультаты": True,
-                "Состав": exam_full.get("Состав", [])
+                "Состав": sastav
             }
 
-            # 5. Надіслати PATCH-запит
             url_patch = f"{ODATA_URL}Document_Анализы(guid'{ref_key_exam}')"
             patch_response = requests.patch(url_patch, auth=(ODATA_USER, ODATA_PASSWORD), headers=HEADERS, json=patch_data)
             patch_response.raise_for_status()
 
             log(f"⬆️ Внесено оновлення в Єнот ({updated_count} відповідей)")
-
             update_request_status(ref_key_exam)
             log("🔄 Статус оновлено на 'done' у bot_study_requests\n")
 

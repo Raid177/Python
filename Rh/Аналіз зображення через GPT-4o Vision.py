@@ -266,7 +266,7 @@ def save_answer_log(image_paths, prompt_text, gpt_response):
 if __name__ == "__main__":
     print("\n⏳ Аналізуємо знімки GPT-4o...\n")
 
-    ref_key = "74061efa-3bd5-11f0-82a9-2ae983d8a0f0"  # ← сюди вставляєш потрібний Ref_KeyEXAM
+    ref_key = "5f2a3af6-3bdb-11f0-82a9-2ae983d8a0f0"  # ← сюди вставляєш потрібний Ref_KeyEXAM
 
     try:
         row = get_study_request(ref_key)
