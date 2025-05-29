@@ -13,7 +13,10 @@ SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive'
 ]
-creds = Credentials.from_authorized_user_file("token.json", SCOPES)
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+token_path = os.path.join(script_dir, "token.json")
+creds = Credentials.from_authorized_user_file(token_path, SCOPES)
 client = gspread.authorize(creds)
 
 # === Налаштування ===
@@ -23,7 +26,7 @@ SHEET_TARGET = "фкт_ГрафікПлаский"
 
 KEY_FIELDS = ["Дата зміни", "Посада", "Відділення", "ТипЗміни", "ПочатокЗміни", "КінецьЗміни", "IDX"]
 
-# === Отримуємо таблиці ===
+# === Отримати таблиці ===
 ss = client.open(SPREADSHEET_NAME)
 source_ws = ss.worksheet(SHEET_SOURCE)
 target_ws = ss.worksheet(SHEET_TARGET)
@@ -34,48 +37,49 @@ target_data = target_ws.get_all_values()
 target_header = target_data[0]
 target_rows = target_data[1:]
 
-# Побудова map по ключу
+# === Побудова ключа ===
 def build_key(row, header):
     return tuple(row[header.index(col)] for col in KEY_FIELDS)
 
 existing_keys = {
-    build_key(row, target_header): i + 2  # +2 бо get_all_values пропускає заголовок і рахунок з 1
+    build_key(row, target_header): i + 2  # +2 бо заголовок + 1-індексація
     for i, row in enumerate(target_rows)
     if len(row) >= len(target_header)
 }
 
-# Обробка джерела
-day_numbers = source_data[2][7:38]  # назви колонок H:AL — дні
+# === День місяця з H1:AL1 ===
+day_numbers = source_data[0][7:38]  # колонки H–AL
 
+# === Обробка рядків починаючи з 2-го (індекс 1) ===
 new_rows = []
 updated = 0
 added = 0
 
-for row in source_data[3:]:
+for row in source_data[1:]:
     if len(row) < 38:
         continue
     try:
         month_str = row[0].strip()  # формат: 05.2025
         month, year = map(int, month_str.split('.'))
 
-        idx = row[6]  # колонка G → IDX
-        surname = row[7]  # колонка H → Прізвище
-        role = row[1]
-        dept = row[2]
+        posada = row[1]
+        viddil = row[2]
         shift_type = row[3]
         shift_start = row[4]
         shift_end = row[5]
+        idx = row[6]
 
-        for i, mark in enumerate(row[8:39]):  # колонки I:AM
-            if mark.strip().lower() not in {"1", "д", "н"}:
-                continue
+        for i, mark in enumerate(row[7:38]):  # поля H–AL
+            if not mark.strip():
+                continue  # пропускаємо порожні клітинки
 
             day = int(day_numbers[i])
             date_obj = datetime(year, month, day).strftime("%d.%m.%Y")
+            surname = mark.strip()
 
             flat_row = [
                 date_obj, idx, shift_start, shift_end,
-                role, dept, shift_type, surname,
+                posada, viddil, shift_type, surname,
                 "", "", ""  # ФактПочаток, ФактКінець, Коментар
             ]
 
@@ -93,8 +97,8 @@ for row in source_data[3:]:
         print(f"[⚠️] Помилка в рядку: {row} — {e}")
         continue
 
-# Додавання нових рядків
+# === Додавання нових рядків ===
 if new_rows:
     target_ws.append_rows(new_rows, value_input_option="USER_ENTERED")
 
-print(f"✅ Запис завершено: оновлено {updated}, додано {added}")
+print(f"✅ Завершено. Оновлено: {updated} | Додано: {added}")
