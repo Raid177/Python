@@ -1,31 +1,43 @@
-import os
-import gspread
-from dotenv import load_dotenv
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
-from gspread_formatting import format_cell_range, CellFormat, textFormat
+from googleapiclient.discovery import build
 
-# Завантаження токена
-load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
-SCOPES = [
-    'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive.metadata.readonly'
-]
-token_path = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/token.json"
-creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-if creds.expired and creds.refresh_token:
-    creds.refresh(Request())
+# Ідентифікатори
+spreadsheet_id = sheet.spreadsheet.id
+sheet_id = sheet.id
 
-# Авторизація
-client = gspread.authorize(creds)
-sheet = client.open("zp_PetWealth").worksheet("Test_Format")
+# A1 -> GridRange
+def a1_to_gridrange(a1):
+    from gspread.utils import a1_to_rowcol
+    col, row = a1_to_rowcol(a1)
+    return {
+        "sheetId": sheet_id,
+        "startRowIndex": row - 1,
+        "endRowIndex": row,
+        "startColumnIndex": col - 1,
+        "endColumnIndex": col
+    }
 
-# Клітинки для перекреслення
-cells = ["A1", "B2", "C3", "C10"]
+# Формат запиту на перекреслення
+requests = []
+for cell in ["A1", "B2", "C3", "C10"]:
+    requests.append({
+        "repeatCell": {
+            "range": a1_to_gridrange(cell),
+            "cell": {
+                "userEnteredFormat": {
+                    "textFormat": {
+                        "strikethrough": True
+                    }
+                }
+            },
+            "fields": "userEnteredFormat.textFormat.strikethrough"
+        }
+    })
 
-# Встановити перекреслення
-for cell in cells:
-    fmt = CellFormat(textFormat=textFormat(strikethrough=True))
-    format_cell_range(sheet, cell, fmt)
+# Надсилання
+service = build("sheets", "v4", credentials=creds)
+service.spreadsheets().batchUpdate(
+    spreadsheetId=spreadsheet_id,
+    body={"requests": requests}
+).execute()
 
-print("✅ Перекреслення застосовано")
+print("✅ Перекреслення встановлено напряму через API")
