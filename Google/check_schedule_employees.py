@@ -7,7 +7,6 @@ from google.auth.transport.requests import Request
 from gspread_formatting import *
 from datetime import datetime
 import json
-import time
 
 # === Налаштування ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
@@ -32,40 +31,49 @@ print("\n[LOG] Початок перевірки графіка —", datetime.n
 # === 1. Отримати дані з Єнота ===
 ODATA_URL = "https://app.enote.vet/7edc4405-f8d6-4022-9999-8186ee1ce262-copy/odata/standard.odata/Catalog_ФизическиеЛица"
 response = requests.get(
-    "https://app.enote.vet/7edc4405-f8d6-4022-9999-8186ee1ce262/odata/standard.odata/Catalog_ФизическиеЛица?$select=Ref_Key,Code,Description&$filter=IsFolder eq false&$format=json",
-    auth=(os.getenv("ODATA_USER"), os.getenv("ODATA_PASSWORD"))
+    ODATA_URL,
+    auth=(os.getenv("ODATA_USER"), os.getenv("ODATA_PASSWORD")),
+    params={
+        "$select": "Ref_Key,Code,Description",
+        "$filter": "IsFolder eq false",
+        "$format": "json"
+    }
 )
 response.raise_for_status()
 data = response.json()['value']
 print(f"[LOG] Отримано {len(data)} співробітників з Єнота")
 
-# === 2. Оновити дов_Співробітники ===
-staff_ws = client.open("zp_PetWealth").worksheet("дов_Співробітники")
-staff_data = staff_ws.get_all_records()
-manual_links = {row['Ref_Key']: row['Графік'].strip() for row in staff_data if row['Ref_Key']}
-
 # Підготовка списку
+def shorten_name(full_name):
+    parts = full_name.strip().split()
+    return f"{parts[0]} {parts[1][0]}." if len(parts) >= 2 else full_name.strip()
+
 staff_map = {
     entry['Ref_Key']: {
         'ПІБ': entry['Description'].strip(),
         'Code': entry['Code'],
-        'Графік': manual_links.get(entry['Ref_Key'], '')
+        'Графік': shorten_name(entry['Description'])
     } for entry in data
 }
 
+# === 2. Оновити дов_Співробітники ===
+staff_ws = client.open("Графік").worksheet("дов_Співробітники")
+staff_data = staff_ws.get_all_records()
+manual_links = {row['Ref_Key']: row['Графік'].strip() for row in staff_data if row['Ref_Key']}
+
 new_rows = []
 for ref, info in staff_map.items():
-    графік = manual_links.get(ref, '')  # НЕ чіпаємо вручну внесений
+    графік = manual_links.get(ref, info['Графік'])
     new_rows.append([info['ПІБ'], графік, info['Code'], ref])
 
 staff_ws.clear()
-staff_ws.append_row(["ПІБ", "Графік", "Code", "Ref_Key"])
+staff_ws.append_row(["ПІБ", "Графік", "Code", "Ref_Key", "Оновлено"])
 for row in new_rows:
-    staff_ws.append_row(row)
+    staff_ws.append_row(row + ["=NOW()"])
 print(f"[LOG] Оновлено дов_Співробітники — {len(new_rows)} рядків")
 
 # === 3. Перевірка графіка ===
-schedule_ws = client.open("zp_PetWealth").worksheet("Графік")
+schedule_ws = client.open("Графік").worksheet("графік")
 schedule_data = schedule_ws.get_all_values()
 valid_names = {row[1].strip() for row in new_rows if row[1].strip()}
 
@@ -80,34 +88,13 @@ for row_idx, row in enumerate(schedule_data[1:], start=2):
         if not name:
             continue
 
-        try:
-            if name not in valid_names:
-                fmt = cellFormat(borders=Borders(
-                    left=Border("SOLID_THICK", Color(1, 0, 0)),
-                    right=Border("SOLID_THICK", Color(1, 0, 0)),
-                    top=Border("SOLID_THICK", Color(1, 0, 0)),
-                    bottom=Border("SOLID_THICK", Color(1, 0, 0))
-                ))
-                format_cell_range(schedule_ws, cell, fmt)
-                print(f"[❌] {cell}: '{name}' — НЕ знайдено у довіднику")
-                invalid_count += 1
-            else:
-                # Зняти лише бордюри, залишивши фон та інше форматування
-                fmt_clear_borders = cellFormat(
-                    borders=Borders(
-                        left=Border("NONE"),
-                        right=Border("NONE"),
-                        top=Border("NONE"),
-                        bottom=Border("NONE")
-                    )
-                )
-                format_cell_range(schedule_ws, cell, fmt_clear_borders)
-                fixed_count += 1
-
-            time.sleep(1.2)  # Обмеження 50 запитів на хвилину
-
-        except Exception as e:
-            print(f"[ERR] {cell}: Помилка при обробці — {e}")
-            continue
+        if name not in valid_names:
+            fmt = cellFormat(border=border('SOLID', color='red', style='SOLID', width=2))
+            format_cell_range(schedule_ws, cell, fmt)
+            print(f"[❌] {cell}: '{name}' — НЕ знайдено у довіднику")
+            invalid_count += 1
+        else:
+            clear_format(schedule_ws, cell)
+            fixed_count += 1
 
 print(f"[LOG] Перевірка завершена. Некоректних клітинок: {invalid_count}, очищено форматів: {fixed_count}\n")

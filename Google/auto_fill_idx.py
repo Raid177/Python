@@ -1,107 +1,101 @@
 import os
-import re
-import json
-import gspread
 import requests
+import gspread
+from dotenv import load_dotenv
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from gspread_formatting import *
+from datetime import datetime
+import json
 
-# ==== Конфігурація ====
+# === Налаштування ===
+load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
+
+# Авторизація Google Sheets через token.json
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.metadata.readonly"
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive.readonly"
 ]
-SPREADSHEET_NAME = "zp_PetWealth"
-WORKSHEET_NAME = "Графік"
-IDX_COLUMN_NAME = "IDX"
-POSADA_COLUMN_NAME = "Посада"
-# ======================
 
-def get_abbreviation(word):
-    vowels = set("АЕЄИІЇОУЮЯ")
-    result = word[0].upper()
-    count = 0
-    for char in word[1:]:
-        char = char.lower()
-        if char.upper() not in vowels:
-            result += char
-            count += 1
-            if count == 2:
-                break
-    return result.capitalize()
+script_dir = os.path.dirname(os.path.abspath(__file__))
+token_path = os.path.join(script_dir, "token.json")
+creds = Credentials.from_authorized_user_file(token_path, SCOPES)
+if creds.expired and creds.refresh_token:
+    creds.refresh(Request())
 
-def auto_fill_idx():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    token_path = os.path.join(script_dir, "token.json")
-    creds = Credentials.from_authorized_user_file(token_path, SCOPES)
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
+client = gspread.authorize(creds)
 
-    client = gspread.authorize(creds)
-    spreadsheet = client.open(SPREADSHEET_NAME)
-    sheet = spreadsheet.worksheet(WORKSHEET_NAME)
-    data = sheet.get_all_values()
+print("\n[LOG] Початок перевірки графіка —", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
-    header = data[0]
-    idx_col = header.index(IDX_COLUMN_NAME)
-    pos_col = header.index(POSADA_COLUMN_NAME)
+# === 1. Отримати дані з Єнота ===
+ODATA_URL = "https://app.enote.vet/7edc4405-f8d6-4022-9999-8186ee1ce262-copy/odata/standard.odata/Catalog_ФизическиеЛица"
+response = requests.get(
+    ODATA_URL,
+    auth=(os.getenv("ODATA_USER"), os.getenv("ODATA_PASSWORD")),
+    params={
+        "$select": "Ref_Key,Code,Description",
+        "$filter": "IsFolder eq false",
+        "$format": "json"
+    }
+)
+response.raise_for_status()
+data = response.json()['value']
+print(f"[LOG] Отримано {len(data)} співробітників з Єнота")
 
-    role_counter = {}
-    pattern = re.compile(r"^([А-ЯҐЄІЇа-яґєії]{3})_(\d+)$")
+# Підготовка списку
+def shorten_name(full_name):
+    parts = full_name.strip().split()
+    return f"{parts[0]} {parts[1][0]}." if len(parts) >= 2 else full_name.strip()
 
-    for row in data[1:]:
-        if idx_col < len(row):
-            val = row[idx_col].strip()
-            match = pattern.match(val)
-            if match:
-                prefix, number = match.groups()
-                number = int(number)
-                if prefix not in role_counter or number > role_counter[prefix]:
-                    role_counter[prefix] = number
+staff_map = {
+    entry['Ref_Key']: {
+        'ПІБ': entry['Description'].strip(),
+        'Code': entry['Code'],
+        'Графік': shorten_name(entry['Description'])
+    } for entry in data
+}
 
-    updates = []
+# === 2. Оновити дов_Співробітники ===
+staff_ws = client.open("Графік").worksheet("дов_Співробітники")
+staff_data = staff_ws.get_all_records()
+manual_links = {row['Ref_Key']: row['Графік'].strip() for row in staff_data if row['Ref_Key']}
 
-    for i in range(1, len(data)):
-        row = data[i]
+new_rows = []
+for ref, info in staff_map.items():
+    графік = manual_links.get(ref, info['Графік'])
+    new_rows.append([info['ПІБ'], графік, info['Code'], ref])
 
-        if idx_col < len(row) and row[idx_col].strip():
+staff_ws.clear()
+staff_ws.append_row(["ПІБ", "Графік", "Code", "Ref_Key", "Оновлено"])
+for row in new_rows:
+    staff_ws.append_row(row + ["=NOW()"])
+print(f"[LOG] Оновлено дов_Співробітники — {len(new_rows)} рядків")
+
+# === 3. Перевірка графіка ===
+schedule_ws = client.open("Графік").worksheet("графік")
+schedule_data = schedule_ws.get_all_values()
+valid_names = {row[1].strip() for row in new_rows if row[1].strip()}
+
+print("[LOG] Починаємо перевірку клітинок з H2 по AL...")
+invalid_count = 0
+fixed_count = 0
+
+for row_idx, row in enumerate(schedule_data[1:], start=2):
+    for col_idx in range(8, 39):
+        name = row[col_idx-1].strip()
+        cell = gspread.utils.rowcol_to_a1(row_idx, col_idx)
+        if not name:
             continue
 
-        right_part = row[idx_col + 1:]
-        if not any(cell.strip() for cell in right_part):
-            continue
-
-        posada = row[pos_col].strip()
-        if not posada:
-            continue
-
-        prefix = get_abbreviation(posada)
-        role_counter[prefix] = role_counter.get(prefix, 0) + 1
-        new_idx = f"{prefix}_{role_counter[prefix]}"
-        a1_notation = gspread.utils.rowcol_to_a1(i + 1, idx_col + 1)
-        updates.append({
-            "range": f"{WORKSHEET_NAME}!{a1_notation}",
-            "majorDimension": "ROWS",
-            "values": [[new_idx]]
-        })
-
-    if updates:
-        url = f"https://sheets.googleapis.com/v4/spreadsheets/{spreadsheet.id}/values:batchUpdate"
-        headers = {
-            "Authorization": f"Bearer {creds.token}",
-            "Content-Type": "application/json"
-        }
-        body = {
-            "valueInputOption": "USER_ENTERED",
-            "data": updates
-        }
-        response = requests.post(url, headers=headers, data=json.dumps(body))
-        if response.ok:
-            print(f"✅ Оновлено {len(updates)} індексів")
+        if name not in valid_names:
+            fmt = cellFormat(border=border('SOLID', color='red', style='SOLID', width=2))
+            format_cell_range(schedule_ws, cell, fmt)
+            print(f"[❌] {cell}: '{name}' — НЕ знайдено у довіднику")
+            invalid_count += 1
         else:
-            print(f"❌ ПОМИЛКА batchUpdate: {response.status_code} — {response.text}")
-    else:
-        print("⚠️ Нічого не оновлено")
+            clear_format(schedule_ws, cell)
+            fixed_count += 1
 
-if __name__ == "__main__":
-    auto_fill_idx()
+print(f"[LOG] Перевірка завершена. Некоректних клітинок: {invalid_count}, очищено форматів: {fixed_count}\n")
