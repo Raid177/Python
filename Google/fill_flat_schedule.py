@@ -66,6 +66,7 @@ header = data[0]  # рядок із днями
 # === Обробка графіка ===
 flat_data = []
 skip_counter = 0
+skipped_log = []
 for i, row in enumerate(data[2:], start=3):  # з 3-го рядка
     base = data[i - 1][:7]  # A-G: МісяцьРік і решта
     try:
@@ -76,17 +77,9 @@ for i, row in enumerate(data[2:], start=3):  # з 3-го рядка
 
     for col in range(7, len(row)):
         cell_value = row[col].strip()
-        if not cell_value:
-            continue  # пропускаємо порожні клітинки
-
         try:
             day = int(header[col])
         except:
-            continue
-
-        # Перевірка на помилкові клітинки
-        if (f"{month:02d}.{year}", str(day), base[6], cell_value) in error_cells:
-            skip_counter += 1
             continue
 
         try:
@@ -94,8 +87,17 @@ for i, row in enumerate(data[2:], start=3):  # з 3-го рядка
         except:
             continue
 
+        if not cell_value:
+            continue  # <== ігноруємо повністю
+
+        # Перевірка на помилкові клітинки
+        if (f"{month:02d}.{year}", str(day), base[6], cell_value) in error_cells:
+            skip_counter += 1
+            skipped_log.append(f"Пропущено: {month:02d}.{year} {day} {base[6]} {cell_value}")
+            continue
+
         flat_data.append([
-            date_str, base[1], base[2], base[3], base[4], base[5], base[6], base[0], cell_value
+            date_str, base[6], base[4], base[5], base[1], base[2], base[3], cell_value
         ])
 
 # === Отримання існуючих даних у пласкій таблиці ===
@@ -108,18 +110,43 @@ for row in existing_data[1:]:
 
 # === Формування нових даних ===
 final_data = []
-update_counter = 0
+batch_updates = []
 insert_counter = 0
+update_counter = 0
+cleared_counter = 0
+deleted_rows = []
+updated_log = []
+
 for row in flat_data:
     key = tuple(row[:8])
     if key in existing_keys:
         for i, ex_row in enumerate(existing_data[1:], start=2):
-            if tuple(ex_row[:8]) == key and (len(ex_row) < 9 or ex_row[8] != row[8]):
-                tgt_ws.update_cell(i, 9, row[8])
-                update_counter += 1
+            if tuple(ex_row[:8]) == key:
+                if len(ex_row) < 9 or ex_row[8] != row[7]:
+                    batch_updates.append({"range": f"H{i}", "values": [[row[7]]]} )
+                    if row[7] == "":
+                        deleted_rows.append(i)
+                        cleared_counter += 1
+                    else:
+                        update_counter += 1
+                        updated_log.append(f"Оновлено H{i}: {row[7]}")
         continue
     final_data.append(row)
     insert_counter += 1
+
+# === Видалення записів, які зникли з графіка ===
+deleted_log = []
+for i, ex_row in enumerate(existing_data[1:], start=2):
+    if len(ex_row) >= 8:
+        key = tuple(ex_row[:8])
+        if key not in [tuple(row[:8]) for row in flat_data] and ex_row[7].strip():
+            deleted_rows.append(i)
+            cleared_counter += 1
+            deleted_log.append(f"Видалено рядок {i}: {ex_row[:8]}")
+
+# === Масове оновлення значень ===
+if batch_updates:
+    tgt_ws.batch_update(batch_updates)
 
 # === Додавання нових рядків ===
 if final_data:
@@ -127,11 +154,27 @@ if final_data:
 
 # === Видалення порожніх прізвищ ===
 deleted = 0
-updated_data = tgt_ws.get_all_values()
-for i in range(len(updated_data) - 1, 0, -1):
-    if len(updated_data[i]) >= 9 and updated_data[i][8] == "":
-        tgt_ws.delete_rows(i + 1)
+for i in sorted(deleted_rows, reverse=True):
+    try:
+        tgt_ws.delete_rows(i)
         deleted += 1
+    except:
+        pass
 
 # === Логування ===
-print(f"✅ Завершено. Додано: {insert_counter}, Оновлено: {update_counter}, Видалено: {deleted}, Пропущено помилкових: {skip_counter}")
+print(f"✅ Завершено. Додано: {insert_counter}, Оновлено: {update_counter}, Очищено: {cleared_counter}, Видалено: {deleted}, Пропущено помилкових: {skip_counter}")
+
+if updated_log:
+    print("\n🔄 Оновлені клітинки:")
+    for line in updated_log:
+        print(line)
+
+if deleted_log:
+    print("\n🗑️ Видалені рядки:")
+    for line in deleted_log:
+        print(line)
+
+if skipped_log:
+    print("\n⚠️ Пропущено через помилки:")
+    for line in skipped_log:
+        print(line)
