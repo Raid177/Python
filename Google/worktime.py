@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-# === Завантаження змінних із .env ===
+# === Завантаження .env ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
 DB_CONFIG = {
@@ -18,13 +18,11 @@ DB_CONFIG = {
     "cursorclass": pymysql.cursors.DictCursor,
 }
 
-# === Дані Google Sheets ===
 SPREADSHEET_ID = "19mfpQ8XgUSMpGNKQpLtL9ek5OrLj2UlvgUVR39yWubw"
 SHEET_NAME = "фкт_ГрафікПлаский"
 RANGE_NAME = f"{SHEET_NAME}!A1:Z"
 TOKEN_PATH = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/token.json"
 
-# === Авторизація через token.json ===
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
@@ -34,7 +32,7 @@ SCOPES = [
 creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 service = build("sheets", "v4", credentials=creds)
 
-# === Допоміжні функції ===
+# === Парсинг і розрахунок ===
 def parse_datetime(date_str, time_str):
     try:
         return datetime.strptime(f"{date_str} {time_str.strip()}", "%Y-%m-%d %H:%M")
@@ -48,10 +46,10 @@ def calculate_duration(start_dt, end_dt):
         end_dt += timedelta(days=1)
     delta = end_dt - start_dt
     hours = round(delta.total_seconds() / 3600, 1)
-    text = str(delta)[:-3]  # формат hh:mm
+    text = str(delta)[:-3]  # hh:mm
     return text, hours
 
-# === Основна логіка ===
+# === Основна функція ===
 def main():
     result = service.spreadsheets().values().get(
         spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME
@@ -74,17 +72,12 @@ def main():
             for _, row in df.iterrows():
                 try:
                     raw_date = (row.get("Дата зміни") or "").strip()
-                    try:
-                        date_shift = datetime.strptime(raw_date, "%d.%m.%Y").strftime("%Y-%m-%d")
-                    except:
+                    idx = (row.get("IDX") or "").strip()
+                    if not raw_date or not idx:
                         skipped += 1
                         continue
 
-                    idx = row.get("IDX")
-                    if not date_shift or not idx:
-                        skipped += 1
-                        continue
-
+                    date_shift = datetime.strptime(raw_date, "%d.%m.%Y").strftime("%Y-%m-%d")
                     base_start = (row.get("ПочатокЗміни") or "").strip()
                     base_end = (row.get("КінецьЗміни") or "").strip()
                     fact_start = (row.get("ФактПочаток") or "").strip()
@@ -102,8 +95,8 @@ def main():
                     record = {
                         "date_shift": date_shift,
                         "idx": idx,
-                        "time_start": start_time,
-                        "time_end": end_time,
+                        "time_start": start_dt.strftime("%Y-%m-%d %H:%M:%S") if start_dt else None,
+                        "time_end": end_dt.strftime("%Y-%m-%d %H:%M:%S") if end_dt else None,
                         "position": row.get("Посада", ""),
                         "department": row.get("Відділення", ""),
                         "shift_type": row.get("ТипЗміни", ""),
@@ -123,7 +116,6 @@ def main():
                         VALUES ({values})
                         ON DUPLICATE KEY UPDATE {updates}
                     """
-                    # print(f"{date_shift=}, {idx=}")
 
                     cursor.execute(sql, list(record.values()))
                     if cursor.rowcount == 1:
@@ -132,7 +124,7 @@ def main():
                         updated += 1
 
                 except Exception as e:
-                    print(f"⚠️ Помилка в рядку IDX={row.get('IDX')}: {e}")
+                    print(f"⚠️ Помилка в IDX={row.get('IDX')}: {e}")
                     skipped += 1
 
         conn.commit()
