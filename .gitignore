@@ -35,6 +35,8 @@ Thumbs.db
 token.pickle
 secrets.json
 credentials.json
+Google/token.json
+**/token.json
 
 # === CSV, temp files (optional) ===
 *.csv
