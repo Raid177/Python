@@ -5,10 +5,10 @@ import pymysql
 from dotenv import load_dotenv
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
-from gspread_formatting import *
-from gspread_formatting.dataframe import format_cell_ranges
+from googleapiclient.discovery import build
 from datetime import datetime
 import time
+import re
 
 # === Налаштування ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
@@ -16,9 +16,7 @@ load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 # Авторизація Google Sheets через token.json
 SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
-    'https://www.googleapis.com/auth/drive',
-    'https://www.googleapis.com/auth/drive.file',
-    'https://www.googleapis.com/auth/drive.readonly'
+    'https://www.googleapis.com/auth/drive'
 ]
 script_dir = os.path.dirname(os.path.abspath(__file__))
 token_path = os.path.join(script_dir, "token.json")
@@ -27,6 +25,7 @@ if creds.expired and creds.refresh_token:
     creds.refresh(Request())
 
 client = gspread.authorize(creds)
+service = build('sheets', 'v4', credentials=creds)
 
 # Підключення до БД
 connection = pymysql.connect(
@@ -38,6 +37,43 @@ connection = pymysql.connect(
     cursorclass=pymysql.cursors.DictCursor
 )
 cursor = connection.cursor()
+
+# === Функції для форматування тексту ===
+def a1_to_gridrange(a1_notation, sheet_id):
+    match = re.match(r"([A-Z]+)(\d+)", a1_notation)
+    if not match:
+        raise ValueError("Invalid A1 notation")
+    col, row = match.groups()
+    col_idx = sum((ord(char) - 64) * (26 ** i) for i, char in enumerate(reversed(col))) - 1
+    return {
+        "sheetId": sheet_id,
+        "startRowIndex": int(row) - 1,
+        "endRowIndex": int(row),
+        "startColumnIndex": col_idx,
+        "endColumnIndex": col_idx + 1,
+    }
+
+def mark_strikethrough(spreadsheet_id, sheet_id, cells, enable=True):
+    requests = []
+    for cell in cells:
+        requests.append({
+            "repeatCell": {
+                "range": a1_to_gridrange(cell, sheet_id),
+                "cell": {
+                    "userEnteredFormat": {
+                        "textFormat": {
+                            "strikethrough": enable
+                        }
+                    }
+                },
+                "fields": "userEnteredFormat.textFormat.strikethrough"
+            }
+        })
+    if requests:
+        service.spreadsheets().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body={"requests": requests}
+        ).execute()
 
 print("\n[LOG] Початок перевірки графіка —", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
 
@@ -75,17 +111,20 @@ for row in new_rows:
 print(f"[LOG] Оновлено дов_Співробітники — {len(new_rows)} рядків")
 
 # === 3. Перевірка графіка ===
-schedule_ws = client.open("zp_PetWealth").worksheet("Графік")
+spreadsheet = client.open("zp_PetWealth")
+schedule_ws = spreadsheet.worksheet("Графік")
 schedule_data = schedule_ws.get_all_values()
 valid_names = {row[1].strip() for row in new_rows if row[1].strip()}
+sheet_id = schedule_ws.id
+spreadsheet_id = schedule_ws.spreadsheet.id
 
 print("[LOG] Починаємо перевірку клітинок з H2 по AL...")
 invalid_count = 0
 fixed_count = 0
-
 insert_errors = []
 resolve_errors = []
-style_updates = []
+strike_on = []
+strike_off = []
 
 for row_idx, row in enumerate(schedule_data[1:], start=2):
     month_year = row[0].strip()
@@ -101,38 +140,20 @@ for row_idx, row in enumerate(schedule_data[1:], start=2):
 
         try:
             if name not in valid_names:
-                fmt = cellFormat(borders=Borders(
-                    left=Border("SOLID_THICK", Color(1, 0, 0)),
-                    right=Border("SOLID_THICK", Color(1, 0, 0)),
-                    top=Border("SOLID_THICK", Color(1, 0, 0)),
-                    bottom=Border("SOLID_THICK", Color(1, 0, 0))
-                ))
-                style_updates.append((cell, fmt))
+                strike_on.append(cell)
                 insert_errors.append((month_year, idx, day_number, cell, name, "Не знайдено у довіднику"))
                 invalid_count += 1
             else:
-                fmt_clear_borders = cellFormat(
-                    borders=Borders(
-                        left=None,
-                        right=None,
-                        top=None,
-                        bottom=None
-                    )
-                )
-                style_updates.append((cell, fmt_clear_borders))
+                strike_off.append(cell)
                 resolve_errors.append((month_year, idx, day_number))
                 fixed_count += 1
-
         except Exception as e:
             print(f"[ERR] {cell}: Помилка при обробці — {e}")
             continue
 
-# === Пакетне застосування стилів ===
-if style_updates:
-    try:
-        format_cell_ranges(schedule_ws, style_updates)
-    except Exception as e:
-        print(f"[ERR] Не вдалося застосувати стилі пакетно — {e}")
+# Застосування стилю
+mark_strikethrough(spreadsheet_id, sheet_id, strike_on, enable=True)
+mark_strikethrough(spreadsheet_id, sheet_id, strike_off, enable=False)
 
 # Пакетне оновлення БД
 if insert_errors:
