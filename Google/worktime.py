@@ -65,6 +65,7 @@ def main():
     df = pd.DataFrame(normalized_rows, columns=header)
 
     added, updated, skipped = 0, 0, 0
+    current_keys = set()
     conn = pymysql.connect(**DB_CONFIG)
 
     with conn:
@@ -118,6 +119,8 @@ def main():
                     """
 
                     cursor.execute(sql, list(record.values()))
+                    current_keys.add((str(date_shift), idx))
+
                     if cursor.rowcount == 1:
                         added += 1
                     else:
@@ -126,6 +129,20 @@ def main():
                 except Exception as e:
                     print(f"⚠️ Помилка в IDX={row.get('IDX')}: {e}")
                     skipped += 1
+
+            # === Видалення застарілих записів ===
+            cursor.execute("SELECT date_shift, idx FROM zp_worktime")
+            db_keys = {(str(row["date_shift"]), row["idx"]) for row in cursor.fetchall()}
+            to_delete = db_keys - current_keys
+
+            if to_delete:
+                format_strings = ",".join(["(%s,%s)"] * len(to_delete))
+                delete_sql = f"DELETE FROM zp_worktime WHERE (date_shift, idx) IN ({format_strings})"
+                delete_values = [val for pair in to_delete for val in pair]
+                cursor.execute(delete_sql, delete_values)
+                print(f"🗑 Видалено: {len(to_delete)}")
+            else:
+                print("🟢 Нічого не видалено.")
 
         conn.commit()
 
