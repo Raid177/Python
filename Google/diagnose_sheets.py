@@ -108,9 +108,9 @@ for ref, info in staff_map.items():
     new_rows.append([info['ПІБ'], графік, info['Code'], ref])
 
 staff_ws.clear()
-staff_ws.append_row(["ПІБ", "Графік", "Code", "Ref_Key"])
-for row in new_rows:
-    staff_ws.append_row(row)
+header = ["ПІБ", "Графік", "Code", "Ref_Key"]
+staff_ws.update([header] + new_rows)
+
 print(f"[LOG] Оновлено дов_Співробітники — {len(new_rows)} рядків")
 
 # === 3. Перевірка графіка ===
