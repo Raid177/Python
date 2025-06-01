@@ -42,36 +42,48 @@ try:
 
         for work_row in worktime_rows:
             work_date = work_row['date_shift']
-            last_name = work_row['last_name']
-            position = work_row['position']
-            department = work_row['department']
+            last_name = str(work_row['last_name']).strip()
+            position = str(work_row['position']).strip()
+            department = str(work_row['department']).strip()
 
             error_messages = []
 
-            # 🔎 1️⃣ Підтягуємо рівень із zp_фктРівніСпівробітників
-            level_value = ''
+            print(f"\n🔎 Перевірка рівня для ID={work_row['idx']} Прізвище='{last_name}', Посада='{position}', Відділення='{department}', Дата={work_date}")
+
+            # 1️⃣ Підтягуємо рівень
             cursor.execute("""
                 SELECT Рівень
                 FROM zp_фктРівніСпівробітників
-                WHERE Прізвище = %s
-                  AND Посада = %s
-                  AND Відділення = %s
+                WHERE TRIM(LOWER(Прізвище)) = %s
+                  AND TRIM(LOWER(Посада)) = %s
+                  AND TRIM(LOWER(Відділення)) = %s
                   AND ДатаПочатку <= %s
                   AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
-            """, (last_name, position, department, work_date, work_date))
+            """, (
+                last_name.lower(),
+                position.lower(),
+                department.lower(),
+                work_date,
+                work_date
+            ))
             levels = cursor.fetchall()
 
             if not levels:
-                # Шукаємо універсальне відділення
+                # Шукаємо універсальний рядок
                 cursor.execute("""
                     SELECT Рівень
                     FROM zp_фктРівніСпівробітників
-                    WHERE Прізвище = %s
-                      AND Посада = %s
-                      AND (Відділення IS NULL OR Відділення = '')
+                    WHERE TRIM(LOWER(Прізвище)) = %s
+                      AND TRIM(LOWER(Посада)) = %s
+                      AND (Відділення IS NULL OR TRIM(Відділення) = '')
                       AND ДатаПочатку <= %s
                       AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
-                """, (last_name, position, work_date, work_date))
+                """, (
+                    last_name.lower(),
+                    position.lower(),
+                    work_date,
+                    work_date
+                ))
                 levels = cursor.fetchall()
 
             if len(levels) > 1:
@@ -79,13 +91,16 @@ try:
                                  f"({last_name}, {position}, {department}) на дату {work_date}.")
                 print(f"[⚠️] {error_message}")
                 error_messages.append(error_message)
+                level_value = None
             elif len(levels) == 1:
                 level_value = levels[0]['Рівень']
+                print(f"✅ Знайдено рівень: {level_value}")
             else:
                 error_message = (f"Не вдалося визначити рівень для {last_name}, {position}, {department} "
                                  f"на дату {work_date} — відсутній рівень для конкретного відділення і універсального.")
                 print(f"[⚠️] {error_message}")
                 error_messages.append(error_message)
+                level_value = None
 
             # Оновлюємо рівень у worktime
             cursor.execute("""
@@ -94,7 +109,7 @@ try:
                 WHERE date_shift = %s AND idx = %s
             """, (level_value, work_row['date_shift'], work_row['idx']))
 
-            # 🔎 2️⃣ Підтягуємо умови оплати
+            # 2️⃣ Перевірка правил у zp_фктУмовиОплати
             cursor.execute("""
                 SELECT * FROM zp_фктУмовиОплати
                 WHERE ДатаПочатку <= %s AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
@@ -113,15 +128,20 @@ try:
                     rule_field = field_mapping[field]
                     rule_value = rule.get(rule_field)
 
+                    work_val_norm = str(work_value).strip().lower() if work_value else ''
+                    rule_val_norm = str(rule_value).strip().lower() if rule_value else ''
+
+                    print(f"🔍 Порівнюємо поле '{field}': worktime='{work_val_norm}' vs rule='{rule_val_norm}'")
+
                     if field == 'level':
-                        if rule_value and work_value:
-                            if str(work_value).strip().lower() == str(rule_value).strip().lower():
+                        if rule_val_norm and work_val_norm:
+                            if work_val_norm == rule_val_norm:
                                 matches += 1
                                 score += weight
                             else:
                                 skip_rule = True
                                 break
-                        elif not rule_value:
+                        elif not rule_val_norm:
                             # універсальне правило по level
                             matches += 1
                             score += weight
@@ -133,15 +153,15 @@ try:
                             skip_rule = True
                             break
                     else:
-                        if rule_value:
-                            if work_value and str(work_value).strip().lower() == str(rule_value).strip().lower():
+                        if rule_val_norm:
+                            if work_val_norm == rule_val_norm:
                                 matches += 1
                                 score += weight
                             else:
                                 skip_rule = True
                                 break
                         else:
-                            # універсальне правило по цьому полю
+                            # універсальне правило
                             matches += 1
                             score += weight
 
@@ -177,9 +197,8 @@ try:
                     print(f"[⚠️] Колізія для ID {work_row['idx']} на дату {work_date}: {colision}")
                     error_messages.append(f"Колізія: {colision}")
 
-            # 🔥 3️⃣ Запис у worktime
+            # 3️⃣ Запис у worktime
             if error_messages or not best_matches:
-                # помилка або немає правил → обнуляємо зарплату
                 cursor.execute("""
                     UPDATE zp_worktime
                     SET

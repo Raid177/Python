@@ -1,4 +1,4 @@
-старрьо - малювало бордюри
+# старрьо - малювало бордюри
 # import os
 # import requests
 # import gspread
