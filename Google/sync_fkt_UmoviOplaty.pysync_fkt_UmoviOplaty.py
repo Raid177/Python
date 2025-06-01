@@ -21,6 +21,8 @@ creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
 
+print(f"🚀 Скрипт запущено: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
 # === Крок 1. Отримати дані з Google Sheets ===
 result = sheet.values().get(
     spreadsheetId=SPREADSHEET_ID,
@@ -62,6 +64,7 @@ df['ДатаЗакінчення'] = pd.to_datetime(df['ДатаЗакінчен
 df.sort_values(by=['Прізвище', 'Посада', 'Відділення', 'Рівень', 'ТипЗміни', 'ДатаПочатку'], inplace=True)
 
 # === Додаємо ДатаЗакінчення лише там, де треба ===
+changed_rows = 0
 for idx in range(1, len(df)):
     curr = df.iloc[idx]
     prev = df.iloc[idx - 1]
@@ -78,12 +81,16 @@ for idx in range(1, len(df)):
         if pd.isna(prev['ДатаЗакінчення']) or prev['ДатаЗакінчення'] == '':
             new_end_date = curr['ДатаПочатку'] - timedelta(days=1)
             df.at[df.index[idx - 1], 'ДатаЗакінчення'] = new_end_date.strftime('%d.%m.%Y')
+            changed_rows += 1
+            print(f"📝 Встановлено ДатаЗакінчення у рядку {idx}: {prev.to_dict()}")
+            print(f"↪️ Закрито на основі рядка: {curr.to_dict()}")
 
-# Перетворюємо дати у формат dd.mm.yyyy
 df['ДатаПочатку'] = df['ДатаПочатку'].dt.strftime('%d.%m.%Y')
 df['ДатаЗакінчення'] = df['ДатаЗакінчення'].apply(lambda x: x.strftime('%d.%m.%Y') if pd.notna(x) and x != '' else '')
 
-# === Крок 3. Оновлюємо дані у Google Sheets (без очищення та нових рядків) ===
+print(f"✅ Всього змінено ДатаЗакінчення у {changed_rows} рядках.")
+
+# === Крок 3. Оновлюємо дані у Google Sheets (без зміни структури) ===
 values_to_upload = [list(df.columns)] + df.values.tolist()
 
 sheet.values().update(
@@ -123,6 +130,7 @@ with connection.cursor() as cursor:
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     """
 
+    inserted_rows = 0
     for _, row in df.iterrows():
         cursor.execute(insert_sql, (
             row['ДатаПочатку'] if pd.notna(row['ДатаПочатку']) else None,
@@ -140,7 +148,8 @@ with connection.cursor() as cursor:
             row.get('АнЗП_Колективний', ''),
             float(str(row.get('Ан_Колективний', 0)).replace(',', '.')) if row.get('Ан_Колективний', '') else 0
         ))
+        inserted_rows += 1
 
     connection.commit()
 
-print("✅ Дані перезаписані у БД (zp_фктУмовиОплати).")
+print(f"✅ Дані перезаписані у БД (zp_фктУмовиОплати). Вставлено {inserted_rows} рядків.")
