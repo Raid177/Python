@@ -67,8 +67,8 @@ header = data[0]  # рядок із днями
 flat_data = []
 skip_counter = 0
 skipped_log = []
-for i, row in enumerate(data[2:], start=3):  # з 3-го рядка
-    base = data[i - 1][:7]  # A-G: МісяцьРік і решта
+for i, row in enumerate(data[1:], start=2):
+    base = row[:7]
     try:
         month_year_str = base[0].strip()
         month, year = map(int, month_year_str.split("."))
