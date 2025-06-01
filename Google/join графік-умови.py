@@ -191,28 +191,34 @@ try:
                 top_score = top['score']
                 top_rule = top['rule']
 
-                same_top = [bm for bm in best_matches if bm['matches'] == top_matches and bm['score'] == top_score]
-                if len(same_top) > 1:
-                    reference_rule = same_top[0]['rule']
-                    collision_detected = False
-                    for bm in same_top[1:]:
-                        rule = bm['rule']
-                        rule_an_zp = str(rule.get('АнЗП') or '').strip().lower()
-                        ref_an_zp = str(reference_rule.get('АнЗП') or '').strip().lower()
+            same_top = [bm for bm in best_matches if bm['matches'] == top_matches and bm['score'] == top_score]
+            if len(same_top) > 1:
+                reference_rule = same_top[0]['rule']
+                collision_detected = False
+                for bm in same_top[1:]:
+                    rule = bm['rule']
+                    rule_an_zp = str(rule.get('АнЗП') or '').strip().lower()
+                    ref_an_zp = str(reference_rule.get('АнЗП') or '').strip().lower()
 
-                        rule_an_collective = str(rule.get('АнЗП_Колективний') or '').strip().lower()
-                        ref_an_collective = str(reference_rule.get('АнЗП_Колективний') or '').strip().lower()
+                    rule_an_collective = str(rule.get('АнЗП_Колективний') or '').strip().lower()
+                    ref_an_collective = str(reference_rule.get('АнЗП_Колективний') or '').strip().lower()
 
-                        if rule_an_zp == ref_an_zp and rule_an_collective == ref_an_collective:
-                            collision_detected = True
-                            break
+                    rule_last_name = str(rule.get('Прізвище') or '').strip().lower()
+                    ref_last_name = str(reference_rule.get('Прізвище') or '').strip().lower()
 
-                    if collision_detected:
-                        colision = "Колізія: " + ", ".join([str(bm['rule']['id']) for bm in same_top])
-                        print(f"[⚠️] Колізія для ID {work_row['idx']} на дату {work_date}: {colision}")
-                        error_messages.append(f"Колізія: {colision}")
-                    else:
-                        print(f"[ℹ️] Збіг Matches/Score, але АнЗП або АнЗП_Колективний різні — колізія ігнорується.")
+                    if (rule_an_zp == ref_an_zp and
+                        rule_an_collective == ref_an_collective and
+                        rule_last_name == ref_last_name):
+                        collision_detected = True
+                        break
+
+                if collision_detected:
+                    colision = "Колізія: " + ", ".join([str(bm['rule']['id']) for bm in same_top])
+                    print(f"[⚠️] Колізія для ID {work_row['idx']} на дату {work_date}: {colision}")
+                    error_messages.append(f"Колізія: {colision}")
+                else:
+                    print(f"[ℹ️] Збіг Matches/Score, але АнЗП, АнЗП_Колективний або Прізвище різні — колізія ігнорується.")
+
 
             # 3️⃣ Запис у worktime
             if error_messages or not best_matches:
