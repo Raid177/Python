@@ -1,0 +1,144 @@
+таблиця ворктайму (повна версія)
+CREATE TABLE zp_worktime (
+  date_shift date NOT NULL COMMENT 'Дата зміни',
+  idx varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Унікальний ідентифікатор з графіка (IDX)',
+  time_start datetime DEFAULT NULL COMMENT 'Початок зміни (дата + час)',
+  time_end datetime DEFAULT NULL COMMENT 'Кінець зміни (дата + час)',
+  position varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Посада співробітника',
+  department varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Відділення, де проходить зміна',
+  shift_type varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Тип зміни (денна, нічна, тощо)',
+  duration_text varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Тривалість зміни у форматі hh:mm',
+  duration_hours double DEFAULT NULL COMMENT 'Тривалість зміни у годинах (десятковий формат)',
+  last_name varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Прізвище співробітника',
+  is_corrected enum('так','ні') COLLATE utf8mb4_unicode_ci DEFAULT 'ні' COMMENT 'Позначка, чи була зміна коректована вручну',
+  comment text COLLATE utf8mb4_unicode_ci COMMENT 'Коментар до зміни (причина корекції або інші пояснення)',
+  created_at datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Дата та час створення запису',
+  updated_at datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Дата та час останнього оновлення запису',
+  Matches int DEFAULT '0',
+  Score int DEFAULT '0',
+  Colision text COLLATE utf8mb4_unicode_ci,
+  СтавкаЗміна decimal(12,3) DEFAULT '0.000',
+  СтавкаГодина decimal(12,3) DEFAULT '0.000',
+  АнЗП decimal(12,3) DEFAULT '0.000',
+  Ан_Призначив decimal(12,3) DEFAULT '0.000',
+  Ан_Виконав decimal(12,3) DEFAULT '0.000',
+  АнЗП_Колективний decimal(12,3) DEFAULT '0.000',
+  Ан_Колективний decimal(12,3) DEFAULT '0.000',
+  level varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Рівень співробітника',
+  ErrorLog text COLLATE utf8mb4_unicode_ci COMMENT 'Лог помилок при обробці запису',
+  PRIMARY KEY (date_shift,idx)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Табель робочого часу співробітників'
+
+нам потрібно зараз до кожного рядку нашої таблиці зарплат притягнути умови оплати 
+СтавкаГодина=СтавкаЗміна/12
+Ан_Призначив
+Ан_Виконав
+Ан_Колективний
+СтавкаМісяць
+level
+position
+department
+shift_type
+duration_hours
+
+Т.е. по суті ми джойнимо таблицю яку створили
+select
+	pr.Recorder,
+	LineNumber,
+	Period,
+	Recorder_Type,
+	Номенклатура_Key,
+	nom.Description as Ном_Description,
+	nom.АналитикаПоЗарплате_Key,
+	an.Description as Ан_Description,
+	nom.ВидНоменклатуры,
+	nom.Вид_Key,
+	pr.Сотрудник as Співробітник,
+	NULL as Графік,
+	'Призначив' as Role,
+	Количество,
+	КоличествоОплачено,
+	Стоимость,
+	СтоимостьБезСкидок,
+	СуммаЗатрат,
+	(Стоимость-СуммаЗатрат) as ВаловийПрибуток
+from
+	wealth0_analytics.et_AccumulationRegister_Продажи_RecordType as pr
+left join wealth0_analytics.et_Catalog_Номенклатура as nom
+	on pr.Номенклатура_Key = nom.Ref_Key
+left join wealth0_analytics.et_Catalog_АналитикаПоЗарплате as an
+	on nom.АналитикаПоЗарплате_Key = an.Ref_Key
+where
+	pr.Active = 1
+	and Period >= '2025-05-01'
+
+union all
+
+select
+	pr.Recorder,
+	LineNumber,
+	Period,
+	Recorder_Type,
+	Номенклатура_Key,
+	nom.Description as Ном_Description,
+	nom.АналитикаПоЗарплате_Key,
+	an.Description as Ан_Description,
+	nom.ВидНоменклатуры,
+	nom.Вид_Key,
+	pr.Сотрудник as Співробітник,
+	sp.Графік,
+	'Призначив' as Role,
+	Количество,
+	КоличествоОплачено,
+	Стоимость,
+	СтоимостьБезСкидок,
+	СуммаЗатрат,
+	(Стоимость-СуммаЗатрат) as ВаловийПрибуток
+from
+	wealth0_analytics.et_AccumulationRegister_Продажи_RecordType as pr
+left join wealth0_analytics.et_Catalog_Номенклатура as nom
+	on pr.Номенклатура_Key = nom.Ref_Key
+left join wealth0_analytics.et_Catalog_АналитикаПоЗарплате as an
+	on nom.АналитикаПоЗарплате_Key = an.Ref_Key
+left join wealth0_analytics.zp_довСпівробітники as sp
+	on pr.Сотрудник = sp.Ref_Key
+where
+	pr.Active = 1
+	and Period >= '2025-05-01'
+
+union all
+
+select
+	pr.Recorder,
+	LineNumber,
+	Period,
+	Recorder_Type,
+	Номенклатура_Key,
+	nom.Description as Ном_Description,
+	nom.АналитикаПоЗарплате_Key,
+	an.Description as Ан_Description,
+	nom.ВидНоменклатуры,
+	nom.Вид_Key,
+	pr.Исполнитель as Співробітник,
+	sp.Графік,
+	'Виконавець' as Role,
+	Количество,
+	КоличествоОплачено,
+	Стоимость,
+	СтоимостьБезСкидок,
+	СуммаЗатрат,
+	(Стоимость-СуммаЗатрат) as ВаловийПрибуток
+from
+	wealth0_analytics.et_AccumulationRegister_Продажи_RecordType as pr
+left join wealth0_analytics.et_Catalog_Номенклатура as nom
+	on pr.Номенклатура_Key = nom.Ref_Key
+left join wealth0_analytics.et_Catalog_АналитикаПоЗарплате as an
+	on nom.АналитикаПоЗарплате_Key = an.Ref_Key
+left join wealth0_analytics.zp_довСпівробітники as sp
+	on pr.Исполнитель = sp.Ref_Key
+where
+	pr.Active = 1
+	and Period >= '2025-05-01'
+
+
+до zp_worktime, з якої підтягуємо поля position, department, shift_type, duration_hours, СтавкаЗміна, 
