@@ -1,10 +1,12 @@
 """
-Цей скрипт імпортує дані з Google Sheets у таблицю zp_фктУмовиОплати:
-1️⃣ Завантажує дані.
-2️⃣ Перевіряє дублікати.
-3️⃣ Автоматично проставляє ДатаЗакінчення для попередніх правил, якщо з'являється новий рядок із новішою датою.
-4️⃣ Формує Rule_ID для груп правил.
-5️⃣ Завантажує в Google Sheets і в MySQL (truncate + insert).
+Скрипт імпортує дані з Google Sheets у таблицю zp_фктУмовиОплати:
+✅ Додає колонку ID та присвоює порядкові номери
+✅ Завантажує дані
+✅ Перевіряє дублікати
+✅ Автоматично проставляє ДатаЗакінчення для попередніх правил, якщо додається новий рядок із пізнішою датою
+✅ Формує стабільний Rule_ID для груп правил (по Посада, Відділення, Рівень, ТипЗміни, Прізвище)
+✅ Захищає стовпці ID, Rule_ID та перший рядок (шапку)
+✅ Завантажує дані у Google Sheets та MySQL (truncate + insert)
 """
 
 import os
@@ -53,62 +55,139 @@ for row in values[1:]:
 df = pd.DataFrame(data_rows, columns=values[0])
 print(f"✅ Отримано {len(df)} рядків із Google Sheets.")
 
-# === Обробка дат ===
+# === Крок 2. Додаємо/оновлюємо колонку ID ===
+df['ID'] = range(1, len(df) + 1)
+
+# === Крок 3. Завантажуємо ID назад у Google Sheets ===
+values_to_upload = [list(df.columns)] + df.values.tolist()
+sheet.values().update(
+    spreadsheetId=SPREADSHEET_ID,
+    range=RANGE_NAME,
+    valueInputOption='RAW',
+    body={'values': values_to_upload}
+).execute()
+print("✅ Колонка ID оновлена у Google Sheets.")
+
+# === Крок 4. Додаємо захист для ID, Rule_ID та шапки ===
+sheet_metadata = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
+sheet_id = sheet_metadata['sheets'][0]['properties']['sheetId']  # Перший лист
+
+requests = [
+    # Захищаємо стовпець A (ID)
+    {
+        "addProtectedRange": {
+            "protectedRange": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startColumnIndex": 0,
+                    "endColumnIndex": 1
+                },
+                "description": "Захищено: ID",
+                "warningOnly": False
+            }
+        }
+    },
+    # Захищаємо стовпець B (Rule_ID)
+    {
+        "addProtectedRange": {
+            "protectedRange": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startColumnIndex": 1,
+                    "endColumnIndex": 2
+                },
+                "description": "Захищено: Rule_ID",
+                "warningOnly": False
+            }
+        }
+    },
+    # Захищаємо перший рядок (шапку)
+    {
+        "addProtectedRange": {
+            "protectedRange": {
+                "range": {
+                    "sheetId": sheet_id,
+                    "startRowIndex": 0,
+                    "endRowIndex": 1
+                },
+                "description": "Захищено: Шапка",
+                "warningOnly": False
+            }
+        }
+    }
+]
+
+service.spreadsheets().batchUpdate(
+    spreadsheetId=SPREADSHEET_ID,
+    body={"requests": requests}
+).execute()
+print("✅ Діапазони захищено у Google Sheets.")
+
+# === Крок 5. Обробка дат ===
 df['ДатаПочатку'] = pd.to_datetime(df['ДатаПочатку'], dayfirst=True, errors='coerce')
 df['ДатаЗакінчення'] = pd.to_datetime(df['ДатаЗакінчення'], dayfirst=True, errors='coerce')
 
-# === Сортування для Rule_ID ===
-df.sort_values(by=['Посада', 'Відділення', 'Рівень', 'ТипЗміни', 'Прізвище', 'АнЗП_Колективний', 'АнЗП', 'ДатаПочатку'], inplace=True)
+# === Крок 6. Сортування по ID (щоб зберегти порядок користувача) ===
+df.sort_values(by=['ID'], inplace=True)
 
-# === Проставляємо ДатаЗакінчення ===
+# === Крок 7. Закриття правил ===
 changed_rows = 0
-for idx in range(1, len(df)):
-    curr = df.iloc[idx]
-    prev = df.iloc[idx - 1]
-    if (
-        curr['Посада'] == prev['Посада'] and
-        curr['Відділення'] == prev['Відділення'] and
-        curr['Рівень'] == prev['Рівень'] and
-        curr['ТипЗміни'] == prev['ТипЗміни'] and
-        curr['Прізвище'] == prev['Прізвище'] and
-        curr['АнЗП_Колективний'] == prev['АнЗП_Колективний'] and
-        curr['АнЗП'] == prev['АнЗП']
-    ):
-        if pd.isna(prev['ДатаЗакінчення']) or prev['ДатаЗакінчення'] == '':
-            new_end_date = curr['ДатаПочатку'] - timedelta(days=1)
-            df.at[df.index[idx - 1], 'ДатаЗакінчення'] = new_end_date.strftime('%d.%m.%Y')
-            changed_rows += 1
+df_for_closing = df.sort_values(by=[
+    'Посада', 'Відділення', 'Рівень', 'ТипЗміни', 'Прізвище', 'ДатаПочатку'
+])
 
+for idx in range(len(df_for_closing)):
+    curr = df_for_closing.iloc[idx]
+    for next_idx in range(idx + 1, len(df_for_closing)):
+        next_row = df_for_closing.iloc[next_idx]
+        if (
+            curr['Посада'] == next_row['Посада'] and
+            curr['Відділення'] == next_row['Відділення'] and
+            curr['Рівень'] == next_row['Рівень'] and
+            curr['ТипЗміни'] == next_row['ТипЗміни'] and
+            curr['Прізвище'] == next_row['Прізвище']
+        ):
+            if (
+                pd.notna(next_row['ДатаПочатку']) and
+                next_row['ДатаПочатку'] > curr['ДатаПочатку']
+            ):
+                new_end_date = next_row['ДатаПочатку'] - timedelta(days=1)
+                if (pd.isna(curr['ДатаЗакінчення']) or
+                    pd.to_datetime(curr['ДатаЗакінчення'], dayfirst=True) < new_end_date):
+                    df.at[curr.name, 'ДатаЗакінчення'] = new_end_date.strftime('%d.%m.%Y')
+                    changed_rows += 1
+            break
 print(f"✅ Всього змінено ДатаЗакінчення у {changed_rows} рядках.")
 
-# === Присвоюємо Rule_ID ===
+# === Крок 8. Присвоюємо Rule_ID стабільно на основі ключа ===
+rule_id_map = {}
 current_rule_id = 1
 df['Rule_ID'] = 0
-df.at[df.index[0], 'Rule_ID'] = current_rule_id
 
-for idx in range(1, len(df)):
+for idx in range(len(df)):
     curr = df.iloc[idx]
-    prev = df.iloc[idx - 1]
-    if (
-        curr['Посада'] == prev['Посада'] and
-        curr['Відділення'] == prev['Відділення'] and
-        curr['Рівень'] == prev['Рівень'] and
-        curr['ТипЗміни'] == prev['ТипЗміни'] and
-        curr['Прізвище'] == prev['Прізвище'] and
-        curr['АнЗП_Колективний'] == prev['АнЗП_Колективний']
-    ):
-        df.at[df.index[idx], 'Rule_ID'] = current_rule_id
+    key = (
+        str(curr['Посада']).strip().lower(),
+        str(curr['Відділення']).strip().lower(),
+        str(curr['Рівень']).strip().lower(),
+        str(curr['ТипЗміни']).strip().lower(),
+        str(curr['Прізвище']).strip().lower()
+    )
+    if key in rule_id_map:
+        df.at[df.index[idx], 'Rule_ID'] = rule_id_map[key]
     else:
-        current_rule_id += 1
+        rule_id_map[key] = current_rule_id
         df.at[df.index[idx], 'Rule_ID'] = current_rule_id
+        current_rule_id += 1
 
-print("✅ Rule_ID присвоєно для всіх рядків.")
+print("✅ Rule_ID стабільно присвоєно для всіх рядків.")
 
-# === Форматуємо дати для завантаження назад у Google Sheets ===
+# === Крок 9. Форматуємо дати ===
 df['ДатаПочатку'] = df['ДатаПочатку'].dt.strftime('%d.%m.%Y')
 df['ДатаЗакінчення'] = df['ДатаЗакінчення'].apply(lambda x: x.strftime('%d.%m.%Y') if pd.notna(x) and x != '' else '')
+df = df.fillna('')
 
-# === Оновлюємо дані у Google Sheets ===
+# === Крок 10. Оновлюємо дані у Google Sheets ===
 values_to_upload = [list(df.columns)] + df.values.tolist()
 sheet.values().update(
     spreadsheetId=SPREADSHEET_ID,
@@ -118,7 +197,7 @@ sheet.values().update(
 ).execute()
 print("✅ Дані оновлені у Google Sheets.")
 
-# === Крок 4. Завантажуємо у БД ===
+# === Крок 11. Завантажуємо у БД ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 DB_HOST = os.getenv("DB_HOST")
 DB_USER = os.getenv("DB_USER")
