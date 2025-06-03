@@ -1,3 +1,11 @@
+"""
+Скрипт для розрахунку збігів між таблицею `zp_worktime` та таблицею правил `zp_фктУмовиОплати`.
+✅ Підтягує рівень співробітника
+✅ Підтягує Rule_ID у worktime (якщо немає помилок і колізій)
+✅ Розраховує Matches та Score для кожного запису
+✅ Записує колізії у поле `Colision`, інші помилки — у поле `ErrorLog`
+"""
+
 import pymysql
 from dotenv import load_dotenv
 import os
@@ -47,8 +55,9 @@ try:
             department = str(work_row['department']).strip()
 
             error_messages = []
+            colision_messages = []
 
-            print(f"\n🔎 Перевірка рівня для ID={work_row['idx']} Прізвище='{last_name}', Посада='{position}', Відділення='{department}', Дата={work_date}")
+            print(f"\n🔎 Перевірка рядка ID={work_row['idx']} — {last_name}, {position}, {department}, Дата={work_date}")
 
             # 1️⃣ Підтягуємо рівень
             cursor.execute("""
@@ -69,7 +78,6 @@ try:
             levels = cursor.fetchall()
 
             if not levels:
-                # Шукаємо універсальний рядок
                 cursor.execute("""
                     SELECT Рівень
                     FROM zp_фктРівніСпівробітників
@@ -87,37 +95,29 @@ try:
                 levels = cursor.fetchall()
 
             if len(levels) > 1:
-                error_message = (f"Колізія рівнів: знайдено {len(levels)} записів "
-                                 f"({last_name}, {position}, {department}) на дату {work_date}.")
-                print(f"[⚠️] {error_message}")
-                error_messages.append(error_message)
+                error_messages.append(f"Колізія рівнів: знайдено {len(levels)} записів ({last_name}, {position}, {department}) на дату {work_date}.")
                 level_value = None
             elif len(levels) == 1:
                 level_value = levels[0]['Рівень']
-                print(f"✅ Знайдено рівень: {level_value}")
             else:
-                error_message = (f"Не вдалося визначити рівень для {last_name}, {position}, {department} "
-                                 f"на дату {work_date} — відсутній рівень для конкретного відділення і універсального.")
-                print(f"[⚠️] {error_message}")
-                error_messages.append(error_message)
+                error_messages.append(f"Не знайдено рівень для {last_name}, {position}, {department} на дату {work_date}.")
                 level_value = None
 
-            # Оновлюємо рівень у worktime
             cursor.execute("""
                 UPDATE zp_worktime
                 SET level = %s
                 WHERE date_shift = %s AND idx = %s
             """, (level_value, work_row['date_shift'], work_row['idx']))
 
-            # 2️⃣ Перевірка правил у zp_фктУмовиОплати
+            # 2️⃣ Підтягуємо правила
             cursor.execute("""
-                SELECT * FROM zp_фктУмовиОплати
+                SELECT *
+                FROM zp_фктУмовиОплати
                 WHERE ДатаПочатку <= %s AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
             """, (work_date, work_date))
             rules = cursor.fetchall()
 
             best_matches = []
-
             for rule in rules:
                 matches = 0
                 score = 0
@@ -125,45 +125,19 @@ try:
 
                 for field, weight in weights.items():
                     work_value = work_row.get(field)
-                    rule_field = field_mapping[field]
-                    rule_value = rule.get(rule_field)
+                    rule_value = rule.get(field_mapping[field])
 
                     work_val_norm = str(work_value).strip().lower() if work_value else ''
                     rule_val_norm = str(rule_value).strip().lower() if rule_value else ''
 
-                    print(f"🔍 Порівнюємо поле '{field}': worktime='{work_val_norm}' vs rule='{rule_val_norm}'")
-
-                    if field == 'level':
-                        if rule_val_norm and work_val_norm:
-                            if work_val_norm == rule_val_norm:
-                                matches += 1
-                                score += weight
-                            else:
-                                skip_rule = True
-                                break
-                        elif not rule_val_norm:
-                            # універсальне правило по level
+                    if rule_val_norm:
+                        if work_val_norm == rule_val_norm:
                             matches += 1
                             score += weight
                         else:
-                            error_message = (f"Помилка таблиць (Level mismatch)! ID={work_row['idx']} дата={work_date}: "
-                                             f"rule_level='{rule_value}' vs worktime_level='{work_value}'.")
-                            print(f"[⚠️] {error_message}")
-                            error_messages.append(error_message)
                             skip_rule = True
                             break
-                    else:
-                        if rule_val_norm:
-                            if work_val_norm == rule_val_norm:
-                                matches += 1
-                                score += weight
-                            else:
-                                skip_rule = True
-                                break
-                        else:
-                            # універсальне правило
-                            matches += 1
-                            score += weight
+                    # Пусте поле у правила — не додає Matches/Score
 
                 if not skip_rule:
                     best_matches.append({
@@ -172,123 +146,79 @@ try:
                         'score': score
                     })
 
-            print(f"\n[🔎] Перевірка правил для ID {work_row['idx']} на дату {work_date}:")
-            for bm in best_matches:
-                rule_id = bm['rule']['id']
-                m = bm['matches']
-                s = bm['score']
-                print(f"  🔸 Правило ID={rule_id} → Matches={m}, Score={s}")
-
-            colision = ""
+            # 3️⃣ Обробка результатів
             top_matches = 0
             top_score = 0
+            top_rule = None
 
             if best_matches:
                 best_matches.sort(key=lambda x: (-x['matches'], -x['score']))
-
                 top = best_matches[0]
                 top_matches = top['matches']
                 top_score = top['score']
                 top_rule = top['rule']
 
-            same_top = [bm for bm in best_matches if bm['matches'] == top_matches and bm['score'] == top_score]
-            if len(same_top) > 1:
-                reference_rule = same_top[0]['rule']
-                collision_detected = False
-                for bm in same_top[1:]:
-                    rule = bm['rule']
-                    rule_an_zp = str(rule.get('АнЗП') or '').strip().lower()
-                    ref_an_zp = str(reference_rule.get('АнЗП') or '').strip().lower()
+                # Колізія, якщо більше одного з однаковими Matches і Score і РІЗНИМИ Rule_ID
+                same_top = [bm for bm in best_matches if bm['matches'] == top_matches and bm['score'] == top_score]
+                unique_rule_ids = set(bm['rule']['Rule_ID'] for bm in same_top)
+                if len(unique_rule_ids) > 1:
+                    colision_messages.append(f"Колізія Rule_ID: {', '.join(str(rid) for rid in unique_rule_ids)}")
 
-                    rule_an_collective = str(rule.get('АнЗП_Колективний') or '').strip().lower()
-                    ref_an_collective = str(reference_rule.get('АнЗП_Колективний') or '').strip().lower()
+            # 4️⃣ Запис у worktime
+            update_sql = """
+                UPDATE zp_worktime
+                SET
+                    Matches = %s,
+                    Score = %s,
+                    Colision = %s,
+                    СтавкаЗміна = %s,
+                    СтавкаГодина = %s,
+                    АнЗП = %s,
+                    Ан_Призначив = %s,
+                    Ан_Виконав = %s,
+                    АнЗП_Колективний = %s,
+                    Ан_Колективний = %s,
+                    Rule_ID = %s,
+                    ErrorLog = %s
+                WHERE date_shift = %s AND idx = %s
+            """
 
-                    rule_last_name = str(rule.get('Прізвище') or '').strip().lower()
-                    ref_last_name = str(reference_rule.get('Прізвище') or '').strip().lower()
-
-                    if (rule_an_zp == ref_an_zp and
-                        rule_an_collective == ref_an_collective and
-                        rule_last_name == ref_last_name):
-                        collision_detected = True
-                        break
-
-                if collision_detected:
-                    colision = "Колізія: " + ", ".join([str(bm['rule']['id']) for bm in same_top])
-                    print(f"[⚠️] Колізія для ID {work_row['idx']} на дату {work_date}: {colision}")
-                    error_messages.append(f"Колізія: {colision}")
-                else:
-                    print(f"[ℹ️] Збіг Matches/Score, але АнЗП, АнЗП_Колективний або Прізвище різні — колізія ігнорується.")
-
-
-            # 3️⃣ Запис у worktime
-            if error_messages or not best_matches:
-                cursor.execute("""
-                    UPDATE zp_worktime
-                    SET
-                        Matches = %s,
-                        Score = %s,
-                        Colision = %s,
-                        СтавкаЗміна = %s,
-                        СтавкаГодина = %s,
-                        АнЗП = %s,
-                        Ан_Призначив = %s,
-                        Ан_Виконав = %s,
-                        АнЗП_Колективний = %s,
-                        Ан_Колективний = %s,
-                        ErrorLog = %s
-                    WHERE
-                        date_shift = %s AND idx = %s
-                """, (
+            if top_rule and not colision_messages and not error_messages:
+                cursor.execute(update_sql, (
                     top_matches,
                     top_score,
-                    colision,
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
-                    "\n".join(error_messages),
-                    work_row['date_shift'],
-                    work_row['idx']
-                ))
-                print(f"[⚠️] Помилка: зарплата не розрахована для ID {work_row['idx']}.")
-            else:
-                cursor.execute("""
-                    UPDATE zp_worktime
-                    SET
-                        Matches = %s,
-                        Score = %s,
-                        Colision = %s,
-                        СтавкаЗміна = %s,
-                        СтавкаГодина = %s,
-                        АнЗП = %s,
-                        Ан_Призначив = %s,
-                        Ан_Виконав = %s,
-                        АнЗП_Колективний = %s,
-                        Ан_Колективний = %s,
-                        ErrorLog = %s
-                    WHERE
-                        date_shift = %s AND idx = %s
-                """, (
-                    top_matches,
-                    top_score,
-                    colision,
+                    '',
                     top_rule['СтавкаЗміна'],
-                    top_rule['СтавкаГодина'],
-                    top_rule['АнЗП'],
-                    top_rule['Ан_Призначив'],
-                    top_rule['Ан_Виконав'],
-                    top_rule['АнЗП_Колективний'],
-                    top_rule['Ан_Колективний'],
+                    top_rule.get('СтавкаГодина', 0),
+                    top_rule.get('АнЗП', ''),
+                    top_rule.get('Ан_Призначив', 0),
+                    top_rule.get('Ан_Виконав', 0),
+                    top_rule.get('АнЗП_Колективний', 0),
+                    top_rule.get('Ан_Колективний', 0),
+                    top_rule.get('Rule_ID'),
+                    '',
+                    work_row['date_shift'],
+                    work_row['idx']
+                ))
+            else:
+                cursor.execute(update_sql, (
+                    top_matches,
+                    top_score,
+                    "\n".join(colision_messages),
+                    0.000,
+                    0.000,
+                    0.000,
+                    0.000,
+                    0.000,
+                    0.000,
+                    0.000,
+                    None,
                     "\n".join(error_messages),
                     work_row['date_shift'],
                     work_row['idx']
                 ))
-                print(f"[✅] Оновлено рядок ID {work_row['idx']} Matches={top_matches}, Score={top_score}")
 
         connection.commit()
-        print("\n[🎉] Обробка завершена.")
+        print("\n✅ Обробка завершена.")
 finally:
     connection.close()
