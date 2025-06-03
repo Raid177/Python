@@ -6,9 +6,9 @@
 ✅ Записує колізії у поле `Colision`, інші помилки — у поле `ErrorLog`
 """
 
+import os
 import pymysql
 from dotenv import load_dotenv
-import os
 
 # Завантаження змінних оточення
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
@@ -45,8 +45,31 @@ try:
     )
 
     with connection.cursor() as cursor:
+        # Завантажуємо всі рядки worktime
         cursor.execute("SELECT * FROM zp_worktime")
         worktime_rows = cursor.fetchall()
+
+        # Завантажуємо всі рівні співробітників
+        cursor.execute("SELECT * FROM zp_фктРівніСпівробітників")
+        levels_rows = cursor.fetchall()
+
+        # Завантажуємо всі активні правила
+        cursor.execute("""
+            SELECT *
+            FROM zp_фктУмовиОплати
+            WHERE ДатаЗакінчення IS NULL OR ДатаЗакінчення >= CURDATE()
+        """)
+        rules_rows = cursor.fetchall()
+
+        # Створюємо мапу рівнів
+        levels_map = {}
+        for level in levels_rows:
+            key = (
+                level['Прізвище'].strip().lower(),
+                level['Посада'].strip().lower(),
+                level['Відділення'].strip().lower()
+            )
+            levels_map.setdefault(key, []).append(level)
 
         for work_row in worktime_rows:
             work_date = work_row['date_shift']
@@ -57,48 +80,21 @@ try:
             error_messages = []
             colision_messages = []
 
-            print(f"\n🔎 Перевірка рядка ID={work_row['idx']} — {last_name}, {position}, {department}, Дата={work_date}")
+            key_specific = (last_name.lower(), position.lower(), department.lower())
+            key_generic = (last_name.lower(), position.lower(), '')
 
-            # 1️⃣ Підтягуємо рівень
-            cursor.execute("""
-                SELECT Рівень
-                FROM zp_фктРівніСпівробітників
-                WHERE TRIM(LOWER(Прізвище)) = %s
-                  AND TRIM(LOWER(Посада)) = %s
-                  AND TRIM(LOWER(Відділення)) = %s
-                  AND ДатаПочатку <= %s
-                  AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
-            """, (
-                last_name.lower(),
-                position.lower(),
-                department.lower(),
-                work_date,
-                work_date
-            ))
-            levels = cursor.fetchall()
+            matched_levels = levels_map.get(key_specific, []) + levels_map.get(key_generic, [])
+            matched_levels = [
+                lvl for lvl in matched_levels
+                if lvl['ДатаПочатку'] <= work_date and 
+                   (lvl['ДатаЗакінчення'] is None or lvl['ДатаЗакінчення'] >= work_date)
+            ]
 
-            if not levels:
-                cursor.execute("""
-                    SELECT Рівень
-                    FROM zp_фктРівніСпівробітників
-                    WHERE TRIM(LOWER(Прізвище)) = %s
-                      AND TRIM(LOWER(Посада)) = %s
-                      AND (Відділення IS NULL OR TRIM(Відділення) = '')
-                      AND ДатаПочатку <= %s
-                      AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
-                """, (
-                    last_name.lower(),
-                    position.lower(),
-                    work_date,
-                    work_date
-                ))
-                levels = cursor.fetchall()
-
-            if len(levels) > 1:
-                error_messages.append(f"Колізія рівнів: знайдено {len(levels)} записів ({last_name}, {position}, {department}) на дату {work_date}.")
+            if len(matched_levels) > 1:
+                error_messages.append(f"Колізія рівнів: знайдено {len(matched_levels)} записів ({last_name}, {position}, {department}) на дату {work_date}.")
                 level_value = None
-            elif len(levels) == 1:
-                level_value = levels[0]['Рівень']
+            elif len(matched_levels) == 1:
+                level_value = matched_levels[0]['Рівень']
             else:
                 error_messages.append(f"Не знайдено рівень для {last_name}, {position}, {department} на дату {work_date}.")
                 level_value = None
@@ -109,16 +105,12 @@ try:
                 WHERE date_shift = %s AND idx = %s
             """, (level_value, work_row['date_shift'], work_row['idx']))
 
-            # 2️⃣ Підтягуємо правила
-            cursor.execute("""
-                SELECT *
-                FROM zp_фктУмовиОплати
-                WHERE ДатаПочатку <= %s AND (ДатаЗакінчення >= %s OR ДатаЗакінчення IS NULL)
-            """, (work_date, work_date))
-            rules = cursor.fetchall()
-
             best_matches = []
-            for rule in rules:
+            for rule in rules_rows:
+                if not (rule['ДатаПочатку'] <= work_date and 
+                        (rule['ДатаЗакінчення'] is None or rule['ДатаЗакінчення'] >= work_date)):
+                    continue
+
                 matches = 0
                 score = 0
                 skip_rule = False
@@ -137,7 +129,6 @@ try:
                         else:
                             skip_rule = True
                             break
-                    # Пусте поле у правила — не додає Matches/Score
 
                 if not skip_rule:
                     best_matches.append({
@@ -146,7 +137,6 @@ try:
                         'score': score
                     })
 
-            # 3️⃣ Обробка результатів
             top_matches = 0
             top_score = 0
             top_rule = None
@@ -158,13 +148,12 @@ try:
                 top_score = top['score']
                 top_rule = top['rule']
 
-                # Колізія, якщо більше одного з однаковими Matches і Score і РІЗНИМИ Rule_ID
                 same_top = [bm for bm in best_matches if bm['matches'] == top_matches and bm['score'] == top_score]
                 unique_rule_ids = set(bm['rule']['Rule_ID'] for bm in same_top)
                 if len(unique_rule_ids) > 1:
                     colision_messages.append(f"Колізія Rule_ID: {', '.join(str(rid) for rid in unique_rule_ids)}")
 
-            # 4️⃣ Запис у worktime
+            # Оновлюємо worktime
             update_sql = """
                 UPDATE zp_worktime
                 SET
@@ -173,11 +162,6 @@ try:
                     Colision = %s,
                     СтавкаЗміна = %s,
                     СтавкаГодина = %s,
-                    АнЗП = %s,
-                    Ан_Призначив = %s,
-                    Ан_Виконав = %s,
-                    АнЗП_Колективний = %s,
-                    Ан_Колективний = %s,
                     Rule_ID = %s,
                     ErrorLog = %s
                 WHERE date_shift = %s AND idx = %s
@@ -189,13 +173,8 @@ try:
                     top_score,
                     '',
                     top_rule['СтавкаЗміна'],
-                    top_rule.get('СтавкаГодина', 0),
-                    top_rule.get('АнЗП', ''),
-                    top_rule.get('Ан_Призначив', 0),
-                    top_rule.get('Ан_Виконав', 0),
-                    top_rule.get('АнЗП_Колективний', 0),
-                    top_rule.get('Ан_Колективний', 0),
-                    top_rule.get('Rule_ID'),
+                    float(top_rule['СтавкаЗміна']) / 12 if top_rule['СтавкаЗміна'] else 0,
+                    top_rule['Rule_ID'],
                     '',
                     work_row['date_shift'],
                     work_row['idx']
@@ -205,11 +184,6 @@ try:
                     top_matches,
                     top_score,
                     "\n".join(colision_messages),
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
-                    0.000,
                     0.000,
                     0.000,
                     None,
