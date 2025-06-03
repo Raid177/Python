@@ -4,14 +4,13 @@
 Функціонал:
 - Для кожної зміни з таблиці zp_worktime:
     • Якщо shift_uuid ще не згенеровано, створює його на основі основних полів зміни (date_shift, idx, time_start, time_end, position, department, shift_type).
-    • Для кожного правила з таблиці zp_фктУмовиОплати (якщо АнЗП_Колективний заповнено) обчислює суму продажів з таблиці zp_sales_salary за період зміни.
-    • Обчислює премії для кожного типу (Стоимость, СтоимостьБезСкидок, ВаловийПрибуток).
+    • Для кожного правила з таблиці zp_фктУмовиОплати (якщо АнЗП_Колективний заповнено) обчислює суму продажів з таблиці zp_sales_salary за період зміни (тільки Role = 'Призначив').
+    • Рахує премії для кожного типу (Стоимость, СтоимостьБезСкидок, ВаловийПрибуток).
     • Записує дані у таблицю zp_collective_bonus (insert або update).
-- Забезпечує єдиний зв’язок між таблицями через shift_uuid.
-
-✅ Скрипт можна запускати регулярно для актуалізації колективних премій.
+- Логи:
+    • Наявність продажів або їх відсутність.
+    • Істинні колізії shift_uuid у ворктаймі.
 """
-
 
 import pymysql
 import uuid
@@ -19,9 +18,10 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# Завантажуємо .env
+# 🚀 Завантаження .env
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
+# 🚀 Підключення до БД
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -31,20 +31,21 @@ DB_CONFIG = {
     "cursorclass": pymysql.cursors.DictCursor,
 }
 
-# Підключення до бази
 connection = pymysql.connect(**DB_CONFIG)
 cursor = connection.cursor()
 
-# 1. Отримати дані з zp_worktime
-cursor.execute("""
-    SELECT * FROM zp_worktime
-""")
+print("🔄 Розпочато обробку змін...")
+
+cursor.execute("""SELECT * FROM zp_worktime""")
 worktime_rows = cursor.fetchall()
+print(f"✅ Отримано {len(worktime_rows)} змін для обробки.")
+
+total_bonuses = 0
+true_collisions_detected = 0
 
 for row in worktime_rows:
     shift_uuid = row['shift_uuid']
     if not shift_uuid:
-        # Якщо shift_uuid відсутній, генеруємо
         shift_uuid = str(uuid.uuid5(uuid.NAMESPACE_DNS, f"{row['date_shift']}-{row['idx']}-{row['time_start']}-{row['time_end']}-{row['position']}-{row['department']}-{row['shift_type']}"))
         cursor.execute("""
             UPDATE zp_worktime
@@ -52,8 +53,19 @@ for row in worktime_rows:
             WHERE date_shift = %s AND idx = %s
         """, (shift_uuid, row['date_shift'], row['idx']))
         connection.commit()
+        print(f"🆕 Згенеровано shift_uuid для зміни {row['date_shift']} idx={row['idx']}")
 
-    # 2. Отримати всі правила для Rule_ID
+    # 🔎 Перевірка на істинні колізії
+    cursor.execute("""
+        SELECT COUNT(*) AS cnt
+        FROM zp_worktime
+        WHERE shift_uuid = %s
+    """, (shift_uuid,))
+    count_row = cursor.fetchone()
+    if count_row['cnt'] > 1:
+        true_collisions_detected += 1
+        print(f"⚠️ Істинна колізія: дубльований shift_uuid={shift_uuid} у таблиці zp_worktime (знайдено {count_row['cnt']} записів)")
+
     cursor.execute("""
         SELECT *
         FROM zp_фктУмовиОплати
@@ -65,7 +77,7 @@ for row in worktime_rows:
         ан_колективний = rule['АнЗП_Колективний']
         відсоток = rule['Ан_Колективний']
 
-        # 3. Отримати суму продажів за зміну (zp_sales_salary)
+        # 🔎 Додаємо фільтр Role = 'Призначив'
         cursor.execute("""
             SELECT 
                 SUM(Стоимость) AS СуммаСтоимость,
@@ -73,32 +85,29 @@ for row in worktime_rows:
                 SUM(ВаловийПрибуток) AS СуммаВаловийПрибуток
             FROM zp_sales_salary
             WHERE Period >= %s AND Period < %s
-              AND position = %s
-              AND department = %s
-              AND shift_type = %s
-              AND Rule_ID = %s
               AND Ан_Description = %s
-        """, (row['time_start'], row['time_end'], row['position'], row['department'], row['shift_type'], row['Rule_ID'], ан_колективний))
+              AND Role = 'Призначив'
+        """, (row['time_start'], row['time_end'], ан_колективний))
         sales = cursor.fetchone()
 
         if sales['СуммаСтоимость'] is None:
-            continue  # Якщо немає продажів
+            print(f"⚠️ Немає продажів для правила {ан_колективний} у зміні {row['date_shift']} idx={row['idx']}")
+            continue
 
-        # 4. Обчислити премії
         СтоимостьПремія = sales['СуммаСтоимость'] * відсоток
         СтоимостьБезСкидокПремія = sales['СуммаСтоимостьБезСкидок'] * відсоток
         ВаловийПрибутокПремія = sales['СуммаВаловийПрибуток'] * відсоток
 
-        # 5. INSERT/UPDATE у zp_collective_bonus
         cursor.execute("""
             INSERT INTO zp_collective_bonus (
-                shift_uuid, date_shift, idx, time_start, time_end, position, department, shift_type,
+                shift_uuid, date_shift, last_name, idx, time_start, time_end, position, department, shift_type,
                 Rule_ID, АнЗП_Колективний, Відсоток,
                 СуммаСтоимость, СуммаСтоимостьБезСкидок, СуммаВаловийПрибуток,
                 СтоимостьПремія, СтоимостьБезСкидокПремія, ВаловийПрибутокПремія
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             ON DUPLICATE KEY UPDATE
+                last_name = VALUES(last_name),
                 Відсоток = VALUES(Відсоток),
                 СуммаСтоимость = VALUES(СуммаСтоимость),
                 СуммаСтоимостьБезСкидок = VALUES(СуммаСтоимостьБезСкидок),
@@ -108,9 +117,20 @@ for row in worktime_rows:
                 ВаловийПрибутокПремія = VALUES(ВаловийПрибутокПремія),
                 updated_at = NOW()
         """, (
-            shift_uuid, row['date_shift'], row['idx'], row['time_start'], row['time_end'],
-            row['position'], row['department'], row['shift_type'], row['Rule_ID'], ан_колективний, відсоток,
+            shift_uuid, row['date_shift'], row['last_name'], row['idx'], row['time_start'], row['time_end'],
+            row['position'], row['department'], row['shift_type'],
+            row['Rule_ID'], ан_колективний, відсоток,
             sales['СуммаСтоимость'], sales['СуммаСтоимостьБезСкидок'], sales['СуммаВаловийПрибуток'],
             СтоимостьПремія, СтоимостьБезСкидокПремія, ВаловийПрибутокПремія
         ))
         connection.commit()
+
+        total_bonuses += 1
+        # print(f"✅ Додано/оновлено премію для shift_uuid={shift_uuid} + {ан_колективний}")
+
+print(f"🏁 Обробка завершена: {total_bonuses} записів премій.")
+if true_collisions_detected > 0:
+    print(f"⚠️ Увага! Виявлено {true_collisions_detected} істинних колізій!")
+
+cursor.close()
+connection.close()
