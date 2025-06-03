@@ -1,8 +1,29 @@
+"""
+🚀 Скрипт завантаження та оновлення таблиці zp_worktime 🚀
+
+Функціонал:
+- Підключається до Google Sheets (ліст "фкт_ГрафікПлаский").
+- Зчитує таблицю графіка змін персоналу (дата, часи, посада тощо).
+- Для кожного рядка:
+    • Парсить дату та час зміни (враховуючи фактичні початок/кінець).
+    • Обчислює тривалість зміни у форматі hh:mm та в годинах (десятковий формат).
+    • Генерує унікальний ідентифікатор зміни shift_uuid (MD5-хеш від дати, idx та інших ключових полів).
+    • Формує словник значень та вставляє/оновлює запис у таблиці zp_worktime.
+- Видаляє зі zp_worktime записи, яких більше немає у графіку Google Sheets.
+- Логує кількість доданих, оновлених та пропущених записів.
+- Виводить інформаційні повідомлення про хід виконання скрипту.
+
+Підключення до БД здійснюється через pymysql з використанням даних із .env файлу.
+
+✅ Скрипт можна запускати регулярно (крон або вручну) для актуалізації таблиці zp_worktime.
+"""
+
 import os
 import pymysql
 import pandas as pd
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import hashlib
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
@@ -107,6 +128,11 @@ def main():
                         "is_corrected": "так" if use_fact else "ні",
                         "comment": comment if use_fact else "",
                     }
+
+                    # === Додати shift_uuid ===
+                    concat_str = f"{date_shift}_{idx}_{record['time_start']}_{record['time_end']}_{record['position']}_{record['department']}_{record['shift_type']}"
+                    shift_uuid = hashlib.md5(concat_str.encode()).hexdigest()
+                    record["shift_uuid"] = shift_uuid
 
                     placeholders = ", ".join([f"`{k}`" for k in record])
                     values = ", ".join(["%s"] * len(record))
