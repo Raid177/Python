@@ -3,6 +3,7 @@
 
 Функція:
 - Формує таблицю з продажів та розрахованими преміями через SQL-CTE (без дублювань Role)
+- Підтягує shift_uuid з zp_worktime для унікальної ідентифікації зміни
 - Отримує DataFrame
 - Чистить таблицю zp_sales_salary
 - Завантажує нові дані у zp_sales_salary
@@ -34,7 +35,7 @@ engine = create_engine(
     connect_args={'charset': 'utf8mb4'}
 )
 
-# === SQL-запит з виправленими ролями ===
+# === SQL-запит з shift_uuid ===
 sql_query = """
 WITH our_table AS (
     -- Призначив (Сотрудник)
@@ -106,6 +107,7 @@ SELECT
     w.department,
     w.shift_type,
     w.Rule_ID,
+    w.shift_uuid,  -- 🆕 Додаємо shift_uuid з zp_worktime
     CASE
         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив
         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав
@@ -134,7 +136,7 @@ LEFT JOIN wealth0_analytics.zp_worktime w
 LEFT JOIN wealth0_analytics.zp_фктУмовиОплати pay
     ON w.Rule_ID = pay.Rule_ID
     AND pay.АнЗП = o.Ан_Description
-    AND pay.ДатаЗакінчення IS NULL
+    AND (pay.ДатаЗакінчення IS NULL OR o.Period < pay.ДатаЗакінчення)
 WHERE o.Period >= '2025-05-01'
 """
 
