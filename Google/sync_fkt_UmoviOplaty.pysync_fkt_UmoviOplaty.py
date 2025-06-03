@@ -3,7 +3,7 @@
 ✅ Додає колонку ID та присвоює порядкові номери
 ✅ Завантажує дані
 ✅ Перевіряє дублікати
-✅ Автоматично проставляє ДатаЗакінчення для попередніх правил, якщо додається новий рядок із пізнішою датою
+✅ Автоматично проставляє ДатаЗакінчення для попередніх умов (рядків) правила, якщо додається новий рядок із пізнішою датою
 ✅ Формує стабільний Rule_ID для груп правил (по Посада, Відділення, Рівень, ТипЗміни, Прізвище)
 ✅ Захищає стовпці ID, Rule_ID та перший рядок (шапку)
 ✅ Завантажує дані у Google Sheets та MySQL (truncate + insert)
@@ -73,7 +73,6 @@ sheet_metadata = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execut
 sheet_id = sheet_metadata['sheets'][0]['properties']['sheetId']  # Перший лист
 
 requests = [
-    # Захищаємо стовпець A (ID)
     {
         "addProtectedRange": {
             "protectedRange": {
@@ -87,7 +86,6 @@ requests = [
             }
         }
     },
-    # Захищаємо стовпець B (Rule_ID)
     {
         "addProtectedRange": {
             "protectedRange": {
@@ -101,7 +99,6 @@ requests = [
             }
         }
     },
-    # Захищаємо перший рядок (шапку)
     {
         "addProtectedRange": {
             "protectedRange": {
@@ -130,10 +127,10 @@ df['ДатаЗакінчення'] = pd.to_datetime(df['ДатаЗакінчен
 # === Крок 6. Сортування по ID (щоб зберегти порядок користувача) ===
 df.sort_values(by=['ID'], inplace=True)
 
-# === Крок 7. Закриття правил ===
+# === Крок 7. Закриття рядків (з урахуванням АнЗП для умови правила) ===
 changed_rows = 0
 df_for_closing = df.sort_values(by=[
-    'Посада', 'Відділення', 'Рівень', 'ТипЗміни', 'Прізвище', 'ДатаПочатку'
+    'Посада', 'Відділення', 'Рівень', 'ТипЗміни', 'Прізвище', 'АнЗП', 'ДатаПочатку'
 ])
 
 for idx in range(len(df_for_closing)):
@@ -145,7 +142,8 @@ for idx in range(len(df_for_closing)):
             curr['Відділення'] == next_row['Відділення'] and
             curr['Рівень'] == next_row['Рівень'] and
             curr['ТипЗміни'] == next_row['ТипЗміни'] and
-            curr['Прізвище'] == next_row['Прізвище']
+            curr['Прізвище'] == next_row['Прізвище'] and
+            curr['АнЗП'] == next_row['АнЗП']
         ):
             if (
                 pd.notna(next_row['ДатаПочатку']) and
@@ -159,7 +157,7 @@ for idx in range(len(df_for_closing)):
             break
 print(f"✅ Всього змінено ДатаЗакінчення у {changed_rows} рядках.")
 
-# === Крок 8. Присвоюємо Rule_ID стабільно на основі ключа ===
+# === Крок 8. Присвоюємо Rule_ID стабільно на основі ключа правила ===
 rule_id_map = {}
 current_rule_id = 1
 df['Rule_ID'] = 0
