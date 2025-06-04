@@ -1,33 +1,24 @@
 # === Опис функціоналу ===
-# 1️⃣ Підключення до Google Sheets і MySQL, авторизація через token.json та .env.
-# 2️⃣ Завантаження даних із аркуша "Графік" та перевірка наявності помилкових клітинок у таблиці zp_log_schedule_errors.
-# 3️⃣ Формування плоскої таблиці (flat_data) для подальшої обробки.
-# 4️⃣ Перевірка на конфлікти змін (перетин змін співробітників у межах однієї дати).
-#     ➡️ Якщо є конфлікт: додається рядок у колонку L, рядок закреслюється.
-#     ➡️ Якщо конфлікту немає: знімається закреслення і очищається колонка L.
-# 5️⃣ Логування знайдених конфліктів у консоль.
-# 6️⃣ Масове оновлення форматування та даних у таблиці "фкт_ГрафікПлаский" через Google API.
-# 7️⃣ Скрипт завершується повідомленням про кількість знайдених та оброблених конфліктів.
-
+# 1️⃣ Завантаження даних із Google Sheets («Графік» та «фкт_ГрафікПлаский»)
+# 2️⃣ Збереження внесених користувачем значень (ФактПочаток, ФактКінець, Коментар) з пласкої таблиці
+# 3️⃣ Очищення пласкої таблиці (залишаємо хедер)
+# 4️⃣ Формування актуальної пласкої таблиці з урахуванням Графіка
+# 5️⃣ Вставка збережених значень користувача (якщо є)
+# 6️⃣ Перевірка на конфлікти змін (нахльости)
+# 7️⃣ Заповнення колонки Error та застосування перекреслення рядків (batchUpdate)
 
 import os
-import re
 import json
-from datetime import datetime
-import pymysql
 import gspread
+from datetime import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from gspread_formatting import get_effective_format
-from gspread.utils import rowcol_to_a1
-from dotenv import load_dotenv
 
 # === Налаштування ===
 SPREADSHEET_NAME = "zp_PetWealth"
 SOURCE_SHEET = "Графік"
 TARGET_SHEET = "фкт_ГрафікПлаский"
 TOKEN_PATH = os.path.join(os.path.dirname(__file__), "token.json")
-ENV_PATH = os.path.join(os.path.dirname(__file__), "../.env")
 
 SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -50,34 +41,32 @@ spreadsheet_id = spreadsheet.id
 sheet_metadata = service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
 sheet_id = next(s['properties']['sheetId'] for s in sheet_metadata['sheets'] if s['properties']['title'] == TARGET_SHEET)
 
-# === Авторизація до MySQL ===
-load_dotenv(ENV_PATH)
-db = pymysql.connect(
-    host=os.getenv("DB_HOST"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_DATABASE"),
-    charset='utf8mb4'
-)
-cursor = db.cursor()
+# === Завантаження існуючих даних із пласкої таблиці ===
+existing_data = tgt_ws.get_all_values()
+header_row = [
+    "Дата зміни", "IDX", "ПочатокЗміни", "КінецьЗміни", "Посада",
+    "Відділення", "ТипЗміни", "Прізвище",
+    "ФактПочаток", "ФактКінець", "Коментар", "Error"
+]
 
-# === Перевірка таблиці помилок ===
-cursor.execute("""
-    SELECT `month_year`, `day_number`, `idx`, `value`
-    FROM zp_log_schedule_errors
-    WHERE `resolved_at` IS NULL
-""")
-error_cells = set((row[0], str(row[1]), row[2], row[3]) for row in cursor.fetchall())
+# === Збереження користувацьких полів ===
+user_fields = {}
+for row in existing_data[1:]:
+    if len(row) >= 12:
+        key = tuple(row[:8])  # Дата зміни, IDX, ПочатокЗміни, КінецьЗміни, Посада, Відділення, ТипЗміни, Прізвище
+        user_fields[key] = (row[8], row[9], row[10])  # ФактПочаток, ФактКінець, Коментар
 
-# === Отримання даних з графіка ===
+# === Очистка пласкої таблиці (залишаємо тільки хедер) ===
+tgt_ws.clear()
+tgt_ws.append_row(header_row, value_input_option="USER_ENTERED")
+print("✅ Таблиця очищена та заголовок додано.")
+
+# === Завантаження даних із таблиці Графік ===
 data = src_ws.get_all_values()
 header = data[0]
-
-# === Обробка графіка ===
 flat_data = []
-skip_counter = 0
-skipped_log = []
-for i, row in enumerate(data[1:], start=2):
+
+for row in data[1:]:
     base = row[:7]
     try:
         month_year_str = base[0].strip()
@@ -91,127 +80,129 @@ for i, row in enumerate(data[1:], start=2):
             day = int(header[col])
         except:
             continue
-
         try:
             date_str = datetime(year, month, day).strftime("%d.%m.%Y")
         except:
             continue
-
         if not cell_value:
             continue
 
-        if (f"{month:02d}.{year}", str(day), base[6], cell_value) in error_cells:
-            skip_counter += 1
-            skipped_log.append(f"Пропущено: {month:02d}.{year} {day} {base[6]} {cell_value}")
-            continue
-
+        key = (date_str, base[6], base[4], base[5], base[1], base[2], base[3], cell_value)
+        fact_start, fact_end, comment = user_fields.get(key, ("", "", ""))
         flat_data.append([
-            date_str, base[6], base[4], base[5], base[1], base[2], base[3], cell_value
+            date_str, base[6], base[4], base[5], base[1], base[2], base[3], cell_value,
+            fact_start, fact_end, comment, ""
         ])
 
+# === Додавання актуальних рядків у пласку таблицю ===
+if flat_data:
+    tgt_ws.append_rows(flat_data, value_input_option="USER_ENTERED")
+    print(f"✅ Додано {len(flat_data)} актуальних рядків.")
+else:
+    print("⚠️ Даних для вставки немає у таблиці Графік.")
+
 # === Перевірка на конфлікти ===
-conflicts = []
+existing_data = tgt_ws.get_all_values()
+existing_data_rows = existing_data[1:]  # Пропускаємо хедер
 error_rows = set()
 flat_data_grouped = {}
-for row in flat_data:
-    date, idx, start, end, posada, viddil, shift_type, surname = row
-    key = (surname, date)
-    if key not in flat_data_grouped:
-        flat_data_grouped[key] = []
-    flat_data_grouped[key].append((start, end, idx, posada, row))
 
+for row in existing_data_rows:
+    if len(row) >= 12:
+        date, idx, start, end, posada, viddil, shift_type, surname = row[:8]
+        fact_start = row[8].strip() if row[8].strip() else start
+        fact_end = row[9].strip() if row[9].strip() else end
+
+        key = (surname, date)
+        if key not in flat_data_grouped:
+            flat_data_grouped[key] = []
+        flat_data_grouped[key].append((fact_start, fact_end, idx, posada, viddil, row))
+
+conflicts = []
 for key, shifts in flat_data_grouped.items():
     surname, date = key
     for i in range(len(shifts)):
-        start1, end1, idx1, posada1, row1 = shifts[i]
+        start1, end1, idx1, posada1, viddil1, row1 = shifts[i]
         try:
             s1 = int(start1.split(':')[0]) * 60 + int(start1.split(':')[1])
             e1 = int(end1.split(':')[0]) * 60 + int(end1.split(':')[1])
             if e1 <= s1:
                 e1 += 24 * 60
+            e1 -= 1
         except:
             continue
+
         for j in range(i + 1, len(shifts)):
-            start2, end2, idx2, posada2, row2 = shifts[j]
+            start2, end2, idx2, posada2, viddil2, row2 = shifts[j]
             try:
                 s2 = int(start2.split(':')[0]) * 60 + int(start2.split(':')[1])
                 e2 = int(end2.split(':')[0]) * 60 + int(end2.split(':')[1])
                 if e2 <= s2:
                     e2 += 24 * 60
+                e2 -= 1
             except:
                 continue
+
             if (s1 < e2) and (s2 < e1):
-                conflict_text = f"⚠️ Конфлікт: {surname} на {date} між {posada1} ({start1}-{end1}) та {posada2} ({start2}-{end2})"
+                conflict_text = (
+                    f"⚠️ Конфлікт: {surname} на {date} між {posada1} ({start1}-{end1}) та "
+                    f"{posada2} ({start2}-{end2})"
+                )
                 conflicts.append(conflict_text)
+
+                row1_index = existing_data_rows.index(row1) + 2  # +2 для коректного номера рядка
+                row2_index = existing_data_rows.index(row2) + 2
+
+                row1[11] = f"Перетин з рядком №{row2_index}: {date}, {idx2}, {start2}-{end2}, {posada2}, {viddil2}"
+                row2[11] = f"Перетин з рядком №{row1_index}: {date}, {idx1}, {start1}-{end1}, {posada1}, {viddil1}"
+
                 error_rows.add(tuple(row1))
                 error_rows.add(tuple(row2))
+
+# === Формування колонки Error ===
+error_column_values = []
+for row in existing_data_rows:
+    if tuple(row) in error_rows:
+        error_column_values.append([row[11]])
+    else:
+        error_column_values.append([""])
+
+tgt_ws.update(error_column_values, range_name=f"L2:L{len(existing_data)}", value_input_option="USER_ENTERED")
+
+# === Формування batchUpdate для перекреслення ===
+requests = []
+for idx, row in enumerate(existing_data_rows, start=2):
+    strikethrough = bool(tuple(row) in error_rows)
+    requests.append({
+        "repeatCell": {
+            "range": {
+                "sheetId": sheet_id,
+                "startRowIndex": idx - 1,
+                "endRowIndex": idx,
+                "startColumnIndex": 0,
+                "endColumnIndex": 12
+            },
+            "cell": {
+                "userEnteredFormat": {
+                    "textFormat": {"strikethrough": strikethrough}
+                }
+            },
+            "fields": "userEnteredFormat.textFormat.strikethrough"
+        }
+    })
+
+# === Виконуємо batchUpdate для закреслення ===
+if requests:
+    service.spreadsheets().batchUpdate(
+        spreadsheetId=spreadsheet_id,
+        body={"requests": requests}
+    ).execute()
 
 if conflicts:
     print("\n⚠️ Знайдені конфлікти:")
     for conflict in conflicts:
         print(conflict)
+else:
+    print("\n✅ Конфліктів не знайдено.")
 
-# === Існуючі дані у пласкій таблиці ===
-existing_data = tgt_ws.get_all_values()
-batch_updates = []
-
-for i, ex_row in enumerate(existing_data[1:], start=2):
-    if len(ex_row) >= 8:
-        row_key = tuple(ex_row[:8])
-        if row_key in error_rows:
-            batch_updates.append({"range": f"L{i}", "values": [["Конфлікт змін"]]})
-            service.spreadsheets().batchUpdate(
-                spreadsheetId=spreadsheet_id,
-                body={
-                    "requests": [
-                        {
-                            "repeatCell": {
-                                "range": {
-                                    "sheetId": sheet_id,
-                                    "startRowIndex": i - 1,
-                                    "endRowIndex": i,
-                                    "startColumnIndex": 0,
-                                    "endColumnIndex": 8
-                                },
-                                "cell": {
-                                    "userEnteredFormat": {
-                                        "textFormat": {"strikethrough": True}
-                                    }
-                                },
-                                "fields": "userEnteredFormat.textFormat.strikethrough"
-                            }
-                        }
-                    ]
-                }
-            )
-        else:
-            batch_updates.append({"range": f"L{i}", "values": [[""]]})
-            service.spreadsheets().batchUpdate(
-                spreadsheetId=spreadsheet_id,
-                body={
-                    "requests": [
-                        {
-                            "repeatCell": {
-                                "range": {
-                                    "sheetId": sheet_id,
-                                    "startRowIndex": i - 1,
-                                    "endRowIndex": i,
-                                    "startColumnIndex": 0,
-                                    "endColumnIndex": 8
-                                },
-                                "cell": {
-                                    "userEnteredFormat": {
-                                        "textFormat": {"strikethrough": False}
-                                    }
-                                },
-                                "fields": "userEnteredFormat.textFormat.strikethrough"
-                            }
-                        }
-                    ]
-                }
-            )
-
-if batch_updates:
-    tgt_ws.batch_update(batch_updates)
-
-print("\n✅ Перевірка конфліктів завершена")
+print("\n✅ Завершено: таблицю оновлено та перевірено на перехльости.")
