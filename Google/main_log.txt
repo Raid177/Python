@@ -468,3 +468,23 @@
 [2025-06-05 00:21:31] [242 rows x 16 columns]
 [2025-06-05 00:21:32] ⏱️  Час виконання скрипта summary.py: 1.62 сек.
 [2025-06-05 00:21:32] 🏁 Загальний час виконання: 67.46 сек.
+================================================================================
+[2025-06-05 00:53:01] Запущено з командою: c:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/run_all.py
+================================================================================
+[2025-06-05 00:53:01] ▶️  Виконую скрипт: import_enote_reference.py
+------------------------------------------------------------
+[2025-06-05 00:53:03] [OK] Отримано 6 записів з Єноту
+[2025-06-05 00:53:03] [ERROR] Помилка під час оновлення Google Sheets: ('invalid_scope: Bad Request', {'error': 'invalid_scope', 'error_description': 'Bad Request'})
+[2025-06-05 00:53:03] ⏱️  Час виконання скрипта import_enote_reference.py: 2.07 сек.
+[2025-06-05 00:53:03] ❌ Проблема з авторизацією Google у скрипті: import_enote_reference.py.
+[2025-06-05 00:53:15] ▶️  Виконую скрипт: authorize.py
+------------------------------------------------------------
+[2025-06-05 00:53:20] [DELETE] Стерто старий token.json
+[2025-06-05 00:53:20] [INFO] Відкриваємо браузер для авторизації...
+[2025-06-05 00:53:20] [INFO] Якщо браузер не відкриється автоматично, запустіть цей скрипт окремо вручну.
+[2025-06-05 00:53:20] Please visit this URL to authorize this application: https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=70000851824-cpneiii8cofvrugulqqco93kpsgp6ihb.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A52786%2F&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fspreadsheets+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.metadata.readonly&state=LXumjVP3PIpz0CF67m47NjrSUBvKhI&access_type=offline
+[2025-06-05 00:53:20] [OK] Авторизація завершена.
+[2025-06-05 00:53:20] [INFO] Отримані scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.metadata.readonly']
+[2025-06-05 00:53:20] ⏱️  Час виконання скрипта authorize.py: 5.97 сек.
+[2025-06-05 00:53:20] ✅ Авторизація Google пройдена.
+[2025-06-05 00:53:27] 🔄 Повторний запуск з тими ж параметрами...

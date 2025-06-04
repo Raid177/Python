@@ -36,7 +36,7 @@ SCRIPTS = [
 ]
 
 # === Шлях до лог-файлу ===
-LOG_FILE = os.path.join(os.path.dirname(__file__), "main_log.txt")
+LOG_FILE = os.path.join(os.path.dirname(__file__), "..", "main_log.txt")
 
 def current_timestamp():
     """Отримати таймстамп у форматі [YYYY-MM-DD HH:MM:SS]."""
@@ -57,9 +57,9 @@ def print_help():
     help_text = """
 run_all.py — запуск скриптів підрахунку ЗП.
 
-🔹 Без аргументів — повний запуск всіх скриптів по порядку.
-🔹 <назва_скрипта.py> — запуск лише цього скрипта.
-🔹 from <назва_скрипта.py> — запуск цього скрипта та всіх наступних.
+- Без аргументів — повний запуск всіх скриптів по порядку.
+- <назва_скрипта.py> — запуск лише цього скрипта.
+- from <назва_скрипта.py> — запуск цього скрипта та всіх наступних.
 
 Наприклад:
     python run_all.py
@@ -73,10 +73,10 @@ def run_script(script):
     """Запускає окремий скрипт, логуючи stdout/stderr та перевіряючи помилки авторизації Google."""
     script_path = os.path.join(os.path.dirname(__file__), script)
     if not os.path.isfile(script_path):
-        print_and_log(f"⚠️  Скрипт не знайдено: {script}")
+        print_and_log(f"[WARN] Скрипт не знайдено: {script}")
         return False
 
-    print_and_log(f"▶️  Виконую скрипт: {script}")
+    print_and_log(f"[RUN] Виконую скрипт: {script}")
     log_write("-" * 60)
     start_time = time.time()
 
@@ -90,14 +90,14 @@ def run_script(script):
 
     error_google_auth = False
     google_keywords = [
-    "google authorization",
-    "refresh token",
-    "expired token",
-    "refresherror",
-    "invalidgrant",
-    "invalid_scope",
-    "bad request"
-]
+        "google authorization",
+        "refresh token",
+        "expired token",
+        "refresherror",
+        "invalidgrant",
+        "invalid_scope",
+        "bad request"
+    ]
 
     while True:
         line = process.stdout.readline()
@@ -112,28 +112,32 @@ def run_script(script):
 
     exit_code = process.wait()
     elapsed_time = round(time.time() - start_time, 2)
-    print_and_log(f"⏱️  Час виконання скрипта {script}: {elapsed_time} сек.")
+    print_and_log(f"[TIME] Час виконання скрипта {script}: {elapsed_time} сек.")
 
     if exit_code != 0:
         if error_google_auth:
-            print_and_log(f"❌ Проблема з авторизацією Google у скрипті: {script}.")
+            print_and_log(f"[ERROR] Проблема з авторизацією Google у скрипті: {script}.")
             choice = input("Пройти авторизацію? (так/ні): ").strip().lower()
             if choice in ("так", "y", "yes"):
                 run_script("authorize.py")
-                print_and_log("✅ Авторизація Google пройдена.")
+                print_and_log("[OK] Авторизація Google пройдена.")
                 restart = input("Запустити все заново? (так/ні): ").strip().lower()
                 if restart in ("так", "y", "yes"):
-                    print_and_log("🔄 Повторний запуск з тими ж параметрами...")
+                    print_and_log("[SYNC] Повторний запуск з тими ж параметрами...")
                     python_exe = sys.executable
-                    os.execv(python_exe, [python_exe] + sys.argv)
+                    try:
+                        subprocess.run([python_exe, sys.argv[0]] + sys.argv[1:], check=True)
+                    except subprocess.CalledProcessError as e:
+                        print_and_log(f"[ERROR] Повторний запуск завершився з помилкою: {e.returncode}")
+                    sys.exit(0)
                 else:
-                    print_and_log("⚠️  Завершення роботи.")
+                    print_and_log("[WARN] Завершення роботи.")
                     sys.exit(1)
             else:
-                print_and_log("⚠️  Завершення роботи.")
+                print_and_log("[WARN] Завершення роботи.")
                 sys.exit(1)
         else:
-            print_and_log(f"❌ Помилка виконання: {script}. Зупиняємо.")
+            print_and_log(f"[ERROR] Помилка виконання: {script}. Зупиняємо.")
             sys.exit(exit_code)
     return True
 
@@ -160,20 +164,20 @@ def main():
                 for script in SCRIPTS[start_index:]:
                     run_script(script)
             except ValueError:
-                print_and_log(f"⚠️  Скрипт '{args[1]}' не знайдено у списку.")
+                print_and_log(f"[WARN] Скрипт '{args[1]}' не знайдено у списку.")
                 sys.exit(1)
         elif len(args) == 1:
             if args[0] in SCRIPTS:
                 run_script(args[0])
             else:
-                print_and_log(f"⚠️  Скрипт '{args[0]}' не знайдено у списку.")
+                print_and_log(f"[WARN] Скрипт '{args[0]}' не знайдено у списку.")
                 sys.exit(1)
         else:
-            print_and_log("⚠️  Невідомі аргументи.")
+            print_and_log("[WARN] Невідомі аргументи.")
             print_help()
     finally:
         total_time = round(time.time() - start_all_time, 2)
-        print_and_log(f"🏁 Загальний час виконання: {total_time} сек.")
+        print_and_log(f"[FINISH] Загальний час виконання: {total_time} сек.")
 
 if __name__ == "__main__":
     main()
