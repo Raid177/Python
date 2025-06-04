@@ -1,5 +1,5 @@
 """
-🚀 Скрипт завантаження та оновлення таблиці zp_worktime 🚀
+[START] Скрипт завантаження та оновлення таблиці zp_worktime [START]
 
 Функціонал:
 - Підключається до Google Sheets (ліст "фкт_ГрафікПлаский").
@@ -15,7 +15,7 @@
 
 Підключення до БД здійснюється через pymysql з використанням даних із .env файлу.
 
-✅ Скрипт можна запускати регулярно (крон або вручну) для актуалізації таблиці zp_worktime.
+[OK] Скрипт можна запускати регулярно (крон або вручну) для актуалізації таблиці zp_worktime.
 """
 
 import os
@@ -77,7 +77,7 @@ def main():
     ).execute()
     data = result.get("values", [])
     if not data:
-        print("❌ Дані не знайдено.")
+        print("[ERROR] Дані не знайдено.")
         return
 
     header = data[0]
@@ -153,7 +153,7 @@ def main():
                         updated += 1
 
                 except Exception as e:
-                    print(f"⚠️ Помилка в IDX={row.get('IDX')}: {e}")
+                    print(f"[WARN] Помилка в IDX={row.get('IDX')}: {e}")
                     skipped += 1
 
             # === Видалення застарілих записів ===
@@ -168,11 +168,11 @@ def main():
                 cursor.execute(delete_sql, delete_values)
                 print(f"🗑 Видалено: {len(to_delete)}")
             else:
-                print("🟢 Нічого не видалено.")
+                print("[INFO] Нічого не видалено.")
 
         conn.commit()
 
-    print(f"✅ Додано: {added}, Оновлено: {updated}, Пропущено: {skipped}")
+    print(f"[OK] Додано: {added}, Оновлено: {updated}, Пропущено: {skipped}")
 
 if __name__ == "__main__":
     main()

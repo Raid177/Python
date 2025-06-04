@@ -20,7 +20,7 @@ fill_flat_schedule.py
 worktime.py
 Переніс пласкої таблиці в БД zp_worktime з обробкою коректувань по зміненим годинам роботи.
 
-sync_fkt_UmoviOplaty.pysync_fkt_UmoviOplaty.py
+sync_fkt_UmoviOplaty.py
 Імпортуємо умови в БД. Групуємо умови по типу продажу. Присвоюємо індекси групі.
 
 sync_умови_рівень.py

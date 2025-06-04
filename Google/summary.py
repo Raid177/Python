@@ -18,7 +18,7 @@
 
 import os
 import pandas as pd
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from dotenv import load_dotenv
 
 # === Завантаження .env ===
@@ -58,7 +58,6 @@ query_sales = """
         Ан_Description,
         SUM(Стоимость * ВідсотокПремії) AS Премія
     FROM zp_sales_salary
-    WHERE Role = 'Призначив'
     GROUP BY shift_uuid, Ан_Description
 """
 df_sales = pd.read_sql(query_sales, con=engine)
@@ -98,13 +97,17 @@ summary_df = df_worktime.set_index('shift_uuid')\
 summary_df = summary_df.fillna(0)
 
 # 5️⃣ Обчислення ВсьогоЗаЗміну
-summary_df['ВсьогоЗаЗміну'] = summary_df['Ставка'] + summary_df['Премія_Всього'] + summary_df['КолективнаПремія_Всього']
+summary_df['ВсьогоЗаЗміну'] = (
+    summary_df['Ставка'] +
+    summary_df['Премія_Всього'] +
+    summary_df['КолективнаПремія_Всього']
+)
 
 # 6️⃣ Експорт у Excel
 file_name = 'salary_summary.xlsx'
 summary_df.reset_index().to_excel(file_name, index=False)
-print(f"✅ Дані успішно експортовано до Excel: {file_name}")
+print(f"[OK] Дані успішно експортовано до Excel: {file_name}")
 
 # 7️⃣ Вивід у консоль
-print("🏁 Результати агрегування зарплати по змінах:")
+print("[FINISH] Результати агрегування зарплати по змінах:")
 print(summary_df.reset_index())

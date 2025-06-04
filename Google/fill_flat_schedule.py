@@ -59,7 +59,7 @@ for row in existing_data[1:]:
 # === Очистка пласкої таблиці (залишаємо тільки хедер) ===
 tgt_ws.clear()
 tgt_ws.append_row(header_row, value_input_option="USER_ENTERED")
-print("✅ Таблиця очищена та заголовок додано.")
+print("[OK] Таблиця очищена та заголовок додано.")
 
 # === Завантаження даних із таблиці Графік ===
 data = src_ws.get_all_values()
@@ -97,9 +97,9 @@ for row in data[1:]:
 # === Додавання актуальних рядків у пласку таблицю ===
 if flat_data:
     tgt_ws.append_rows(flat_data, value_input_option="USER_ENTERED")
-    print(f"✅ Додано {len(flat_data)} актуальних рядків.")
+    print(f"[OK] Додано {len(flat_data)} актуальних рядків.")
 else:
-    print("⚠️ Даних для вставки немає у таблиці Графік.")
+    print("[WARN] Даних для вставки немає у таблиці Графік.")
 
 # === Перевірка на конфлікти ===
 existing_data = tgt_ws.get_all_values()
@@ -145,7 +145,7 @@ for key, shifts in flat_data_grouped.items():
 
             if (s1 < e2) and (s2 < e1):
                 conflict_text = (
-                    f"⚠️ Конфлікт: {surname} на {date} між {posada1} ({start1}-{end1}) та "
+                    f"[WARN] Конфлікт: {surname} на {date} між {posada1} ({start1}-{end1}) та "
                     f"{posada2} ({start2}-{end2})"
                 )
                 conflicts.append(conflict_text)
@@ -199,10 +199,10 @@ if requests:
     ).execute()
 
 if conflicts:
-    print("\n⚠️ Знайдені конфлікти:")
+    print("\n[WARN] Знайдені конфлікти:")
     for conflict in conflicts:
         print(conflict)
 else:
-    print("\n✅ Конфліктів не знайдено.")
+    print("\n[OK] Конфліктів не знайдено.")
 
-print("\n✅ Завершено: таблицю оновлено та перевірено на перехльости.")
+print("\n[OK] Завершено: таблицю оновлено та перевірено на перехльости.")

@@ -31,7 +31,7 @@
        • Colision
    - Логування результатів у консоль.
 
-✅ Важливо:
+[OK] Важливо:
 - Скрипт виконує обидва блоки по черзі: спочатку синхронізація рівнів, потім обробка zp_worktime.
 - Скрипт зупиняє роботу, якщо знайдено дублікати в Google Sheets.
 """
@@ -75,7 +75,7 @@ def log_message(message):
 
 # === СИНХРОНІЗАЦІЯ РІВНІВ СПІВРОБІТНИКІВ ===
 def sync_employee_levels():
-    log_message("🔄 Початок синхронізації рівнів співробітників...")
+    log_message("[SYNC] Початок синхронізації рівнів співробітників...")
     creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
     service = build("sheets", "v4", credentials=creds)
     sheet = service.spreadsheets()
@@ -83,7 +83,7 @@ def sync_employee_levels():
     values = result.get("values", [])
 
     if not values:
-        log_message("❌ Дані не знайдено в Google Sheets!")
+        log_message("[ERROR] Дані не знайдено в Google Sheets!")
         return
 
     header = values[0]
@@ -98,7 +98,7 @@ def sync_employee_levels():
 
     duplicate_mask = df.duplicated(subset=["Прізвище", "ДатаПочатку", "Посада", "Відділення", "Рівень"], keep=False)
     if duplicate_mask.any():
-        log_message("⚠️ В Google Sheets знайдено дублікати, виправте їх перед завантаженням.")
+        log_message("[WARN] В Google Sheets знайдено дублікати, виправте їх перед завантаженням.")
         duplicates = df[duplicate_mask]
         for _, row in duplicates.iterrows():
             log_message(f"  - {row['Прізвище']} | {row['ДатаПочатку'].date() if pd.notnull(row['ДатаПочатку']) else ''} | "
@@ -117,7 +117,7 @@ def sync_employee_levels():
             if key == prev_key:
                 if pd.isnull(prev_row["ДатаЗакінчення"]) and row["ДатаПочатку"] > prev_row["ДатаПочатку"]:
                     df.at[prev_row.name, "ДатаЗакінчення"] = row["ДатаПочатку"] - timedelta(days=1)
-                    log_message(f"🔄 Закрито рівень: {prev_row['Прізвище']} {prev_row['Посада']} {prev_row['Відділення']} "
+                    log_message(f"[SYNC] Закрито рівень: {prev_row['Прізвище']} {prev_row['Посада']} {prev_row['Відділення']} "
                                 f"{prev_row['ДатаПочатку'].date()} → {df.at[prev_row.name, 'ДатаЗакінчення'].date()}")
         prev_row = row if pd.isnull(row["ДатаЗакінчення"]) else None
 
@@ -139,7 +139,7 @@ def sync_employee_levels():
         valueInputOption="RAW",
         body={"values": updated_values}
     ).execute()
-    log_message("✅ Google Sheets оновлено!")
+    log_message("[OK] Google Sheets оновлено!")
 
     conn = pymysql.connect(**DB_CONFIG)
     cursor = conn.cursor()
@@ -171,11 +171,11 @@ def sync_employee_levels():
     conn.commit()
     cursor.close()
     conn.close()
-    log_message(f"✅ Завантажено: {inserted} додано, {updated} оновлено.")
+    log_message(f"[OK] Завантажено: {inserted} додано, {updated} оновлено.")
 
 # === ОБРОБКА zp_worktime ===
 def calculate_worktime_matches():
-    log_message("🔎 Початок розрахунку збігів у zp_worktime...")
+    log_message("[INFO] Початок розрахунку збігів у zp_worktime...")
     weights = {
         'position': 50,
         'last_name': 40,
@@ -298,7 +298,7 @@ def calculate_worktime_matches():
     conn.commit()
     cursor.close()
     conn.close()
-    log_message("✅ Обробка завершена!")
+    log_message("[OK] Обробка завершена!")
 
 # === MAIN ===
 if __name__ == "__main__":

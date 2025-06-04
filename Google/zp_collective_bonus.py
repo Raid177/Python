@@ -1,5 +1,5 @@
 """
-🚀 Скрипт формування таблиці zp_collective_bonus 🚀
+[START] Скрипт формування таблиці zp_collective_bonus [START]
 
 Функціонал:
 - Для кожної зміни з таблиці zp_worktime:
@@ -18,10 +18,10 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# 🚀 Завантаження .env
+# [START] Завантаження .env
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
-# 🚀 Підключення до БД
+# [START] Підключення до БД
 DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
@@ -34,11 +34,11 @@ DB_CONFIG = {
 connection = pymysql.connect(**DB_CONFIG)
 cursor = connection.cursor()
 
-print("🔄 Розпочато обробку змін...")
+print("[SYNC] Розпочато обробку змін...")
 
 cursor.execute("""SELECT * FROM zp_worktime""")
 worktime_rows = cursor.fetchall()
-print(f"✅ Отримано {len(worktime_rows)} змін для обробки.")
+print(f"[OK] Отримано {len(worktime_rows)} змін для обробки.")
 
 total_bonuses = 0
 true_collisions_detected = 0
@@ -53,9 +53,9 @@ for row in worktime_rows:
             WHERE date_shift = %s AND idx = %s
         """, (shift_uuid, row['date_shift'], row['idx']))
         connection.commit()
-        print(f"🆕 Згенеровано shift_uuid для зміни {row['date_shift']} idx={row['idx']}")
+        print(f"[NEW] Згенеровано shift_uuid для зміни {row['date_shift']} idx={row['idx']}")
 
-    # 🔎 Перевірка на істинні колізії
+    # [INFO] Перевірка на істинні колізії
     cursor.execute("""
         SELECT COUNT(*) AS cnt
         FROM zp_worktime
@@ -64,7 +64,7 @@ for row in worktime_rows:
     count_row = cursor.fetchone()
     if count_row['cnt'] > 1:
         true_collisions_detected += 1
-        print(f"⚠️ Істинна колізія: дубльований shift_uuid={shift_uuid} у таблиці zp_worktime (знайдено {count_row['cnt']} записів)")
+        print(f"[WARN] Істинна колізія: дубльований shift_uuid={shift_uuid} у таблиці zp_worktime (знайдено {count_row['cnt']} записів)")
 
     cursor.execute("""
         SELECT *
@@ -77,7 +77,7 @@ for row in worktime_rows:
         ан_колективний = rule['АнЗП_Колективний']
         відсоток = rule['Ан_Колективний']
 
-        # 🔎 Додаємо фільтр Role = 'Призначив'
+        # [INFO] Додаємо фільтр Role = 'Призначив'
         cursor.execute("""
             SELECT 
                 SUM(Стоимость) AS СуммаСтоимость,
@@ -91,7 +91,7 @@ for row in worktime_rows:
         sales = cursor.fetchone()
 
         if sales['СуммаСтоимость'] is None:
-            print(f"⚠️ Немає продажів для правила {ан_колективний} у зміні {row['date_shift']} idx={row['idx']}")
+            print(f"[WARN] Немає продажів для правила {ан_колективний} у зміні {row['date_shift']} idx={row['idx']}")
             continue
 
         СтоимостьПремія = sales['СуммаСтоимость'] * відсоток
@@ -126,11 +126,11 @@ for row in worktime_rows:
         connection.commit()
 
         total_bonuses += 1
-        # print(f"✅ Додано/оновлено премію для shift_uuid={shift_uuid} + {ан_колективний}")
+        # print(f"[OK] Додано/оновлено премію для shift_uuid={shift_uuid} + {ан_колективний}")
 
-print(f"🏁 Обробка завершена: {total_bonuses} записів премій.")
+print(f"[FINISH] Обробка завершена: {total_bonuses} записів премій.")
 if true_collisions_detected > 0:
-    print(f"⚠️ Увага! Виявлено {true_collisions_detected} істинних колізій!")
+    print(f"[WARN] Увага! Виявлено {true_collisions_detected} істинних колізій!")
 
 cursor.close()
 connection.close()

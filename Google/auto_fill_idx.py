@@ -2,7 +2,7 @@
 # Аналізує існуючі індекси за шаблоном префікс_номер.
 # Формує нові унікальні індекси на основі скорочення Посади та порядкового номера.
 # Оновлює їх у таблиці за допомогою пакетного запиту (batchUpdate) через Google Sheets API.
-# Таким чином, кожному рядку з посадами присвоюється унікальний індекс для подальшої ідентифікації у базі даних або інших скриптах. ✅
+# Таким чином, кожному рядку з посадами присвоюється унікальний індекс для подальшої ідентифікації у базі даних або інших скриптах. [OK]
 
 import os
 import re
@@ -103,11 +103,11 @@ def auto_fill_idx():
         }
         response = requests.post(url, headers=headers, data=json.dumps(body))
         if response.ok:
-            print(f"✅ Оновлено {len(updates)} індексів")
+            print(f"[OK] Оновлено {len(updates)} індексів")
         else:
-            print(f"❌ ПОМИЛКА batchUpdate: {response.status_code} — {response.text}")
+            print(f"[ERROR] ПОМИЛКА batchUpdate: {response.status_code} — {response.text}")
     else:
-        print("⚠️ Нічого не оновлено")
+        print("[WARN] Нічого не оновлено")
 
 if __name__ == "__main__":
     auto_fill_idx()

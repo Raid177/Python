@@ -35,9 +35,9 @@ try:
     response = requests.get(ODATA_URL, auth=(ODATA_USER, ODATA_PASSWORD))
     response.raise_for_status()
     records = response.json().get('value', [])
-    print(f"✅ Отримано {len(records)} записів з Єноту")
+    print(f"[OK] Отримано {len(records)} записів з Єноту")
 except Exception as e:
-    print(f"❌ Помилка під час отримання даних з OData: {e}")
+    print(f"[ERROR] Помилка під час отримання даних з OData: {e}")
     exit(1)
 
 # === Формування даних для Google Sheets ===
@@ -56,7 +56,7 @@ try:
         range=RANGE_NAME,
         body={}
     ).execute()
-    print(f"🗑️ Дані на листі '{SHEET_NAME}' очищено.")
+    print(f"[DELETE] Дані на листі '{SHEET_NAME}' очищено.")
 
     # Запис нових даних
     body = {'values': values}
@@ -66,7 +66,7 @@ try:
         valueInputOption='RAW',
         body=body
     ).execute()
-    print(f"✅ Дані успішно оновлено на листі '{SHEET_NAME}'.")
+    print(f"[OK] Дані успішно оновлено на листі '{SHEET_NAME}'.")
 except Exception as e:
-    print(f"❌ Помилка під час оновлення Google Sheets: {e}")
+    print(f"[ERROR] Помилка під час оновлення Google Sheets: {e}")
     exit(1)

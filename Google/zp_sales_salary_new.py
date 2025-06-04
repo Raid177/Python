@@ -107,7 +107,7 @@ SELECT
     w.department,
     w.shift_type,
     w.Rule_ID,
-    w.shift_uuid,  -- 🆕 Додаємо shift_uuid з zp_worktime
+    w.shift_uuid,  -- [NEW] Додаємо shift_uuid з zp_worktime
     CASE
         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив
         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав
@@ -141,21 +141,21 @@ WHERE o.Period >= '2025-05-01'
 """
 
 # === Отримання даних ===
-print("🔍 Виконуємо SQL-запит...")
+print("[INFO] Виконуємо SQL-запит...")
 df = pd.read_sql(sql_query, con=engine)
-print(f"✅ Отримано {len(df)} рядків")
+print(f"[OK] Отримано {len(df)} рядків")
 
 # === Очищення таблиці zp_sales_salary ===
 with engine.connect() as conn:
-    print("🗑️ Очищення старих записів...")
+    print("[DELETE] Очищення старих записів...")
     conn.execute(text("TRUNCATE TABLE wealth0_analytics.zp_sales_salary"))
 
 # === Завантаження нових даних ===
-print("⬇️ Завантажуємо дані у zp_sales_salary...")
+print("[LOAD] Завантажуємо дані у zp_sales_salary...")
 df.to_sql(
     name='zp_sales_salary',
     con=engine,
     if_exists='append',
     index=False
 )
-print("✅ Дані успішно завантажені!")
+print("[OK] Дані успішно завантажені!")

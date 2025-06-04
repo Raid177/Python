@@ -1,12 +1,12 @@
 """
 Скрипт імпортує дані з Google Sheets у таблицю zp_фктУмовиОплати:
-✅ Додає колонку ID та присвоює порядкові номери
-✅ Завантажує дані
-✅ Перевіряє дублікати
-✅ Автоматично проставляє ДатаЗакінчення для попередніх умов (рядків) правила, якщо додається новий рядок із пізнішою датою
-✅ Формує стабільний Rule_ID для груп правил (по Посада, Відділення, Рівень, ТипЗміни, Прізвище)
-✅ Захищає стовпці ID, Rule_ID та перший рядок (шапку)
-✅ Завантажує дані у Google Sheets та MySQL (truncate + insert)
+[OK] Додає колонку ID та присвоює порядкові номери
+[OK] Завантажує дані
+[OK] Перевіряє дублікати
+[OK] Автоматично проставляє ДатаЗакінчення для попередніх умов (рядків) правила, якщо додається новий рядок із пізнішою датою
+[OK] Формує стабільний Rule_ID для груп правил (по Посада, Відділення, Рівень, ТипЗміни, Прізвище)
+[OK] Захищає стовпці ID, Rule_ID та перший рядок (шапку)
+[OK] Завантажує дані у Google Sheets та MySQL (truncate + insert)
 """
 
 import os
@@ -32,7 +32,7 @@ creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
 service = build('sheets', 'v4', credentials=creds)
 sheet = service.spreadsheets()
 
-print(f"🚀 Скрипт запущено: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+print(f"[START] Скрипт запущено: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
 # === Крок 1. Отримати дані з Google Sheets ===
 result = sheet.values().get(
@@ -42,7 +42,7 @@ result = sheet.values().get(
 values = result.get('values', [])
 
 if not values or len(values) < 2:
-    print("❌ Google Sheet порожній або відсутні дані.")
+    print("[ERROR] Google Sheet порожній або відсутні дані.")
     exit(1)
 
 header_len = len(values[0])
@@ -53,7 +53,7 @@ for row in values[1:]:
     data_rows.append(row)
 
 df = pd.DataFrame(data_rows, columns=values[0])
-print(f"✅ Отримано {len(df)} рядків із Google Sheets.")
+print(f"[OK] Отримано {len(df)} рядків із Google Sheets.")
 
 # === Крок 2. Додаємо/оновлюємо колонку ID ===
 df['ID'] = range(1, len(df) + 1)
@@ -66,7 +66,7 @@ sheet.values().update(
     valueInputOption='RAW',
     body={'values': values_to_upload}
 ).execute()
-print("✅ Колонка ID оновлена у Google Sheets.")
+print("[OK] Колонка ID оновлена у Google Sheets.")
 
 # === Крок 4. Додаємо захист для ID, Rule_ID та шапки ===
 sheet_metadata = service.spreadsheets().get(spreadsheetId=SPREADSHEET_ID).execute()
@@ -118,7 +118,7 @@ service.spreadsheets().batchUpdate(
     spreadsheetId=SPREADSHEET_ID,
     body={"requests": requests}
 ).execute()
-print("✅ Діапазони захищено у Google Sheets.")
+print("[OK] Діапазони захищено у Google Sheets.")
 
 # === Крок 5. Обробка дат ===
 df['ДатаПочатку'] = pd.to_datetime(df['ДатаПочатку'], dayfirst=True, errors='coerce')
@@ -155,7 +155,7 @@ for idx in range(len(df_for_closing)):
                     df.at[curr.name, 'ДатаЗакінчення'] = new_end_date.strftime('%d.%m.%Y')
                     changed_rows += 1
             break
-print(f"✅ Всього змінено ДатаЗакінчення у {changed_rows} рядках.")
+print(f"[OK] Всього змінено ДатаЗакінчення у {changed_rows} рядках.")
 
 # === Крок 8. Присвоюємо Rule_ID стабільно на основі ключа правила ===
 rule_id_map = {}
@@ -178,7 +178,7 @@ for idx in range(len(df)):
         df.at[df.index[idx], 'Rule_ID'] = current_rule_id
         current_rule_id += 1
 
-print("✅ Rule_ID стабільно присвоєно для всіх рядків.")
+print("[OK] Rule_ID стабільно присвоєно для всіх рядків.")
 
 # === Крок 9. Форматуємо дати ===
 df['ДатаПочатку'] = df['ДатаПочатку'].dt.strftime('%d.%m.%Y')
@@ -193,7 +193,7 @@ sheet.values().update(
     valueInputOption='RAW',
     body={'values': values_to_upload}
 ).execute()
-print("✅ Дані оновлені у Google Sheets.")
+print("[OK] Дані оновлені у Google Sheets.")
 
 # === Крок 11. Завантажуємо у БД ===
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
@@ -244,4 +244,4 @@ with connection.cursor() as cursor:
 
     connection.commit()
 
-print(f"✅ Дані перезаписані у БД (zp_фктУмовиОплати). Вставлено {inserted_rows} рядків.")
+print(f"[OK] Дані перезаписані у БД (zp_фктУмовиОплати). Вставлено {inserted_rows} рядків.")
