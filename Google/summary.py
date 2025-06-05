@@ -49,7 +49,7 @@ query_worktime = """
 df_worktime = pd.read_sql(query_worktime, con=engine)
 
 # Перерахунок Ставки за фактично відпрацьований час
-df_worktime['Ставка'] = df_worktime['СтавкаГодина'] * df_worktime['DurationShift']
+df_worktime['Ставка'] = (df_worktime['СтавкаГодина'] * df_worktime['DurationShift']).round(2)
 
 # 2️⃣ Премії з zp_sales_salary
 sales_queries = {
