@@ -6,7 +6,7 @@
     • Якщо shift_uuid ще не згенеровано, створює його на основі основних полів зміни (date_shift, idx, time_start, time_end, position, department, shift_type).
     • Для кожного правила з таблиці zp_фктУмовиОплати (якщо АнЗП_Колективний заповнено) обчислює суму продажів з таблиці zp_sales_salary за період зміни (тільки Role = 'Призначив').
     • Рахує премії для кожного типу (Стоимость, СтоимостьБезСкидок, ВаловийПрибуток).
-    • Записує дані у таблицю zp_collective_bonus (insert або update).
+    • Повністю очищає таблицю zp_collective_bonus (TRUNCATE) і вставляє нові дані.
 - Логи:
     • Наявність продажів або їх відсутність.
     • Істинні колізії shift_uuid у ворктаймі.
@@ -36,6 +36,11 @@ cursor = connection.cursor()
 
 print("[SYNC] Розпочато обробку змін...")
 
+# [STEP] Очищення таблиці zp_collective_bonus
+cursor.execute("""TRUNCATE TABLE zp_collective_bonus""")
+print("[CLEAN] Таблиця zp_collective_bonus очищена.")
+
+# [STEP] Отримання змін з ворктайму
 cursor.execute("""SELECT * FROM zp_worktime""")
 worktime_rows = cursor.fetchall()
 print(f"[OK] Отримано {len(worktime_rows)} змін для обробки.")
@@ -103,19 +108,10 @@ for row in worktime_rows:
                 shift_uuid, date_shift, last_name, idx, time_start, time_end, position, department, shift_type,
                 Rule_ID, АнЗП_Колективний, Відсоток,
                 СуммаСтоимость, СуммаСтоимостьБезСкидок, СуммаВаловийПрибуток,
-                СтоимостьПремія, СтоимостьБезСкидокПремія, ВаловийПрибутокПремія
+                СтоимостьПремія, СтоимостьБезСкидокПремія, ВаловийПрибутокПремія,
+                created_at, updated_at
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON DUPLICATE KEY UPDATE
-                last_name = VALUES(last_name),
-                Відсоток = VALUES(Відсоток),
-                СуммаСтоимость = VALUES(СуммаСтоимость),
-                СуммаСтоимостьБезСкидок = VALUES(СуммаСтоимостьБезСкидок),
-                СуммаВаловийПрибуток = VALUES(СуммаВаловийПрибуток),
-                СтоимостьПремія = VALUES(СтоимостьПремія),
-                СтоимостьБезСкидокПремія = VALUES(СтоимостьБезСкидокПремія),
-                ВаловийПрибутокПремія = VALUES(ВаловийПрибутокПремія),
-                updated_at = NOW()
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,NOW(),NOW())
         """, (
             shift_uuid, row['date_shift'], row['last_name'], row['idx'], row['time_start'], row['time_end'],
             row['position'], row['department'], row['shift_type'],
@@ -126,7 +122,6 @@ for row in worktime_rows:
         connection.commit()
 
         total_bonuses += 1
-        # print(f"[OK] Додано/оновлено премію для shift_uuid={shift_uuid} + {ан_колективний}")
 
 print(f"[FINISH] Обробка завершена: {total_bonuses} записів премій.")
 if true_collisions_detected > 0:
