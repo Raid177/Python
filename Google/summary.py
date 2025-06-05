@@ -6,16 +6,10 @@
     • zp_worktime (основна інформація по зміні)
     • zp_sales_salary (премії по групах продажів)
     • zp_collective_bonus (колективні премії)
-- Розраховує премії по трьох полях: Стоимость, СтоимостьБезСкидок, ВаловийПрибуток
-- Додає колонку DurationShift (десяткове число) на основі ТривалістьЗміни
-- Об’єднує дані в єдину фінальну таблицю з унікальним рядком на кожну зміну
-- Очищає таблицю zp_summary по датах і записує туди результат
-- Виводить загальні суми зарплат у консоль
+- Розраховує зарплату за зміну на основі СтавкаГодина * DurationShift
+- Очищає таблицю zp_summary через TRUNCATE
+- Записує результат у zp_summary
 - Працює для даних з 2025-05-01
-
-Інструкції:
-1. Налаштуйте змінні .env для доступу до БД.
-2. Запустіть скрипт: python salary_summary_aggregated.py
 """
 
 import os
@@ -48,11 +42,14 @@ query_worktime = """
         shift_type AS ТипЗміни,
         duration_text AS ТривалістьЗміни,
         duration_hours AS DurationShift,
-        СтавкаЗміна AS Ставка
+        СтавкаГодина
     FROM zp_worktime
     WHERE date_shift >= '2025-05-01'
 """
 df_worktime = pd.read_sql(query_worktime, con=engine)
+
+# Перерахунок Ставки за фактично відпрацьований час
+df_worktime['Ставка'] = df_worktime['СтавкаГодина'] * df_worktime['DurationShift']
 
 # 2️⃣ Премії з zp_sales_salary
 sales_queries = {
@@ -149,18 +146,16 @@ print(f"По СтоимостьБезСкидок: {total_salary_stoimost_bez_sk
 print(f"По ВаловийПрибуток: {total_salary_valovyi_prybutok:,.2f}")
 print("===============================\n")
 
-# 7️⃣ Очистка таблиці zp_summary по діапазону дат
-min_date = summary_df['ДатаЗміни'].min()
-max_date = summary_df['ДатаЗміни'].max()
-
+# 7️⃣ Очистка таблиці zp_summary через TRUNCATE
 with engine.begin() as conn:
-    delete_sql = text("""
-        DELETE FROM zp_summary
-        WHERE ДатаЗміни BETWEEN :start_date AND :end_date
-    """)
-    conn.execute(delete_sql, {"start_date": min_date, "end_date": max_date})
+    truncate_sql = text("TRUNCATE TABLE zp_summary")
+    conn.execute(truncate_sql)
 
-# 8️⃣ Запис у таблицю zp_summary
+# 8️⃣ Видаляємо поле СтавкаГодина перед записом у БД
+if 'СтавкаГодина' in summary_df.columns:
+    summary_df = summary_df.drop(columns=['СтавкаГодина'])
+
+# 9️⃣ Запис у таблицю zp_summary
 summary_df.reset_index().to_sql(
     'zp_summary',
     con=engine,
@@ -168,8 +163,4 @@ summary_df.reset_index().to_sql(
     index=False
 )
 
-print(f"[OK] Дані успішно завантажено у таблицю zp_summary з {min_date} по {max_date}.")
-
-# 9️⃣ Експорт у Excel (опційно — залишено закоментованим)
-# summary_df.reset_index().to_excel('salary_summary.xlsx', index=False)
-# print(f"[OK] Дані успішно експортовано до Excel: salary_summary.xlsx")
+print("[OK] Дані успішно завантажено у таблицю zp_summary.")
