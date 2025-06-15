@@ -177,7 +177,7 @@ def main():
             print_help()
     finally:
         total_time = round(time.time() - start_all_time, 2)
-        print_and_log(f"[FINISH] Загальний час виконання: {total_time} сек.")
+        print_and_log(f"[FINISH] Загальний час виконання: {total_time} сетакк.")
 
 if __name__ == "__main__":
     main()
