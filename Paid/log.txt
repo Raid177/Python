@@ -829,3 +829,862 @@
 Т.е. ты его если и удаляешь, то только после команды /delete
 [2025-05-24 03:30:32,447] INFO: Application is stopping. This might take a moment.
 [2025-05-24 03:30:32,447] INFO: Application.stop() complete
+[2025-05-24 03:31:42,126] INFO: 🚀 Запуск бота...
+[2025-05-24 03:31:42,474] INFO: Application started
+[2025-05-24 04:30:41,830] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 04:30:41,831] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 04:31:43,263] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 04:31:43,265] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 06:00:04,770] INFO: Application is stopping. This might take a moment.
+[2025-05-24 06:00:04,770] INFO: Application.stop() complete
+[2025-05-24 06:00:05,338] INFO: 🚀 Запуск бота...
+[2025-05-24 06:00:05,768] INFO: Application started
+[2025-05-24 06:46:19,674] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 06:46:19,675] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 08:05:48,011] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-24 09:49:32,219] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 09:49:32,220] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 12:00:01,628] INFO: Application is stopping. This might take a moment.
+[2025-05-24 12:00:01,628] INFO: Application.stop() complete
+[2025-05-24 12:00:02,386] INFO: 🚀 Запуск бота...
+[2025-05-24 12:00:02,786] INFO: Application started
+[2025-05-24 12:15:00,063] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 12:15:00,065] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 12:20:35,011] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 12:20:35,012] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 12:56:31,897] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 12:56:31,898] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 13:07:24,630] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 13:07:24,630] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 13:09:07,133] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 13:09:07,133] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 13:12:30,319] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 13:12:30,319] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 13:13:32,058] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 13:13:32,059] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 13:23:31,125] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 13:23:31,125] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 14:00:50,554] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 14:00:50,555] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 14:26:30,598] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 14:26:30,599] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:20:20,802] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:20:20,803] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:20:42,727] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:20:42,727] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:23:56,116] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:23:56,117] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:29:00,288] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:29:00,288] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:33:45,785] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:33:45,786] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:51:14,570] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:51:14,571] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 15:53:18,204] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 15:53:18,204] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 16:15:50,643] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 16:15:50,644] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 16:32:04,451] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 16:32:04,451] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 17:22:37,749] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 17:22:37,749] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 18:00:01,726] INFO: Application is stopping. This might take a moment.
+[2025-05-24 18:00:01,727] INFO: Application.stop() complete
+[2025-05-24 18:00:02,540] INFO: 🚀 Запуск бота...
+[2025-05-24 18:00:03,141] INFO: Application started
+[2025-05-24 18:04:37,782] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 18:04:37,782] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 18:09:30,739] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-24 18:09:43,226] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 18:09:43,226] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 18:14:08,549] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 18:14:08,549] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 18:19:04,562] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 18:19:04,562] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 18:55:12,235] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 18:55:12,236] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 19:46:12,742] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 19:46:12,743] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 20:22:22,371] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 20:22:22,372] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 20:24:26,025] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 20:24:26,026] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 20:37:34,808] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 20:37:34,808] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 20:48:16,315] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 20:48:16,315] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 21:19:32,714] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 21:19:32,714] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-24 21:22:16,469] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-24 21:22:16,470] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 00:00:01,634] INFO: Application is stopping. This might take a moment.
+[2025-05-25 00:00:01,635] INFO: Application.stop() complete
+[2025-05-25 00:00:02,416] INFO: 🚀 Запуск бота...
+[2025-05-25 00:00:02,861] INFO: Application started
+[2025-05-25 06:00:01,491] INFO: Application is stopping. This might take a moment.
+[2025-05-25 06:00:01,492] INFO: Application.stop() complete
+[2025-05-25 06:00:02,236] INFO: 🚀 Запуск бота...
+[2025-05-25 06:00:02,677] INFO: Application started
+[2025-05-25 08:14:39,082] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-25 09:57:12,054] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 09:57:12,054] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 12:00:01,403] INFO: Application is stopping. This might take a moment.
+[2025-05-25 12:00:01,405] INFO: Application.stop() complete
+[2025-05-25 12:00:02,160] INFO: 🚀 Запуск бота...
+[2025-05-25 12:00:02,609] INFO: Application started
+[2025-05-25 13:29:30,005] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 13:29:30,005] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 13:34:12,427] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 13:34:12,427] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 14:39:53,905] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 14:39:53,906] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 14:41:05,390] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 14:41:05,391] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 18:00:01,274] INFO: Application is stopping. This might take a moment.
+[2025-05-25 18:00:01,274] INFO: Application.stop() complete
+[2025-05-25 18:00:02,036] INFO: 🚀 Запуск бота...
+[2025-05-25 18:00:02,475] INFO: Application started
+[2025-05-25 18:56:10,386] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-25 18:56:10,387] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-25 21:35:03,449] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-26 00:00:01,275] INFO: Application is stopping. This might take a moment.
+[2025-05-26 00:00:01,275] INFO: Application.stop() complete
+[2025-05-26 00:00:02,122] INFO: 🚀 Запуск бота...
+[2025-05-26 00:00:02,547] INFO: Application started
+[2025-05-26 00:05:14,242] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-26 00:05:14,243] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-26 01:09:24,668] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-26 01:09:24,668] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-26 06:00:01,179] INFO: Application is stopping. This might take a moment.
+[2025-05-26 06:00:01,180] INFO: Application.stop() complete
+[2025-05-26 06:00:01,902] INFO: 🚀 Запуск бота...
+[2025-05-26 06:00:02,360] INFO: Application started
+[2025-05-26 07:12:42,404] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-26 08:15:23,923] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-26 08:15:23,924] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-26 09:45:35,357] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAICh2g0DgLszmuPq5bb19wy4VIJFFL3AAJE8zEb2DuhSZFklmfSVwzeAQADAgADeQADNgQ
+[2025-05-26 09:45:36,259] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADRPMxG9g7oUl-.jpg
+[2025-05-26 09:45:36,895] INFO: ✅ Запис про файл додано до БД: photo_AQADRPMxG9g7oUl-.jpg (user_id: None)
+[2025-05-26 09:59:20,026] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-26 09:59:20,026] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-26 12:00:02,104] INFO: Application is stopping. This might take a moment.
+[2025-05-26 12:00:02,105] INFO: Application.stop() complete
+[2025-05-26 12:00:02,880] INFO: 🚀 Запуск бота...
+[2025-05-26 12:00:03,259] INFO: Application started
+[2025-05-26 14:11:43,454] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-26 16:49:50,394] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-26 17:53:41,148] INFO: [ALL] 161197876 (Alexey_Raid): Добрий день, отримали матеріал на дослідження кота Ючі, власник тваринки - Дзюба.
++150 грн доставка кур'єром
+
+Код дослідження: ПЛР 18
+Сума до оплати: 850 грн. 
+
+
+Відправляєм реквізити до оплати: 
+
+Розділ "Платежі", «Інші платежі», «Платіж за IBAN»
+Рахунок отримувача: 
+UA443052990000026006000133941
+Отримувач платежу: ТОВ «Бальд» 
+Код ЄДРПОУ: 32854025 
+
+Призначення платежу:
+«За діагностичні послуги у ветеринарії згідно замовлення № 120413 від ПІБ, номер телефону»
+
+*Відправте, будь ласка, скрін / фото квитанції у цей чат
+[2025-05-26 17:54:58,577] INFO: 📎 Тригер: False, файл: None
+[2025-05-26 17:54:58,577] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-05-26 18:00:04,973] INFO: Application is stopping. This might take a moment.
+[2025-05-26 18:00:04,973] INFO: Application.stop() complete
+[2025-05-26 18:00:05,680] INFO: 🚀 Запуск бота...
+[2025-05-26 18:00:06,035] INFO: Application started
+[2025-05-26 22:45:25,955] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-26 22:45:25,956] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 00:00:04,896] INFO: Application is stopping. This might take a moment.
+[2025-05-27 00:00:04,897] INFO: Application.stop() complete
+[2025-05-27 00:00:05,561] INFO: 🚀 Запуск бота...
+[2025-05-27 00:00:05,960] INFO: Application started
+[2025-05-27 00:16:35,634] INFO: 🔍 Обробка /pending...
+[2025-05-27 00:16:36,128] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-27 00:16:36,190] INFO: 📄 Знайдено 3 запис(ів) зі статусом 'pending'
+[2025-05-27 00:16:36,190] INFO: 📨 Обробка: Рахунок № ЛР031331 від 29.10.2024.pdf (ID: 19, Chat: -1002544853552, MsgID: 427)
+[2025-05-27 00:16:36,885] INFO: 📨 Обробка: Рахунок № ЛР031327 від 29.10.2024.pdf (ID: 20, Chat: -1002544853552, MsgID: 428)
+[2025-05-27 00:16:37,512] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-27 00:23:20,543] INFO: 🔍 Обробка /pending...
+[2025-05-27 00:23:21,047] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-27 00:23:21,111] INFO: 📄 Знайдено 3 запис(ів) зі статусом 'pending'
+[2025-05-27 00:23:21,111] INFO: 📨 Обробка: Рахунок № ЛР031331 від 29.10.2024.pdf (ID: 19, Chat: -1002544853552, MsgID: 427)
+[2025-05-27 00:23:21,782] INFO: 📨 Обробка: Рахунок № ЛР031327 від 29.10.2024.pdf (ID: 20, Chat: -1002544853552, MsgID: 428)
+[2025-05-27 00:23:22,364] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-27 00:24:35,161] INFO: 🔍 Обробка /pending...
+[2025-05-27 00:24:35,659] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-27 00:24:35,721] INFO: 📄 Знайдено 3 запис(ів) зі статусом 'pending'
+[2025-05-27 00:24:35,721] INFO: 📨 Обробка: Рахунок № ЛР031331 від 29.10.2024.pdf (ID: 19, Chat: -1002544853552, MsgID: 427)
+[2025-05-27 00:24:36,395] INFO: 📨 Обробка: Рахунок № ЛР031327 від 29.10.2024.pdf (ID: 20, Chat: -1002544853552, MsgID: 428)
+[2025-05-27 00:24:36,968] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-27 00:24:39,599] INFO: 🔍 Обробка /pending...
+[2025-05-27 00:24:40,100] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-27 00:24:40,164] INFO: 📄 Знайдено 3 запис(ів) зі статусом 'pending'
+[2025-05-27 00:24:40,164] INFO: 📨 Обробка: Рахунок № ЛР031331 від 29.10.2024.pdf (ID: 19, Chat: -1002544853552, MsgID: 427)
+[2025-05-27 00:24:40,742] INFO: 📨 Обробка: Рахунок № ЛР031327 від 29.10.2024.pdf (ID: 20, Chat: -1002544853552, MsgID: 428)
+[2025-05-27 00:24:41,332] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-27 00:27:40,093] INFO: 🔍 Обробка /pending...
+[2025-05-27 00:27:40,585] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-27 00:27:40,654] INFO: 📄 Знайдено 1 запис(ів) зі статусом 'pending'
+[2025-05-27 00:27:40,654] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-27 02:05:58,195] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-27 05:36:53,745] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 05:36:53,746] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 06:00:04,755] INFO: Application is stopping. This might take a moment.
+[2025-05-27 06:00:04,755] INFO: Application.stop() complete
+[2025-05-27 06:00:05,464] INFO: 🚀 Запуск бота...
+[2025-05-27 06:00:05,814] INFO: Application started
+[2025-05-27 10:44:42,932] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 10:44:42,932] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 11:17:55,565] INFO: [ALL] 7173765324 (None): None
+[2025-05-27 11:18:02,555] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIComg1dTN-ekHH9ja65KCBGj5WNaIjAAK7cQACuJaoSfMCqQnbXwgXNgQ
+[2025-05-27 11:18:03,807] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна_Валерія_Олександрівеа_ФОП_e5bd9ed2_ce77_4142_8057_31033662cedd.xls
+[2025-05-27 11:18:04,319] INFO: ✅ Запис про файл додано до БД: Жиліна_Валерія_Олександрівеа_ФОП_e5bd9ed2_ce77_4142_8057_31033662cedd.xls (user_id: None)
+[2025-05-27 12:00:01,616] INFO: Application is stopping. This might take a moment.
+[2025-05-27 12:00:01,617] INFO: Application.stop() complete
+[2025-05-27 12:00:02,343] INFO: 🚀 Запуск бота...
+[2025-05-27 12:00:02,731] INFO: Application started
+[2025-05-27 13:07:23,762] INFO: 📎 Тригер: False, файл: None
+[2025-05-27 13:07:23,764] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-05-27 13:07:23,817] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-05-27 13:09:47,555] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICpmg1jtsSsZROh5JibtZlo0pJHII-AAKSeQACHzOpSfb01R2wXyMhNgQ
+[2025-05-27 13:09:48,769] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок № ЛР016107 від 27.05.2025.pdf
+[2025-05-27 13:09:49,328] INFO: ✅ Запис про файл додано до БД: Рахунок № ЛР016107 від 27.05.2025.pdf (user_id: None)
+[2025-05-27 13:28:50,596] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-27 14:58:11,318] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 14:58:11,319] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 14:59:12,763] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 14:59:12,763] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 16:26:38,425] INFO: [ALL] 7173765324 (None): None
+[2025-05-27 16:26:43,710] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICqWg1vY7XcGQEWt6MQOTjkIqrWOkbAALUcwACWxmwSZFmzxey_74oNgQ
+[2025-05-27 16:26:51,245] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5196 от 20 мая 2025 г._copy_2025-05-27_16-26-51.xls
+[2025-05-27 16:26:51,803] INFO: ✅ Запис про файл додано до БД: № 5196 от 20 мая 2025 г..xls (user_id: None)
+[2025-05-27 16:27:00,280] INFO: [ALL] 7173765324 (None): None
+[2025-05-27 16:27:07,739] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICrGg1vaTaOoZP_zPosC8rknJfYnQwAALTcwACWxmwSQ11C2H4Ev_YNgQ
+[2025-05-27 16:27:10,435] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 3632 от 20 мая 2025 г._copy_2025-05-27_16-27-10.xls
+[2025-05-27 16:27:11,054] INFO: ✅ Запис про файл додано до БД: № 3632 от 20 мая 2025 г..xls (user_id: None)
+[2025-05-27 16:27:30,198] INFO: [ALL] 7173765324 (None): None
+[2025-05-27 16:27:36,082] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICr2g1vcKPmwJIy09c-YD8XUxrDR5JAAIlbgACyHOxSS0RoWo3PXBzNgQ
+[2025-05-27 16:27:38,359] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 2466 от 20 мая 2025 г._copy_2025-05-27_16-27-38.xls
+[2025-05-27 16:27:38,971] INFO: ✅ Запис про файл додано до БД: № 2466 от 20 мая 2025 г..xls (user_id: None)
+[2025-05-27 17:31:59,187] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 17:31:59,188] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 17:33:20,740] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 17:33:20,741] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 18:00:04,553] INFO: Application is stopping. This might take a moment.
+[2025-05-27 18:00:04,553] INFO: Application.stop() complete
+[2025-05-27 18:00:05,220] INFO: 🚀 Запуск бота...
+[2025-05-27 18:00:05,651] INFO: Application started
+[2025-05-27 23:57:28,964] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 23:57:28,968] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-27 23:58:50,482] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-27 23:58:50,483] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-28 00:00:01,538] INFO: Application is stopping. This might take a moment.
+[2025-05-28 00:00:01,538] INFO: Application.stop() complete
+[2025-05-28 00:00:02,654] INFO: 🚀 Запуск бота...
+[2025-05-28 00:00:03,213] INFO: Application started
+[2025-05-28 06:00:01,557] INFO: Application is stopping. This might take a moment.
+[2025-05-28 06:00:01,559] INFO: Application.stop() complete
+[2025-05-28 06:00:02,428] INFO: 🚀 Запуск бота...
+[2025-05-28 06:00:02,820] INFO: Application started
+[2025-05-28 10:18:34,521] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAICsmg2uLzMJF50xim9AvyBkWE-1KQHAAIf9TEbk_OhSffCyf0ofy2vAQADAgADeQADNgQ
+[2025-05-28 10:18:35,421] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADH_UxG5PzoUl-.jpg
+[2025-05-28 10:18:36,045] INFO: ✅ Запис про файл додано до БД: photo_AQADH_UxG5PzoUl-.jpg (user_id: None)
+[2025-05-28 10:30:38,700] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-28 10:30:38,701] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-28 12:00:01,535] INFO: Application is stopping. This might take a moment.
+[2025-05-28 12:00:01,536] INFO: Application.stop() complete
+[2025-05-28 12:00:02,362] INFO: 🚀 Запуск бота...
+[2025-05-28 12:00:02,754] INFO: Application started
+[2025-05-28 13:14:45,968] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-28 13:14:45,969] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-28 14:29:30,009] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-28 14:29:30,010] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-28 14:30:31,467] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-28 14:30:31,467] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-28 18:00:04,465] INFO: Application is stopping. This might take a moment.
+[2025-05-28 18:00:04,466] INFO: Application.stop() complete
+[2025-05-28 18:00:05,282] INFO: 🚀 Запуск бота...
+[2025-05-28 18:00:05,703] INFO: Application started
+[2025-05-28 19:46:42,024] INFO: 🔍 Обробка /pending...
+[2025-05-28 19:46:42,527] INFO: 📥 SQL: Вибірка pending файлів
+[2025-05-28 19:46:42,592] INFO: 📄 Знайдено 7 запис(ів) зі статусом 'pending'
+[2025-05-28 19:46:42,592] INFO: 📨 Обробка: Рахунок № ЛР016107 від 20.05.2025.pdf (ID: 23, Chat: -1002544853552, MsgID: 447)
+[2025-05-28 19:46:43,318] INFO: 📨 Обробка: Жиліна_Валерія_Олександрівеа_ФОП_e5bd9ed2_ce77_4142_8057_31033662cedd.xls (ID: 42, Chat: -1002544853552, MsgID: 674)
+[2025-05-28 19:46:44,032] INFO: 📨 Обробка: Рахунок № ЛР016107 від 27.05.2025.pdf (ID: 43, Chat: -1002544853552, MsgID: 678)
+[2025-05-28 19:46:44,643] INFO: 📨 Обробка: № 5196 от 20 мая 2025 г..xls (ID: 44, Chat: -1002544853552, MsgID: 681)
+[2025-05-28 19:46:45,256] INFO: 📨 Обробка: № 3632 от 20 мая 2025 г..xls (ID: 45, Chat: -1002544853552, MsgID: 684)
+[2025-05-28 19:46:45,980] INFO: 📨 Обробка: № 2466 от 20 мая 2025 г..xls (ID: 46, Chat: -1002544853552, MsgID: 687)
+[2025-05-28 19:46:46,600] INFO: 📨 Обробка: photo_AQADH_UxG5PzoUl-.jpg (ID: 47, Chat: -1002544853552, MsgID: 690)
+[2025-05-28 19:47:06,822] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-28 22:03:13,133] INFO: 🗑 Файл переміщено до Deleted/: /root/Automation/Paid/Deleted/Рахунок № ЛР016107 від 20.05.2025.pdf
+[2025-05-28 22:41:58,986] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICxWg3ZwaBRWp049FNkboPzoEHBAs1AAJmcgACwdLAScJwcTGwpqdHNgQ
+[2025-05-28 22:41:59,971] INFO: 📥 Збережено файл: /root/Automation/Paid/СтоматологіяРеставрація.pdf
+[2025-05-28 22:42:00,587] INFO: ✅ Запис про файл додано до БД: СтоматологіяРеставрація.pdf (user_id: None)
+[2025-05-29 00:00:01,503] INFO: Application is stopping. This might take a moment.
+[2025-05-29 00:00:01,504] INFO: Application.stop() complete
+[2025-05-29 00:00:02,355] INFO: 🚀 Запуск бота...
+[2025-05-29 00:00:02,851] INFO: Application started
+[2025-05-29 01:23:28,869] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-29 01:23:28,870] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-29 06:00:01,461] INFO: Application is stopping. This might take a moment.
+[2025-05-29 06:00:01,461] INFO: Application.stop() complete
+[2025-05-29 06:00:02,323] INFO: 🚀 Запуск бота...
+[2025-05-29 06:00:02,680] INFO: Application started
+[2025-05-29 07:19:53,738] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-29 09:17:36,991] INFO: [ALL] 7173765324 (None): None
+[2025-05-29 09:17:46,940] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICyGg3_AABCFAczJBFvQjVyTn13RvUOwACQGQAAhAKwUnLholPmo2FXTYE
+[2025-05-29 09:17:48,094] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_5 680,00.pdf
+[2025-05-29 09:17:48,703] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_5 680,00.pdf (user_id: None)
+[2025-05-29 09:53:01,732] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-29 12:00:01,390] INFO: Application is stopping. This might take a moment.
+[2025-05-29 12:00:01,391] INFO: Application.stop() complete
+[2025-05-29 12:00:02,209] INFO: 🚀 Запуск бота...
+[2025-05-29 12:00:02,767] INFO: Application started
+[2025-05-29 18:00:01,305] INFO: Application is stopping. This might take a moment.
+[2025-05-29 18:00:01,305] INFO: Application.stop() complete
+[2025-05-29 18:00:01,992] INFO: 🚀 Запуск бота...
+[2025-05-29 18:00:02,384] INFO: Application started
+[2025-05-29 19:35:01,512] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-29 19:35:01,512] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-30 00:00:01,226] INFO: Application is stopping. This might take a moment.
+[2025-05-30 00:00:01,227] INFO: Application.stop() complete
+[2025-05-30 00:00:01,983] INFO: 🚀 Запуск бота...
+[2025-05-30 00:00:02,507] INFO: Application started
+[2025-05-30 01:27:38,909] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-30 01:27:38,909] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-30 06:00:05,095] INFO: Application is stopping. This might take a moment.
+[2025-05-30 06:00:05,095] INFO: Application.stop() complete
+[2025-05-30 06:00:05,677] INFO: 🚀 Запуск бота...
+[2025-05-30 06:00:06,047] INFO: Application started
+[2025-05-30 08:09:49,304] WARNING: ⚠️ 161197876 (Alexey_Raid) — команда лише в групі
+[2025-05-30 08:09:56,429] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-30 12:00:01,952] INFO: Application is stopping. This might take a moment.
+[2025-05-30 12:00:01,952] INFO: Application.stop() complete
+[2025-05-30 12:00:02,685] INFO: 🚀 Запуск бота...
+[2025-05-30 12:00:03,040] INFO: Application started
+[2025-05-30 18:00:01,884] INFO: Application is stopping. This might take a moment.
+[2025-05-30 18:00:01,884] INFO: Application.stop() complete
+[2025-05-30 18:00:02,612] INFO: 🚀 Запуск бота...
+[2025-05-30 18:00:03,071] INFO: Application started
+[2025-05-30 19:03:02,897] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-05-30 20:21:49,931] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-30 20:21:49,932] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-30 20:23:11,548] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-30 20:23:11,548] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 00:00:04,811] INFO: Application is stopping. This might take a moment.
+[2025-05-31 00:00:04,811] INFO: Application.stop() complete
+[2025-05-31 00:00:05,600] INFO: 🚀 Запуск бота...
+[2025-05-31 00:00:06,938] INFO: Application started
+[2025-05-31 06:00:04,711] INFO: Application is stopping. This might take a moment.
+[2025-05-31 06:00:04,712] INFO: Application.stop() complete
+[2025-05-31 06:00:05,319] INFO: 🚀 Запуск бота...
+[2025-05-31 06:00:05,667] INFO: Application started
+[2025-05-31 07:19:51,196] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-31 07:19:51,198] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 10:00:51,718] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-31 10:00:51,719] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 12:00:04,577] INFO: Application is stopping. This might take a moment.
+[2025-05-31 12:00:04,578] INFO: Application.stop() complete
+[2025-05-31 12:00:05,293] INFO: 🚀 Запуск бота...
+[2025-05-31 12:00:05,681] INFO: Application started
+[2025-05-31 12:59:13,210] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-31 12:59:13,211] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 14:20:27,448] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICy2g65fsb4QABHLRangsE3cB9ffIaEAACfW8AAgMB2EkJaLslcbwilzYE
+[2025-05-31 14:20:28,337] INFO: 📥 Збережено файл: /root/Automation/Paid/ukraine.com.uaInvoice-1183090.pdf
+[2025-05-31 14:20:28,846] INFO: ✅ Запис про файл додано до БД: ukraine.com.uaInvoice-1183090.pdf (user_id: None)
+[2025-05-31 14:20:47,157] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAICzWg65g_O2CqGxqbQjWPBEXinMyiNAAJ-bwACAwHYSUuMkgzrDYWBNgQ
+[2025-05-31 14:20:48,132] INFO: 📥 Збережено файл: /root/Automation/Paid/рахунок Льодін.pdf
+[2025-05-31 14:20:48,768] INFO: ✅ Запис про файл додано до БД: рахунок Льодін.pdf (user_id: None)
+[2025-05-31 16:04:55,448] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-31 16:04:55,449] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 17:31:19,195] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-05-31 17:31:19,195] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-05-31 18:00:04,422] INFO: Application is stopping. This might take a moment.
+[2025-05-31 18:00:04,422] INFO: Application.stop() complete
+[2025-05-31 18:00:05,106] INFO: 🚀 Запуск бота...
+[2025-05-31 18:00:05,483] INFO: Application started
+[2025-05-31 19:37:33,545] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-01 00:00:01,304] INFO: Application is stopping. This might take a moment.
+[2025-06-01 00:00:01,306] INFO: Application.stop() complete
+[2025-06-01 00:00:02,061] INFO: 🚀 Запуск бота...
+[2025-06-01 00:00:02,473] INFO: Application started
+[2025-06-01 05:13:54,475] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-01 06:00:04,211] INFO: Application is stopping. This might take a moment.
+[2025-06-01 06:00:04,211] INFO: Application.stop() complete
+[2025-06-01 06:00:04,824] INFO: 🚀 Запуск бота...
+[2025-06-01 06:00:05,227] INFO: Application started
+[2025-06-01 10:15:24,171] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-01 10:15:24,172] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-01 10:16:25,567] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-01 10:16:25,568] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-01 12:00:02,135] INFO: Application is stopping. This might take a moment.
+[2025-06-01 12:00:02,135] INFO: Application.stop() complete
+[2025-06-01 12:00:02,901] INFO: 🚀 Запуск бота...
+[2025-06-01 12:00:03,312] INFO: Application started
+[2025-06-01 15:11:22,283] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-01 15:11:22,284] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-01 18:00:02,075] INFO: Application is stopping. This might take a moment.
+[2025-06-01 18:00:02,075] INFO: Application.stop() complete
+[2025-06-01 18:00:02,902] INFO: 🚀 Запуск бота...
+[2025-06-01 18:00:03,358] INFO: Application started
+[2025-06-01 20:24:44,036] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-01 20:24:44,037] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-01 22:32:19,070] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-01 22:32:19,071] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-01 23:50:47,872] INFO: 🔍 Обробка /pending...
+[2025-06-01 23:50:48,377] INFO: 📥 SQL: Вибірка pending файлів
+[2025-06-01 23:50:48,442] INFO: 📄 Знайдено 0 запис(ів) зі статусом 'pending'
+[2025-06-02 00:00:05,052] INFO: Application is stopping. This might take a moment.
+[2025-06-02 00:00:05,053] INFO: Application.stop() complete
+[2025-06-02 00:00:05,848] INFO: 🚀 Запуск бота...
+[2025-06-02 00:00:06,273] INFO: Application started
+[2025-06-02 00:55:15,473] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-02 01:42:22,756] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 01:42:22,756] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-02 01:44:34,464] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 01:44:34,465] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-02 04:27:28,184] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 04:27:28,187] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-02 06:00:02,007] INFO: Application is stopping. This might take a moment.
+[2025-06-02 06:00:02,007] INFO: Application.stop() complete
+[2025-06-02 06:00:02,733] INFO: 🚀 Запуск бота...
+[2025-06-02 06:00:03,104] INFO: Application started
+[2025-06-02 08:10:29,955] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-02 10:41:48,838] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 10:41:48,839] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-02 12:00:02,002] INFO: Application is stopping. This might take a moment.
+[2025-06-02 12:00:02,003] INFO: Application.stop() complete
+[2025-06-02 12:00:02,786] INFO: 🚀 Запуск бота...
+[2025-06-02 12:00:03,208] INFO: Application started
+[2025-06-02 14:55:22,242] INFO: [ALL] 7173765324 (None): None
+[2025-06-02 14:55:27,457] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIC02g9kSrjW2BnIKdBkU2MO86BijBvAAJ6dwACww7QSWOwHBiabUklNgQ
+[2025-06-02 14:55:28,300] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 2664 от 29 мая 2025 г..xls
+[2025-06-02 14:55:28,802] INFO: ✅ Запис про файл додано до БД: № 2664 от 29 мая 2025 г..xls (user_id: None)
+[2025-06-02 14:55:47,645] INFO: 📎 Тригер: False, файл: None
+[2025-06-02 14:55:47,645] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-06-02 14:55:55,356] INFO: [ALL] 7173765324 (None): None
+[2025-06-02 14:56:03,679] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIC12g9kUtVCzy_TOFr0q7gaVNk3VYOAAJ7dwACww7QSZqvxBQ6_NJHNgQ
+[2025-06-02 14:56:04,572] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5574 от 29 мая 2025 г..xls
+[2025-06-02 14:56:05,116] INFO: ✅ Запис про файл додано до БД: № 5574 от 29 мая 2025 г..xls (user_id: None)
+[2025-06-02 14:56:17,924] INFO: [ALL] 7173765324 (None): None
+[2025-06-02 14:56:23,242] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIC2mg9kWGGzZzz0DZWKMYcdAylUQi0AAJ5dwACww7QSbTFipyexDypNgQ
+[2025-06-02 14:56:23,925] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 3890 от 29 мая 2025 г..xls
+[2025-06-02 14:56:24,558] INFO: ✅ Запис про файл додано до БД: № 3890 от 29 мая 2025 г..xls (user_id: None)
+[2025-06-02 14:56:43,236] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAICsmg2uLzMJF50xim9AvyBkWE-1KQHAAIf9TEbk_OhSffCyf0ofy2vAQADAgADeQADNgQ
+[2025-06-02 14:59:16,834] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIC4Wg9kgxok2YP9aLLgLEtK-S_XW1KAAJW9TEb3hnwScpIf1O19FjNAQADAgADeQADNgQ
+[2025-06-02 14:59:17,728] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADVvUxG94Z8El-.jpg
+[2025-06-02 14:59:18,329] INFO: ✅ Запис про файл додано до БД: photo_AQADVvUxG94Z8El-.jpg (user_id: None)
+[2025-06-02 16:41:32,837] INFO: [ALL] 7173765324 (None): № 7493
+
+2 099,8 грн
+
+Реквізити за посиланням:
+mssg.me/profipak-oplata
+
+Оплата на ФОП
+
+Реквізити:
+IBAN/Реквізити по Україні 
+UA503220010000026004340006851
+ФОП Каштан Тетяна Ігорівна
+ІПН/ЄДРПО - 3403811366
+Вкажіть коментар: ОПЛАТА ЗА ТОВАР
+  
+Після оплати напишіть нам:
+mssg.me/profipak
+
+profipak.com.ua
+[2025-06-02 16:41:41,276] INFO: 📎 Тригер: False, файл: None
+[2025-06-02 16:41:41,277] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-06-02 16:49:24,007] INFO: [ALL] 161197876 (Alexey_Raid): Даш, я пересмотрю список
+[2025-06-02 16:49:41,009] INFO: [ALL] 161197876 (Alexey_Raid): но мы до конца недели вряд ли все оплатим
+[2025-06-02 16:49:46,454] INFO: [ALL] 161197876 (Alexey_Raid): по этому отмени не срочное
+[2025-06-02 16:50:33,491] INFO: [ALL] 161197876 (Alexey_Raid): до 10 числа - только критично важные закупки
+[2025-06-02 17:07:42,311] INFO: [ALL] 7173765324 (None): медицину только
+[2025-06-02 17:10:17,095] INFO: [ALL] 7173765324 (None): пакеты могу со свей рекламной оплатить
+[2025-06-02 17:15:57,490] INFO: [ALL] 161197876 (Alexey_Raid): еще же Барбус счет не вфыставлял?
+[2025-06-02 17:17:04,864] INFO: [ALL] 7173765324 (None): Не
+[2025-06-02 17:17:16,812] INFO: [ALL] 7173765324 (None): Это будет через неделю скорее всего
+[2025-06-02 17:17:55,190] INFO: [ALL] 161197876 (Alexey_Raid): тогда поудаляй через /delete лишнее, плс
+[2025-06-02 17:19:08,676] INFO: [ALL] 7173765324 (None): Тогда только медицину которую выше скинула
+[2025-06-02 17:19:21,293] INFO: [ALL] 7173765324 (None): Я ж больше ничего и не скидывала сегодня
+[2025-06-02 17:19:26,787] INFO: [ALL] 7173765324 (None): А тот был файл
+[2025-06-02 17:19:31,995] INFO: [ALL] 7173765324 (None): Рание
+[2025-06-02 17:19:41,090] INFO: [ALL] 7173765324 (None): А я не знаю что вы платили а что нет
+[2025-06-02 17:25:01,962] INFO: [ALL] 161197876 (Alexey_Raid): Чубарову я вчера оплатил, которую в пт ты сбрасывала
+[2025-06-02 17:25:10,238] INFO: [ALL] 161197876 (Alexey_Raid): ты продублировала?
+[2025-06-02 17:29:36,167] INFO: [ALL] 7173765324 (None): А да
+[2025-06-02 17:29:38,546] INFO: [ALL] 7173765324 (None): Ща
+[2025-06-02 17:29:44,950] INFO: [ALL] 7173765324 (None): Это что-то меня про глючит
+[2025-06-02 17:29:52,832] INFO: [ALL] 7173765324 (None): Сорри
+[2025-06-02 17:29:59,419] INFO: [ALL] 7173765324 (None): Сейчас приведу все в порядок
+[2025-06-02 17:31:21,972] INFO: [ALL] 7173765324 (None): Не не не скидывала эти накладные
+[2025-06-02 17:31:55,632] INFO: [ALL] 7173765324 (None): Там были накладные за 20 мая
+[2025-06-02 18:00:01,916] INFO: Application is stopping. This might take a moment.
+[2025-06-02 18:00:01,918] INFO: Application.stop() complete
+[2025-06-02 18:00:02,608] INFO: 🚀 Запуск бота...
+[2025-06-02 18:00:03,043] INFO: Application started
+[2025-06-02 20:39:04,449] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 20:39:04,450] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-02 20:59:13,821] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-02 20:59:13,823] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-03 00:00:01,866] INFO: Application is stopping. This might take a moment.
+[2025-06-03 00:00:01,867] INFO: Application.stop() complete
+[2025-06-03 00:00:02,654] INFO: 🚀 Запуск бота...
+[2025-06-03 00:00:03,050] INFO: Application started
+[2025-06-03 06:00:01,833] INFO: Application is stopping. This might take a moment.
+[2025-06-03 06:00:01,833] INFO: Application.stop() complete
+[2025-06-03 06:00:02,556] INFO: 🚀 Запуск бота...
+[2025-06-03 06:00:02,929] INFO: Application started
+[2025-06-03 07:21:06,368] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-03 08:40:59,105] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDAWg-iuv81QTr9IVb7VhitS6XVec_AALtbAAC3hn4SbBb6f4TuOsDNgQ
+[2025-06-03 08:41:00,080] INFO: 📥 Збережено файл: /root/Automation/Paid/Binotel-May-2025-software-invoice.pdf
+[2025-06-03 08:41:00,691] INFO: ✅ Запис про файл додано до БД: Binotel-May-2025-software-invoice.pdf (user_id: None)
+[2025-06-03 08:41:13,963] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDA2g-ivl5KHmf8InU9HLt7gvoUzxBAALubAAC3hn4STIw6oXXFxvUNgQ
+[2025-06-03 08:41:14,929] INFO: 📥 Збережено файл: /root/Automation/Paid/Binotel-May-2025-telecom-invoice.pdf
+[2025-06-03 08:41:15,596] INFO: ✅ Запис про файл додано до БД: Binotel-May-2025-telecom-invoice.pdf (user_id: None)
+[2025-06-03 08:47:29,717] INFO: 🔍 Обробка /pending...
+[2025-06-03 08:47:30,236] INFO: 📥 SQL: Вибірка pending файлів
+[2025-06-03 08:47:30,298] INFO: 📄 Знайдено 4 запис(ів) зі статусом 'pending'
+[2025-06-03 08:47:30,298] INFO: 📨 Обробка: № 2664 от 29 мая 2025 г..xls (ID: 52, Chat: -1002544853552, MsgID: 723)
+[2025-06-03 08:47:30,991] INFO: 📨 Обробка: № 5574 от 29 мая 2025 г..xls (ID: 53, Chat: -1002544853552, MsgID: 727)
+[2025-06-03 08:47:31,602] INFO: 📨 Обробка: № 3890 от 29 мая 2025 г..xls (ID: 54, Chat: -1002544853552, MsgID: 730)
+[2025-06-03 08:47:32,206] INFO: 📨 Обробка: photo_AQADVvUxG94Z8El-.jpg (ID: 55, Chat: -1002544853552, MsgID: 737)
+[2025-06-03 08:47:32,256] WARNING: ❌ Повідомлення недоступне: Message to be replied not found
+[2025-06-03 08:47:32,360] INFO: 📝 Спроба оновити статус на 'invalid' для ID 55
+[2025-06-03 08:47:32,966] INFO: ✅ Статус оновлено успішно
+[2025-06-03 08:55:42,885] INFO: 📎 Тригер: False, файл: None
+[2025-06-03 08:55:42,885] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-06-03 08:56:29,282] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDC2g-jo3fhI3M0VZn-o2LgnQPHJPpAAIQbQAC3hn4SdXbD2l7cOM4NgQ
+[2025-06-03 08:56:30,097] INFO: 📥 Збережено файл: /root/Automation/Paid/рівні.txt
+[2025-06-03 08:56:30,791] INFO: ✅ Запис про файл додано до БД: рівні.txt (user_id: None)
+[2025-06-03 09:19:07,252] INFO: [ALL] 161197876 (Alexey_Raid): https://t.me/+M1urENO6dp4yZDRi
+[2025-06-03 09:21:32,773] INFO: [ALL] 161197876 (Alexey_Raid): asasfsdafsadfas
+[2025-06-03 09:31:24,703] INFO: [ALL] 161197876 (Alexey_Raid): @paidPW_bot test
+[2025-06-03 10:01:01,449] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDD2g-na2fpYgiD17rKCBW2MJsAAGmpwACtm0AAt4Z-EmeC2vqgCu0UTYE
+[2025-06-03 10:01:02,262] INFO: 📥 Збережено файл: /root/Automation/Paid/Критерії категорій ВРІТ.txt
+[2025-06-03 10:01:02,928] INFO: ✅ Запис про файл додано до БД: Критерії категорій ВРІТ.txt (user_id: None)
+[2025-06-03 12:00:04,795] INFO: Application is stopping. This might take a moment.
+[2025-06-03 12:00:04,796] INFO: Application.stop() complete
+[2025-06-03 12:00:05,400] INFO: 🚀 Запуск бота...
+[2025-06-03 12:00:05,761] INFO: Application started
+[2025-06-03 13:36:15,851] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-03 13:36:15,852] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-03 18:00:01,687] INFO: Application is stopping. This might take a moment.
+[2025-06-03 18:00:01,689] INFO: Application.stop() complete
+[2025-06-03 18:00:02,416] INFO: 🚀 Запуск бота...
+[2025-06-03 18:00:02,837] INFO: Application started
+[2025-06-04 00:00:01,680] INFO: Application is stopping. This might take a moment.
+[2025-06-04 00:00:01,680] INFO: Application.stop() complete
+[2025-06-04 00:00:02,358] INFO: 🚀 Запуск бота...
+[2025-06-04 00:00:02,707] INFO: Application started
+[2025-06-04 06:00:01,610] INFO: Application is stopping. This might take a moment.
+[2025-06-04 06:00:01,611] INFO: Application.stop() complete
+[2025-06-04 06:00:02,294] INFO: 🚀 Запуск бота...
+[2025-06-04 06:00:02,650] INFO: Application started
+[2025-06-04 06:10:35,986] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-04 06:10:35,986] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-04 08:07:44,440] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-04 11:48:17,512] INFO: 📎 Тригер: False, файл: None
+[2025-06-04 11:48:17,513] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-06-04 11:48:17,574] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-04 11:48:24,860] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDEmhACFElZmdDt81mD0UR7AAB7wW8sQACgG0AAko8AUrEW7QgkwABiBI2BA
+[2025-06-04 11:48:25,948] INFO: 📥 Збережено файл: /root/Automation/Paid/0386.pdf
+[2025-06-04 11:48:26,555] INFO: ✅ Запис про файл додано до БД: 0386.pdf (user_id: None)
+[2025-06-04 11:52:50,268] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-04 12:00:01,501] INFO: Application is stopping. This might take a moment.
+[2025-06-04 12:00:01,501] INFO: Application.stop() complete
+[2025-06-04 12:00:02,309] INFO: 🚀 Запуск бота...
+[2025-06-04 12:00:02,698] INFO: Application started
+[2025-06-04 12:01:35,442] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-04 12:01:46,263] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-04 12:01:52,493] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDFmhAC2_E6bFqh8NBozEfAAFJW5vC0gACNmkAAmn4AAFKtLq29kZNv002BA
+[2025-06-04 12:01:53,466] INFO: 📥 Збережено файл: /root/Automation/Paid/ЛьодінО_рахунок_на_оплату_2025_06_04_10_32_04_6206.pdf
+[2025-06-04 12:01:54,100] INFO: ✅ Запис про файл додано до БД: ЛьодінО_рахунок_на_оплату_2025_06_04_10_32_04_6206.pdf (user_id: None)
+[2025-06-04 12:02:08,115] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDF2hAC3qQ9vdwdzG1OgJnpVudYdHtAAI3aQACafgAAUrxR7Aq0rwz6TYE
+[2025-06-04 12:02:08,849] INFO: 📥 Збережено файл: /root/Automation/Paid/ЖилінаВ_рахунок_на_оплату_2025_06_04_10_33_10_6606.pdf
+[2025-06-04 12:02:09,481] INFO: ✅ Запис про файл додано до БД: ЖилінаВ_рахунок_на_оплату_2025_06_04_10_33_10_6606.pdf (user_id: None)
+[2025-06-04 16:57:53,909] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDHGhAUOGhFSw0ycE1RIU8V0i1PCUAA15xAAIi6AlKUno7DU92Jts2BA
+[2025-06-04 16:57:54,706] INFO: 📥 Збережено файл: /root/Automation/Paid/Оплата пакети.txt
+[2025-06-04 16:57:55,331] INFO: ✅ Запис про файл додано до БД: Оплата пакети.txt (user_id: None)
+[2025-06-04 17:01:03,234] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-04 18:00:01,380] INFO: Application is stopping. This might take a moment.
+[2025-06-04 18:00:01,381] INFO: Application.stop() complete
+[2025-06-04 18:00:02,390] INFO: 🚀 Запуск бота...
+[2025-06-04 18:00:02,864] INFO: Application started
+[2025-06-05 00:00:01,401] INFO: Application is stopping. This might take a moment.
+[2025-06-05 00:00:01,401] INFO: Application.stop() complete
+[2025-06-05 00:00:02,211] INFO: 🚀 Запуск бота...
+[2025-06-05 00:00:02,620] INFO: Application started
+[2025-06-05 06:00:01,362] INFO: Application is stopping. This might take a moment.
+[2025-06-05 06:00:01,362] INFO: Application.stop() complete
+[2025-06-05 06:00:01,997] INFO: 🚀 Запуск бота...
+[2025-06-05 06:00:02,391] INFO: Application started
+[2025-06-05 12:00:01,246] INFO: Application is stopping. This might take a moment.
+[2025-06-05 12:00:01,247] INFO: Application.stop() complete
+[2025-06-05 12:00:01,886] INFO: 🚀 Запуск бота...
+[2025-06-05 12:00:02,279] INFO: Application started
+[2025-06-05 13:56:38,153] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-05 13:56:38,154] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-05 18:00:02,135] INFO: Application is stopping. This might take a moment.
+[2025-06-05 18:00:02,136] INFO: Application.stop() complete
+[2025-06-05 18:00:02,890] INFO: 🚀 Запуск бота...
+[2025-06-05 18:00:03,280] INFO: Application started
+[2025-06-06 00:00:02,122] INFO: Application is stopping. This might take a moment.
+[2025-06-06 00:00:02,125] INFO: Application.stop() complete
+[2025-06-06 00:00:02,868] INFO: 🚀 Запуск бота...
+[2025-06-06 00:00:03,258] INFO: Application started
+[2025-06-06 06:00:02,001] INFO: Application is stopping. This might take a moment.
+[2025-06-06 06:00:02,001] INFO: Application.stop() complete
+[2025-06-06 06:00:02,728] INFO: 🚀 Запуск бота...
+[2025-06-06 06:00:03,117] INFO: Application started
+[2025-06-06 09:23:04,366] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-06 12:00:01,937] INFO: Application is stopping. This might take a moment.
+[2025-06-06 12:00:01,937] INFO: Application.stop() complete
+[2025-06-06 12:00:02,652] INFO: 🚀 Запуск бота...
+[2025-06-06 12:00:03,038] INFO: Application started
+[2025-06-06 12:40:05,289] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-06 12:40:05,289] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-06 12:42:47,214] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-06 12:42:47,214] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-06 18:00:01,846] INFO: Application is stopping. This might take a moment.
+[2025-06-06 18:00:01,847] INFO: Application.stop() complete
+[2025-06-06 18:00:02,594] INFO: 🚀 Запуск бота...
+[2025-06-06 18:00:02,947] INFO: Application started
+[2025-06-07 00:00:01,846] INFO: Application is stopping. This might take a moment.
+[2025-06-07 00:00:01,847] INFO: Application.stop() complete
+[2025-06-07 00:00:02,639] INFO: 🚀 Запуск бота...
+[2025-06-07 00:00:02,991] INFO: Application started
+[2025-06-07 06:00:01,770] INFO: Application is stopping. This might take a moment.
+[2025-06-07 06:00:01,771] INFO: Application.stop() complete
+[2025-06-07 06:00:02,520] INFO: 🚀 Запуск бота...
+[2025-06-07 06:00:02,890] INFO: Application started
+[2025-06-07 06:53:48,510] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-07 06:53:48,511] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-07 06:55:40,135] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-07 06:55:40,136] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-07 07:46:44,167] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-07 12:00:01,702] INFO: Application is stopping. This might take a moment.
+[2025-06-07 12:00:01,703] INFO: Application.stop() complete
+[2025-06-07 12:00:02,442] INFO: 🚀 Запуск бота...
+[2025-06-07 12:00:02,895] INFO: Application started
+[2025-06-07 12:15:37,421] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-07 12:15:37,421] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-07 18:00:01,607] INFO: Application is stopping. This might take a moment.
+[2025-06-07 18:00:01,607] INFO: Application.stop() complete
+[2025-06-07 18:00:02,290] INFO: 🚀 Запуск бота...
+[2025-06-07 18:00:02,698] INFO: Application started
+[2025-06-07 18:13:58,341] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-07 18:13:58,342] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-07 21:28:10,897] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-07 23:02:08,551] INFO: 📎 Тригер: False, файл: None
+[2025-06-07 23:02:08,551] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-06-07 23:02:08,603] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-07 23:02:18,849] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDIGhEmsACAAFYqte-pzfSvoiMDLenygAC224AAtZtGUqftEfZuuSObDYE
+[2025-06-07 23:02:19,763] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_№99481_Заказ_№66490_Льодін_Олексій_Володимирович.pdf
+[2025-06-07 23:02:20,374] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_№99481_Заказ_№66490_Льодін_Олексій_Володимирович.pdf (user_id: None)
+[2025-06-08 00:00:01,532] INFO: Application is stopping. This might take a moment.
+[2025-06-08 00:00:01,532] INFO: Application.stop() complete
+[2025-06-08 00:00:02,285] INFO: 🚀 Запуск бота...
+[2025-06-08 00:00:02,739] INFO: Application started
+[2025-06-08 06:00:01,476] INFO: Application is stopping. This might take a moment.
+[2025-06-08 06:00:01,477] INFO: Application.stop() complete
+[2025-06-08 06:00:02,238] INFO: 🚀 Запуск бота...
+[2025-06-08 06:00:02,576] INFO: Application started
+[2025-06-08 07:21:17,243] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-08 12:00:01,429] INFO: Application is stopping. This might take a moment.
+[2025-06-08 12:00:01,430] INFO: Application.stop() complete
+[2025-06-08 12:00:02,284] INFO: 🚀 Запуск бота...
+[2025-06-08 12:00:02,725] INFO: Application started
+[2025-06-08 15:55:45,316] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-08 15:55:45,316] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-08 18:00:01,416] INFO: Application is stopping. This might take a moment.
+[2025-06-08 18:00:01,416] INFO: Application.stop() complete
+[2025-06-08 18:00:02,204] INFO: 🚀 Запуск бота...
+[2025-06-08 18:00:02,756] INFO: Application started
+[2025-06-08 21:26:53,768] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-08 21:26:53,769] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-08 21:28:55,548] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-08 21:28:55,548] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-09 00:00:01,366] INFO: Application is stopping. This might take a moment.
+[2025-06-09 00:00:01,366] INFO: Application.stop() complete
+[2025-06-09 00:00:02,107] INFO: 🚀 Запуск бота...
+[2025-06-09 00:00:02,565] INFO: Application started
+[2025-06-09 03:57:24,285] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-09 03:57:24,285] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-09 06:00:01,246] INFO: Application is stopping. This might take a moment.
+[2025-06-09 06:00:01,247] INFO: Application.stop() complete
+[2025-06-09 06:00:01,837] INFO: 🚀 Запуск бота...
+[2025-06-09 06:00:02,209] INFO: Application started
+[2025-06-09 09:46:55,656] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-09 09:58:05,854] INFO: [ALL] 7173765324 (None): None
+[2025-06-09 09:58:14,435] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDI2hGhf3XDcWB6KH8I1R2AAERWNXWZgACYmgAAhriOUq3SGdM4onRRTYE
+[2025-06-09 09:58:15,257] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна рах 09062025.xls
+[2025-06-09 09:58:15,869] INFO: ✅ Запис про файл додано до БД: Жиліна рах 09062025.xls (user_id: None)
+[2025-06-09 09:58:35,279] INFO: [ALL] 7173765324 (None): Оплатите пожалуйста 🙏 
+Это тесты 
+Чтоб их сегодня отправили
+[2025-06-09 11:31:25,801] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-06-09 11:31:48,044] INFO: [ALL] 161197876 (Alexey_Raid): только либо на мой почтомат 8577 Киев
+либо на отделение ближе к клинике
+[2025-06-09 11:37:13,751] INFO: [ALL] 7173765324 (None): Я адаптировалась к поштомату возле АТБ
+[2025-06-09 12:00:05,156] INFO: Application is stopping. This might take a moment.
+[2025-06-09 12:00:05,157] INFO: Application.stop() complete
+[2025-06-09 12:00:05,730] INFO: 🚀 Запуск бота...
+[2025-06-09 12:00:06,159] INFO: Application started
+[2025-06-09 18:00:01,993] INFO: Application is stopping. This might take a moment.
+[2025-06-09 18:00:01,994] INFO: Application.stop() complete
+[2025-06-09 18:00:02,641] INFO: 🚀 Запуск бота...
+[2025-06-09 18:00:03,053] INFO: Application started
+[2025-06-10 00:00:04,900] INFO: Application is stopping. This might take a moment.
+[2025-06-10 00:00:04,901] INFO: Application.stop() complete
+[2025-06-10 00:00:05,541] INFO: 🚀 Запуск бота...
+[2025-06-10 00:00:05,894] INFO: Application started
+[2025-06-10 02:35:43,140] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-10 02:35:43,141] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-10 02:37:14,673] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-10 02:37:14,673] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-10 06:00:01,792] INFO: Application is stopping. This might take a moment.
+[2025-06-10 06:00:01,793] INFO: Application.stop() complete
+[2025-06-10 06:00:02,457] INFO: 🚀 Запуск бота...
+[2025-06-10 06:00:02,897] INFO: Application started
+[2025-06-10 08:29:17,632] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-10 09:17:19,777] INFO: [ALL] 7173765324 (None): None
+[2025-06-10 09:17:33,216] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDKmhHze-MeKlbBAIbTvqHt28RMPTrAAKydAAC7ApBSstm0YVfIqFXNgQ
+[2025-06-10 09:17:34,369] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_8 430,00.pdf
+[2025-06-10 09:17:34,980] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_8 430,00.pdf (user_id: None)
+[2025-06-10 10:47:12,963] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDLWhH4wABcxncAhXaYIQEyK47H2J-tQAC83YAAkd0QUpoxu3m74_MoTYE
+[2025-06-10 10:47:13,803] INFO: 📥 Збережено файл: /root/Automation/Paid/image_2025-06-10_10-47-12.png
+[2025-06-10 10:47:14,418] INFO: ✅ Запис про файл додано до БД: image_2025-06-10_10-47-12.png (user_id: None)
+[2025-06-10 12:00:01,695] INFO: Application is stopping. This might take a moment.
+[2025-06-10 12:00:01,695] INFO: Application.stop() complete
+[2025-06-10 12:00:02,440] INFO: 🚀 Запуск бота...
+[2025-06-10 12:00:02,917] INFO: Application started
+[2025-06-10 13:59:59,890] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-10 13:59:59,891] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-10 14:02:51,774] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-10 14:02:51,774] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-10 18:00:01,553] INFO: Application is stopping. This might take a moment.
+[2025-06-10 18:00:01,553] INFO: Application.stop() complete
+[2025-06-10 18:00:02,293] INFO: 🚀 Запуск бота...
+[2025-06-10 18:00:02,670] INFO: Application started
+[2025-06-10 21:05:43,706] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-10 21:05:43,707] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-11 00:00:04,506] INFO: Application is stopping. This might take a moment.
+[2025-06-11 00:00:04,506] INFO: Application.stop() complete
+[2025-06-11 00:00:05,148] INFO: 🚀 Запуск бота...
+[2025-06-11 00:00:05,539] INFO: Application started
+[2025-06-11 00:26:33,614] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-11 00:26:33,615] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-11 06:00:01,438] INFO: Application is stopping. This might take a moment.
+[2025-06-11 06:00:01,438] INFO: Application.stop() complete
+[2025-06-11 06:00:02,091] INFO: 🚀 Запуск бота...
+[2025-06-11 06:00:02,480] INFO: Application started
+[2025-06-11 07:03:29,017] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-11 12:00:01,353] INFO: Application is stopping. This might take a moment.
+[2025-06-11 12:00:01,354] INFO: Application.stop() complete
+[2025-06-11 12:00:02,124] INFO: 🚀 Запуск бота...
+[2025-06-11 12:00:02,614] INFO: Application started
+[2025-06-11 12:03:05,213] INFO: ➡️ /start від 5983853041 (ierjdyfptz) — роль: employee, чат: private
+[2025-06-11 18:00:01,278] INFO: Application is stopping. This might take a moment.
+[2025-06-11 18:00:01,278] INFO: Application.stop() complete
+[2025-06-11 18:00:02,106] INFO: 🚀 Запуск бота...
+[2025-06-11 18:00:02,558] INFO: Application started
+[2025-06-12 00:00:01,253] INFO: Application is stopping. This might take a moment.
+[2025-06-12 00:00:01,254] INFO: Application.stop() complete
+[2025-06-12 00:00:02,049] INFO: 🚀 Запуск бота...
+[2025-06-12 00:00:02,547] INFO: Application started
+[2025-06-12 02:26:50,688] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-12 06:00:01,342] INFO: Application is stopping. This might take a moment.
+[2025-06-12 06:00:01,343] INFO: Application.stop() complete
+[2025-06-12 06:00:02,302] INFO: 🚀 Запуск бота...
+[2025-06-12 06:00:02,749] INFO: Application started
+[2025-06-12 12:00:01,363] INFO: Application is stopping. This might take a moment.
+[2025-06-12 12:00:01,363] INFO: Application.stop() complete
+[2025-06-12 12:00:02,062] INFO: 🚀 Запуск бота...
+[2025-06-12 12:00:02,615] INFO: Application started
+[2025-06-12 18:00:01,315] INFO: Application is stopping. This might take a moment.
+[2025-06-12 18:00:01,315] INFO: Application.stop() complete
+[2025-06-12 18:00:02,100] INFO: 🚀 Запуск бота...
+[2025-06-12 18:00:02,553] INFO: Application started
+[2025-06-12 20:29:58,237] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-12 22:51:45,133] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDL2hLL9GuHAoMAuSduKhfI-mzH3agAALBdwACpctZSr9u0PbSNZc2NgQ
+[2025-06-12 22:51:46,198] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок NНАС00000989 від 02_06_2025.pdf
+[2025-06-12 22:51:46,817] INFO: ✅ Запис про файл додано до БД: Рахунок NНАС00000989 від 02_06_2025.pdf (user_id: None)
+[2025-06-12 22:57:37,865] INFO: 🔍 Обробка /pending...
+[2025-06-12 22:57:38,371] INFO: 📥 SQL: Вибірка pending файлів
+[2025-06-12 22:57:38,437] INFO: 📄 Знайдено 1 запис(ів) зі статусом 'pending'
+[2025-06-12 22:57:38,437] INFO: 📨 Обробка: Рахунок NНАС00000989 від 02_06_2025.pdf (ID: 68, Chat: -1002544853552, MsgID: 815)
+[2025-06-13 00:00:01,303] INFO: Application is stopping. This might take a moment.
+[2025-06-13 00:00:01,304] INFO: Application.stop() complete
+[2025-06-13 00:00:02,339] INFO: 🚀 Запуск бота...
+[2025-06-13 00:00:02,813] INFO: Application started
+[2025-06-13 01:05:25,181] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-13 01:05:25,182] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-13 06:00:01,330] INFO: Application is stopping. This might take a moment.
+[2025-06-13 06:00:01,332] INFO: Application.stop() complete
+[2025-06-13 06:00:02,209] INFO: 🚀 Запуск бота...
+[2025-06-13 06:00:02,636] INFO: Application started
+[2025-06-13 07:39:50,941] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-13 07:49:24,348] INFO: [ALL] 7173765324 (None): None
+[2025-06-13 07:49:34,246] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDM2hLrdQfJqpDWC18apJ6HQLj7x9HAAK7dAACRxZYSnIiTGMrcRdKNgQ
+[2025-06-13 07:49:35,186] INFO: 📥 Збережено файл: /root/Automation/Paid/Видаткова_накладна_Жиліна_Валерія_Олександрівна_№_178936_від_30.xlsx
+[2025-06-13 07:49:35,805] INFO: ✅ Запис про файл додано до БД: Видаткова_накладна_Жиліна_Валерія_Олександрівна_№_178936_від_30.xlsx (user_id: None)
+[2025-06-13 07:50:15,785] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIDNmhLrfjArET84PdzQBSz4LAN9EOmAAKJ7TEbhLBgSn4bKFRzQzPtAQADAgADeQADNgQ
+[2025-06-13 07:50:16,788] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADie0xG4SwYEp-.jpg
+[2025-06-13 07:50:17,300] INFO: ✅ Запис про файл додано до БД: photo_AQADie0xG4SwYEp-.jpg (user_id: None)
+[2025-06-13 12:00:04,301] INFO: Application is stopping. This might take a moment.
+[2025-06-13 12:00:04,302] INFO: Application.stop() complete
+[2025-06-13 12:00:04,876] INFO: 🚀 Запуск бота...
+[2025-06-13 12:00:05,392] INFO: Application started
+[2025-06-13 18:00:04,240] INFO: Application is stopping. This might take a moment.
+[2025-06-13 18:00:04,240] INFO: Application.stop() complete
+[2025-06-13 18:00:04,861] INFO: 🚀 Запуск бота...
+[2025-06-13 18:00:05,347] INFO: Application started
+[2025-06-13 20:16:34,712] ERROR: Error while getting Updates: httpx.ReadError: 
+[2025-06-13 20:16:34,713] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-06-14 00:00:02,170] INFO: Application is stopping. This might take a moment.
+[2025-06-14 00:00:02,171] INFO: Application.stop() complete
+[2025-06-14 00:00:02,899] INFO: 🚀 Запуск бота...
+[2025-06-14 00:00:03,346] INFO: Application started
+[2025-06-14 06:00:02,132] INFO: Application is stopping. This might take a moment.
+[2025-06-14 06:00:02,133] INFO: Application.stop() complete
+[2025-06-14 06:00:02,854] INFO: 🚀 Запуск бота...
+[2025-06-14 06:00:03,261] INFO: Application started
+[2025-06-14 12:00:02,184] INFO: Application is stopping. This might take a moment.
+[2025-06-14 12:00:02,185] INFO: Application.stop() complete
+[2025-06-14 12:00:02,817] INFO: 🚀 Запуск бота...
+[2025-06-14 12:00:03,296] INFO: Application started
+[2025-06-14 18:00:02,136] INFO: Application is stopping. This might take a moment.
+[2025-06-14 18:00:02,137] INFO: Application.stop() complete
+[2025-06-14 18:00:02,742] INFO: 🚀 Запуск бота...
+[2025-06-14 18:00:03,164] INFO: Application started
+[2025-06-14 21:45:35,220] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-15 00:00:02,132] INFO: Application is stopping. This might take a moment.
+[2025-06-15 00:00:02,132] INFO: Application.stop() complete
+[2025-06-15 00:00:02,795] INFO: 🚀 Запуск бота...
+[2025-06-15 00:00:03,202] INFO: Application started
+[2025-06-15 06:00:02,075] INFO: Application is stopping. This might take a moment.
+[2025-06-15 06:00:02,075] INFO: Application.stop() complete
+[2025-06-15 06:00:02,677] INFO: 🚀 Запуск бота...
+[2025-06-15 06:00:03,066] INFO: Application started
+[2025-06-15 07:27:10,383] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-06-15 12:00:02,114] INFO: Application is stopping. This might take a moment.
+[2025-06-15 12:00:02,115] INFO: Application.stop() complete
+[2025-06-15 12:00:02,807] INFO: 🚀 Запуск бота...
+[2025-06-15 12:00:03,189] INFO: Application started
+[2025-06-15 18:00:02,068] INFO: Application is stopping. This might take a moment.
+[2025-06-15 18:00:02,069] INFO: Application.stop() complete
+[2025-06-15 18:00:02,829] INFO: 🚀 Запуск бота...
+[2025-06-15 18:00:03,322] INFO: Application started
+[2025-06-15 23:06:09,663] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIDOmhPJ7GUJzXs_x_Lux7h-KV1HqKjAAJccAACuXeASh0ubn2vS3ZwNgQ
+[2025-06-16 00:00:02,107] INFO: Application is stopping. This might take a moment.
+[2025-06-16 00:00:02,110] INFO: Application.stop() complete
+[2025-06-16 00:00:02,924] INFO: 🚀 Запуск бота...
+[2025-06-16 00:00:03,407] INFO: Application started
