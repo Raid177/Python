@@ -62,13 +62,13 @@ def parse_datetime(date_str, time_str):
 
 def calculate_duration(start_dt, end_dt):
     if not start_dt or not end_dt:
-        return None, None
+        return None, None, end_dt
     if end_dt < start_dt:
         end_dt += timedelta(days=1)
     delta = end_dt - start_dt
     hours = round(delta.total_seconds() / 3600, 1)
-    text = str(delta)[:-3]  # hh:mm
-    return text, hours
+    text = str(delta)[:-3]
+    return text, hours, end_dt
 
 # === Основна функція ===
 def main():
@@ -112,7 +112,7 @@ def main():
 
                     start_dt = parse_datetime(date_shift, start_time)
                     end_dt = parse_datetime(date_shift, end_time)
-                    duration_text, duration_hours = calculate_duration(start_dt, end_dt)
+                    duration_text, duration_hours, end_dt = calculate_duration(start_dt, end_dt)
 
                     record = {
                         "date_shift": date_shift,

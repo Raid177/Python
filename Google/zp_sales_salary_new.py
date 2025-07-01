@@ -66,7 +66,7 @@ WITH our_table AS (
         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
     LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
         ON pr.Сотрудник = sp.Ref_Key
-    WHERE pr.Active = 1 AND Period >= '2025-05-01'
+    WHERE pr.Active = 1 AND Period >= '2025-06-01'
 
     UNION ALL
 
@@ -98,7 +98,7 @@ WITH our_table AS (
         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
     LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
         ON pr.Исполнитель = sp.Ref_Key
-    WHERE pr.Active = 1 AND Period >= '2025-05-01'
+    WHERE pr.Active = 1 AND Period >= '2025-06-01'
 )
 SELECT
     o.*,
@@ -152,6 +152,20 @@ with engine.connect() as conn:
 
 # === Завантаження нових даних ===
 print("[LOAD] Завантажуємо дані у zp_sales_salary...")
+
+# === Перевірка дублікатів перед вставкою ===
+key_fields = ['Recorder', 'LineNumber', 'Role']
+duplicates = df[df.duplicated(subset=key_fields, keep=False)]
+
+if not duplicates.empty:
+    print("[DUPLICATE WARNING] Знайдено дублікати за ключовими полями:")
+    print(duplicates[key_fields + ['Ном_Description', 'Period']])
+    # За потреби — зберегти для аналізу
+    duplicates.to_csv("duplicate_rows.csv", index=False)
+else:
+    print("[OK] Дублікатів за ключовими полями немає.")
+
+
 df.to_sql(
     name='zp_sales_salary',
     con=engine,
