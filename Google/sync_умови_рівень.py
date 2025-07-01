@@ -203,7 +203,7 @@ def calculate_worktime_matches():
     cursor.execute("""
         SELECT *
         FROM zp_фктУмовиОплати
-        WHERE ДатаЗакінчення IS NULL OR ДатаЗакінчення >= CURDATE()
+        
     """)
     rules_rows = cursor.fetchall()
 
