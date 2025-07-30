@@ -8,7 +8,6 @@
 """
 
 import os
-import time
 import tkinter as tk
 from tkinter import filedialog
 import subprocess
@@ -16,6 +15,44 @@ import subprocess
 from file_handler import process_paid_file
 from telegram_notify import send_payment_notification
 from log import log
+
+def ask_payment_gui(file_name, index, total):
+    """Показує вікно з кнопками: Так / Ні / Вийти"""
+    response = {"answer": None}
+
+    def on_yes():
+        response["answer"] = "так"
+        win.destroy()
+
+    def on_no():
+        response["answer"] = "ні"
+        win.destroy()
+
+    def on_exit():
+        response["answer"] = "вийти"
+        win.destroy()
+
+    win = tk.Tk()
+    win.title("Підтвердження оплати")
+
+    label = tk.Label(
+        win,
+        text=f"Файл {index + 1} з {total}:\n{file_name}\nОплачено?",
+        font=("Arial", 12),
+        pady=10,
+        padx=20
+    )
+    label.pack()
+
+    btn_frame = tk.Frame(win, pady=10)
+    btn_frame.pack()
+
+    tk.Button(btn_frame, text="Так", width=10, command=on_yes, bg="lightgreen").pack(side="left", padx=5)
+    tk.Button(btn_frame, text="Ні", width=10, command=on_no, bg="lightyellow").pack(side="left", padx=5)
+    tk.Button(btn_frame, text="Вийти", width=10, command=on_exit, bg="lightcoral").pack(side="left", padx=5)
+
+    win.mainloop()
+    return response["answer"]
 
 def main():
     root = tk.Tk()
@@ -37,37 +74,30 @@ def main():
         print("❌ Файли не обрано.")
         return
 
-    for file_path in file_paths:
+    for idx, file_path in enumerate(file_paths):
         print(f"\n📂 Відкриття файлу: {file_path}")
         try:
-            # Відкриваємо у дефолтному застосунку
             proc = subprocess.Popen([file_path], shell=True)
             proc.wait()
         except Exception as e:
             log(f"❌ Не вдалося відкрити файл: {file_path} — {e}")
             continue
 
-        # Запит: чи файл оплачено?
-        while True:
-            resp = input("💰 Чи файл оплачено? (так / ні / вийти): ").strip().lower()
-            if resp in ("так", "ні", "вийти"):
-                break
+        file_name = os.path.basename(file_path)
+        resp = ask_payment_gui(file_name, idx, len(file_paths))
 
         if resp == "вийти":
             print("🚪 Завершення обробки.")
             break
-
-        if resp == "ні":
+        elif resp == "ні":
             print("⏭️ Пропущено.")
             continue
-
-        # Якщо файл оплачено:
-        try:
-            file_name = os.path.basename(file_path)
-            process_paid_file(file_path)
-            send_payment_notification(file_name)
-        except Exception as e:
-            log(f"❌ Помилка при обробці файлу {file_path}: {e}")
+        elif resp == "так":
+            try:
+                process_paid_file(file_path)
+                send_payment_notification(file_name)
+            except Exception as e:
+                log(f"❌ Помилка при обробці файлу {file_path}: {e}")
 
 if __name__ == "__main__":
     main()

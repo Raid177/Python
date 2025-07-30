@@ -18,7 +18,8 @@ from log import log
 from file_utils.pdf import stamp_pdf
 from file_utils.txt import stamp_txt
 from file_utils.images import stamp_image
-from file_utils.office import stamp_doc, stamp_excel
+from file_utils.word import stamp_doc
+from file_utils.excel import stamp_excel
 
 STAMP_TEXT = "Оплачено"
 
