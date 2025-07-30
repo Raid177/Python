@@ -33,3 +33,7 @@
 [2025-07-30 18:30:30] ❌ XLS помилка: [Errno 2] No such file or directory: 'C:\\Users\\la\\OneDrive\\Рабочий стол\\test.xls'
 [2025-07-30 18:30:54] 🟦 XLSX: Додано штамп у C:\Users\la\OneDrive\Рабочий стол\test.xlsx
 [2025-07-30 18:30:54] 🟩 XLS: Додано штамп у C:\Users\la\OneDrive\Рабочий стол\test.xls
+[2025-07-30 18:56:36] ❌ Помилка при вставці штампа в Word: C:\Users\la\OneDrive\Рабочий стол\test.docx — 'NoneType' object has no attribute 'runs'
+[2025-07-30 18:56:40] ✅ DOC оброблено: C:\Users\la\OneDrive\Рабочий стол\test.doc
+[2025-07-30 19:01:48] ✅ DOCX оброблено: C:\Users\la\OneDrive\Рабочий стол\test.docx
+[2025-07-30 19:01:53] ✅ DOC оброблено: C:\Users\la\OneDrive\Рабочий стол\test.doc
