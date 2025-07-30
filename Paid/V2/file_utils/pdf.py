@@ -45,5 +45,5 @@ def stamp_pdf(file_path: str, stamp: str):
 
 # 🔧 Тест запуску незалежно
 if __name__ == "__main__":
-    test_path = r"C:\Users\la\OneDrive\Рабочий стол\testt.pdf"
+    test_path = r"C:\Users\la\OneDrive\Рабочий стол\На оплату!\pdft_test.pdf"
     stamp_pdf(test_path, "Оплачено 2025-07-30 19:05")
