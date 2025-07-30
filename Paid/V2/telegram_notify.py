@@ -41,7 +41,7 @@ def send_payment_notification(file_path: str):
                 "text": msg,
                 "reply_to_message_id": message_id
             })
-            log(f"📤 Telegram: {response.status_code} {response.text}")
+            log(f"📤 Telegram: {response.status_code} {response.text.encode('utf-8').decode('unicode_escape')}")
 
             # Оновлюємо статус
             with conn.cursor() as cur:
