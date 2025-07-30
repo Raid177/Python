@@ -6,13 +6,37 @@ from telegram_notify import send_payment_notification
 from log import log
 import subprocess
 import winreg
+import time
+import psutil
+import json
+
+# === 📄 Завантаження конфігурації програм перегляду ===
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+HARDCODED_PROGRAMS = {
+    ".txt": "notepad.exe",
+    ".jpg": "mspaint.exe",
+    ".jpeg": "mspaint.exe",
+    ".png": "mspaint.exe",
+}
+
+if os.path.exists(CONFIG_PATH):
+    try:
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            config_data = json.load(f)
+            HARDCODED_PROGRAMS.update(config_data)
+            log(f"⚙️ Завантажено config.json: {config_data}")
+    except Exception as e:
+        log(f"❌ Неможливо завантажити config.json: {e}")
 
 def get_default_program(ext: str):
+    if ext in HARDCODED_PROGRAMS:
+        return HARDCODED_PROGRAMS[ext]
+
     try:
         with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, ext) as key:
             file_type, _ = winreg.QueryValueEx(key, None)
 
-        cmd_path = fr"{file_type}\shell\open\command"
+        cmd_path = fr"{file_type}\\shell\\open\\command"
         with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, cmd_path) as key:
             command, _ = winreg.QueryValueEx(key, None)
 
@@ -22,6 +46,38 @@ def get_default_program(ext: str):
         log(f"❌ get_default_program({ext}): {e}")
         return None
 
+def manual_continue_gui(file_path: str):
+    log(f"🕐 Очікування підтвердження після перегляду: {file_path}")
+
+    def on_continue():
+        win.quit()
+        win.destroy()
+
+    win = tk.Tk()
+    win.title("Перегляд завершено?")
+    win.attributes("-topmost", True)
+
+    label = tk.Label(win, text=f"Завершили перегляд файлу?\n{file_path}", font=("Arial", 11), padx=20, pady=10)
+    label.pack()
+
+    btn = tk.Button(win, text="Продовжити", width=15, bg="lightblue", command=on_continue)
+    btn.pack(pady=10)
+
+    win.mainloop()
+    log("✅ Користувач підтвердив перегляд")
+
+def wait_file_release(file_path: str, timeout_sec=15):
+    for i in range(timeout_sec):
+        try:
+            tmp_path = file_path + ".tmp_check"
+            os.rename(file_path, tmp_path)
+            os.rename(tmp_path, file_path)
+            return True
+        except PermissionError:
+            log(f"⏳ Очікування звільнення {file_path}...")
+            time.sleep(1.0)
+    return False
+
 def open_and_wait(file_path: str):
     ext = os.path.splitext(file_path)[1].lower()
     exe_path = get_default_program(ext)
@@ -30,16 +86,43 @@ def open_and_wait(file_path: str):
         log(f"⚠️ Програма за замовчуванням для {ext} не знайдена. Відкриваю через os.startfile.")
         try:
             os.startfile(file_path)
-            input("➡️ Натисніть Enter після перегляду...")
+            manual_continue_gui(file_path)
         except Exception as e:
             log(f"❌ os.startfile({file_path}): {e}")
         return
 
-    try:
-        log(f"📂 Відкриття {file_path} через {exe_path}")
+    if ext in (".xls", ".xlsx") and "excel" in exe_path.lower():
+        log(f"📂 Відкриття Excel-файлу: {file_path}")
         proc = subprocess.Popen([exe_path, file_path])
         proc.wait()
-        log(f"✅ Закрито: {file_path}")
+        log(f"✅ Excel закрито: {file_path}")
+        return
+
+    try:
+        log(f"📂 Відкриття {file_path} через {exe_path}")
+
+        before = {p.pid for p in psutil.process_iter()}
+        subprocess.Popen([exe_path, file_path])
+        time.sleep(1.5)
+
+        after = {p.pid for p in psutil.process_iter()}
+        new_pids = list(after - before)
+
+        if not new_pids:
+            log(f"⚠️ Не знайдено процес перегляду для: {file_path}. Очікування вручну.")
+            manual_continue_gui(file_path)
+            return
+
+        for pid in new_pids:
+            try:
+                proc = psutil.Process(pid)
+                log(f"🕓 Очікування закриття процесу: {proc.name()} ({pid})")
+                proc.wait()
+                log(f"✅ Закрито: {file_path}")
+                time.sleep(0.5)
+                break
+            except Exception as e:
+                log(f"❌ Неможливо дочекатись процесу {pid}: {e}")
     except Exception as e:
         log(f"❌ subprocess.Popen для {file_path}: {e}")
 
@@ -138,6 +221,18 @@ def main():
             elif resp == "так":
                 log(f"📥 Підтверджено оплату: {file_name}")
                 try:
+                    log("🛠 Запуск wait_file_release()...")
+                    released = wait_file_release(file_path)
+                    if not released and os.path.exists(file_path):
+                        log(f"⚠️ Ймовірно файл ще зайнятий. Спроба видалити: {file_path}")
+                        try:
+                            os.remove(file_path)
+                            log(f"🗑️ Видалено: {file_path}")
+                            continue
+                        except Exception as e:
+                            log(f"❌ Не вдалося видалити файл: {e}")
+                            continue
+
                     log("🛠 Запуск process_paid_file()...")
                     process_paid_file(file_path)
                     log("📤 Запуск send_payment_notification()...")

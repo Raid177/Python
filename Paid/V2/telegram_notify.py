@@ -1,14 +1,3 @@
-"""
-telegram_notify.py
-Модуль для надсилання повідомлень в Telegram після оплати файлу.
-
-- Працює з таблицею `telegram_files` (поля: file_path, message_id, status).
-- Пошук ведеться по file_path.
-- Якщо знаходить файл у БД — надсилає повідомлення з реплаєм у MAIN_CHAT_ID.
-- Якщо не знаходить — надсилає повідомлення у MAIN_CHAT_ID без реплаю.
-- Оновлює статус на 'paid' у БД.
-"""
-
 import os
 import requests
 from db import get_server_connection
@@ -20,15 +9,20 @@ API_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
 
 def send_payment_notification(file_path: str):
     """Надсилає повідомлення в Telegram після підтвердження оплати."""
+
+    # 🧠 Стандартизуємо шлях для пошуку в БД (отримуємо basename і підставляємо серверний шлях)
+    file_name_only = os.path.basename(file_path)
+    db_file_path = f"/root/Automation/Paid/{file_name_only}"
+
     conn = get_server_connection()
     try:
         with conn.cursor() as cur:
-            log(f"🔍 Пошук у telegram_files: file_path = {file_path}")
+            log(f"🔍 Пошук у telegram_files: file_path = {db_file_path}")
             cur.execute("""
                 SELECT file_name, message_id FROM telegram_files
                 WHERE file_path = %s
                 ORDER BY id DESC LIMIT 1
-            """, (file_path,))
+            """, (db_file_path,))
             result = cur.fetchone()
 
         if result:
@@ -49,7 +43,7 @@ def send_payment_notification(file_path: str):
             with conn.cursor() as cur:
                 cur.execute("""
                     UPDATE telegram_files SET status='paid' WHERE file_path = %s
-                """, (file_path,))
+                """, (db_file_path,))
         else:
             # Файл не знайдено в БД
             file_name = os.path.basename(file_path)
