@@ -1,63 +1,73 @@
-# main_runner.py
+# main.py
 """
-Головний модуль:
-- Запитує вибір файлів для обробки (PDF, TXT, JPG, PNG, XLSX, DOC).
-- Послідовно відкриває файли в дефолтних програмах.
-- Після закриття питає: файл оплачено?
-- Якщо "Так":
-    - Викликає модуль для обробки (додає штамп/переміщує в Оплачено)
-    - Викликає telegram_notify для оновлення статусу в БД і повідомлення
+Головний скрипт:
+1. Дозволяє користувачу вибрати кілька файлів (PDF, TXT, DOC(X), XLS(X), JPG/PNG).
+2. По черзі відкриває кожен файл у дефолтному застосунку.
+3. Після закриття — питає, чи файл оплачено:
+   - якщо так — додає штамп, переміщує у "Оплачено", надсилає повідомлення у Telegram і оновлює БД.
 """
 
 import os
+import time
 import tkinter as tk
 from tkinter import filedialog
 import subprocess
-import time
-from utils import wait_for_file_close, ask_payment_confirmation
+
 from file_handler import process_paid_file
 from telegram_notify import send_payment_notification
-
-# Типи файлів для обробки
-SUPPORTED_EXTENSIONS = ('.pdf', '.txt', '.jpg', '.jpeg', '.png', '.xlsx', '.xls', '.doc', '.docx')
-
-def select_files():
-    root = tk.Tk()
-    root.withdraw()
-    file_paths = filedialog.askopenfilenames(
-        title="Виберіть файли для перегляду та оплати",
-        filetypes=[("Допустимі файли", SUPPORTED_EXTENSIONS)]
-    )
-    return list(file_paths)
+from log import log
 
 def main():
-    files = select_files()
-    if not files:
-        print("❌ Файли не вибрано")
+    root = tk.Tk()
+    root.withdraw()
+
+    file_paths = filedialog.askopenfilenames(
+        title="Оберіть файли для оплати",
+        filetypes=[
+            ("Усі підтримувані файли", ("*.pdf", "*.txt", "*.doc", "*.docx", "*.xls", "*.xlsx", "*.jpg", "*.jpeg", "*.png")),
+            ("PDF", "*.pdf"),
+            ("Текстові файли", "*.txt"),
+            ("Документи Word", ("*.doc", "*.docx")),
+            ("Таблиці Excel", ("*.xls", "*.xlsx")),
+            ("Зображення", ("*.jpg", "*.jpeg", "*.png")),
+        ]
+    )
+
+    if not file_paths:
+        print("❌ Файли не обрано.")
         return
 
-    for file_path in files:
-        file_name = os.path.basename(file_path)
-        folder = os.path.dirname(file_path)
-
-        print(f"\n📂 Відкриваємо: {file_name}")
+    for file_path in file_paths:
+        print(f"\n📂 Відкриття файлу: {file_path}")
         try:
-            proc = subprocess.Popen(['start', '', file_path], shell=True)
-            wait_for_file_close(proc)
+            # Відкриваємо у дефолтному застосунку
+            proc = subprocess.Popen([file_path], shell=True)
+            proc.wait()
         except Exception as e:
-            print(f"❌ Не вдалося відкрити файл: {e}")
+            log(f"❌ Не вдалося відкрити файл: {file_path} — {e}")
             continue
 
-        if ask_payment_confirmation(file_name):
-            new_path = process_paid_file(file_path)
+        # Запит: чи файл оплачено?
+        while True:
+            resp = input("💰 Чи файл оплачено? (так / ні / вийти): ").strip().lower()
+            if resp in ("так", "ні", "вийти"):
+                break
+
+        if resp == "вийти":
+            print("🚪 Завершення обробки.")
+            break
+
+        if resp == "ні":
+            print("⏭️ Пропущено.")
+            continue
+
+        # Якщо файл оплачено:
+        try:
+            file_name = os.path.basename(file_path)
+            process_paid_file(file_path)
             send_payment_notification(file_name)
-        else:
-            print(f"⏭️ Пропущено: {file_name}")
+        except Exception as e:
+            log(f"❌ Помилка при обробці файлу {file_path}: {e}")
 
 if __name__ == "__main__":
     main()
-
-
- # 🔧 Тест PDF-файлу — закоментуй після перевірки
-    # from file_handler import process_paid_file
-    # process_paid_file(r"C:\Users\la\OneDrive\Рабочий стол\testt.pdf")
