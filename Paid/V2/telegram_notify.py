@@ -2,11 +2,11 @@
 telegram_notify.py
 Модуль для надсилання повідомлень в Telegram після оплати файлу.
 
-🔹 Працює з таблицею `telegram_files` (поля: file_name, file_path, message_id, status).
-🔹 Пошук ведеться по file_path (унікальний), бо file_name може повторюватись.
-🔹 Якщо знайдено — надсилає повідомлення з реплаєм у MAIN_CHAT_ID.
-🔹 Якщо не знайдено — надсилає повідомлення у ту ж MAIN_CHAT_ID без реплаю.
-🔹 Оновлює статус на 'paid' у БД по file_path.
+- Працює з таблицею `telegram_files` (поля: file_path, message_id, status).
+- Пошук ведеться по file_path.
+- Якщо знаходить файл у БД — надсилає повідомлення з реплаєм у MAIN_CHAT_ID.
+- Якщо не знаходить — надсилає повідомлення у MAIN_CHAT_ID без реплаю.
+- Оновлює статус на 'paid' у БД.
 """
 
 import os
@@ -41,6 +41,8 @@ def send_payment_notification(file_path: str):
                 "text": msg,
                 "reply_to_message_id": message_id
             })
+
+            # 💬 Декодування Unicode escape:
             log(f"📤 Telegram: {response.status_code} {response.text.encode('utf-8').decode('unicode_escape')}")
 
             # Оновлюємо статус
@@ -48,19 +50,18 @@ def send_payment_notification(file_path: str):
                 cur.execute("""
                     UPDATE telegram_files SET status='paid' WHERE file_path = %s
                 """, (file_path,))
-                log(f"📝 Статус оновлено: paid для file_path = {file_path}")
-
         else:
+            # Файл не знайдено в БД
+            file_name = os.path.basename(file_path)
             msg = (
-                f"✅ Файл оплачено\n"
-                f"⚠️ Але файл не знайдено в базі.\n‼️ Надсилайте файли через бота, щоб бот міг відповісти на оригінал.\n"
-                f"📄 Шлях: {file_path}"
+                f"✅ Файл «{file_name}» оплачено\n"
+                f"⚠️ Але файл не знайдено в базі.\n‼️ Надсилайте файли через бота, щоб бот міг відповісти на оригінал."
             )
             response = requests.post(API_URL, data={
                 "chat_id": MAIN_CHAT_ID,
                 "text": msg
             })
-            log(f"📤 Telegram (no-reply): {response.status_code} {response.text}")
+            log(f"📤 Telegram (no-reply): {response.status_code} {response.text.encode('utf-8').decode('unicode_escape')}")
 
     except Exception as e:
         log(f"❌ Помилка надсилання в Telegram: {e}")
@@ -70,5 +71,5 @@ def send_payment_notification(file_path: str):
 
 # 🔧 Тест при запуску напряму
 if __name__ == "__main__":
-    test_path = "/root/Automation/Paid/testt.pdf"
-    send_payment_notification(test_path)
+    # 🧪 Заміни шлях на актуальний
+    send_payment_notification("/root/Automation/Paid/testt_copy_2025-07-30_16-19-20.pdf")
