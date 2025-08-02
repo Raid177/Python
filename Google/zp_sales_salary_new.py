@@ -24,16 +24,29 @@ from dotenv import load_dotenv
 # === Завантаження .env ===
 load_dotenv(r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\.env")
 
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_DATABASE = os.getenv("DB_DATABASE")
+DB_HOST = os.getenv("DB_HOST_Serv")
+DB_PORT = int(os.getenv("DB_PORT_Serv", 3306))
+DB_USER = os.getenv("DB_USER_Serv")
+DB_PASSWORD = os.getenv("DB_PASSWORD_Serv")
+DB_DATABASE = os.getenv("DB_DATABASE_Serv")
 
 # === SQLAlchemy engine ===
+print(f"HOST: {DB_HOST}")
+print(f"PORT: {DB_PORT}")
+print(f"USER: {DB_USER}")
+print(f"PASS: {DB_PASSWORD}")
+print(f"DB: {DB_DATABASE}")
+
+from urllib.parse import quote_plus
+
+# Екрануємо пароль для URI
+DB_PASSWORD_ENC = quote_plus(DB_PASSWORD)
+
 engine = create_engine(
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}",
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD_ENC}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}",
     connect_args={'charset': 'utf8mb4'}
 )
+
 
 # === SQL-запит з shift_uuid ===
 sql_query = """

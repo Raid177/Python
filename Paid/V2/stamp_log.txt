@@ -723,3 +723,212 @@
 [2025-07-30 23:09:11] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1423,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753906151,"message_thread_id":1421,"reply_to_message":{"message_id":1421,"from":{"id":161197876,"is_bot":false,"first_name":"Олексій","last_name":"Льодін","username":"Alexey_Raid","language_code":"uk","is_premium":true},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753905207,"document":{"file_name":"test_img.jpg","mime_type":"image/jpeg","thumbnail":{"file_id":"AAMCAgADIQUABJevYjAAAgWNaIp4N45d0LVTZ9YeAsrW__UZnCEAAqCHAAJgblhIb77soRUf9_IBAAdtAAM2BA","file_unique_id":"AQADoIcAAmBuWEhy","file_size":13302,"width":240,"height":320},"thumb":{"file_id":"AAMCAgADIQUABJevYjAAAgWNaIp4N45d0LVTZ9YeAsrW__UZnCEAAqCHAAJgblhIb77soRUf9_IBAAdtAAM2BA","file_unique_id":"AQADoIcAAmBuWEhy","file_size":13302,"width":240,"height":320},"file_id":"BQACAgIAAyEFAASXr2IwAAIFjWiKeDeOXdC1U2fWHgLK1v_1GZwhAAKghwACYG5YSG--7KEVH_fyNgQ","file_unique_id":"AgADoIcAAmBuWEg","file_size":111394},"caption":"/pay","caption_entities":[{"offset":0,"length":4,"type":"bot_command"}]},"text":"✅ Файл «test_img.jpg» оплачено"}}
 [2025-07-30 23:09:11] ✅ Завершено: test_img_copy_2025-07-30_22-53-30.jpg
 [2025-07-30 23:09:11] 🏁 Програма завершена
+[2025-07-30 23:36:13] 🚀 Старт програми
+[2025-07-30 23:36:21] 🚀 Старт програми
+[2025-07-30 23:36:43] 🚀 Старт програми
+[2025-07-30 23:36:49] ❌ Користувач не вибрав жодного файлу.
+[2025-07-30 23:53:45] ⚙️ Завантажено config.json: {'.txt': 'C:\\Program Files\\Notepad++\\notepad++.exe', '.jpg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.jpeg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.png': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe'}
+[2025-07-30 23:53:45] 🚀 Старт програми
+[2025-07-30 23:54:02] ❌ Користувач не вибрав жодного файлу.
+[2025-07-31 00:00:05] 🚀 Старт програми
+[2025-07-31 00:00:37] 🗂️ Обробка файлу 1 з 5: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:00:37] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvfExG2BuSEh-.jpg через mspaint.exe
+[2025-07-31 00:00:37] ❌ subprocess.Popen для C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvfExG2BuSEh-.jpg: [WinError 2] Не удается найти указанный файл
+[2025-07-31 00:00:37] 🪟 Відображення вікна підтвердження оплати для photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:00:59] 🟡 Натиснуто НІ для photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:00:59] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:00:59] 🔘 Відповідь користувача: ні
+[2025-07-31 00:00:59] ⏭️ Пропущено: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:00:59] 🗂️ Обробка файлу 2 з 5: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:00:59] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvPExG2BuSEh-.jpg через mspaint.exe
+[2025-07-31 00:00:59] ❌ subprocess.Popen для C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvPExG2BuSEh-.jpg: [WinError 2] Не удается найти указанный файл
+[2025-07-31 00:00:59] 🪟 Відображення вікна підтвердження оплати для photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:01:01] 🟡 Натиснуто НІ для photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:01:01] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:01:01] 🔘 Відповідь користувача: ні
+[2025-07-31 00:01:01] ⏭️ Пропущено: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:01:01] 🗂️ Обробка файлу 3 з 5: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:01:01] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADw_wxGwvzOUh-.jpg через mspaint.exe
+[2025-07-31 00:01:01] ❌ subprocess.Popen для C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADw_wxGwvzOUh-.jpg: [WinError 2] Не удается найти указанный файл
+[2025-07-31 00:01:01] 🪟 Відображення вікна підтвердження оплати для photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:01:02] 🟡 Натиснуто НІ для photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:01:02] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:01:02] 🔘 Відповідь користувача: ні
+[2025-07-31 00:01:02] ⏭️ Пропущено: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:01:02] 🗂️ Обробка файлу 4 з 5: Жиліна рах 28072025.xls
+[2025-07-31 00:01:02] 📂 Відкриття Excel-файлу: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Жиліна рах 28072025.xls
+[2025-07-31 00:01:14] ✅ Excel закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Жиліна рах 28072025.xls
+[2025-07-31 00:01:14] 🪟 Відображення вікна підтвердження оплати для Жиліна рах 28072025.xls
+[2025-07-31 00:01:17] 🟡 Натиснуто НІ для Жиліна рах 28072025.xls
+[2025-07-31 00:01:17] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:01:17] 🔘 Відповідь користувача: ні
+[2025-07-31 00:01:17] ⏭️ Пропущено: Жиліна рах 28072025.xls
+[2025-07-31 00:01:17] 🗂️ Обробка файлу 5 з 5: Реквізити .txt
+[2025-07-31 00:01:17] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/Реквізити .txt через notepad.exe
+[2025-07-31 00:01:19] 🕓 Очікування закриття процесу: Notepad.exe (16696)
+[2025-07-31 00:01:21] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Реквізити .txt
+[2025-07-31 00:01:22] 🪟 Відображення вікна підтвердження оплати для Реквізити .txt
+[2025-07-31 00:01:23] 🟡 Натиснуто НІ для Реквізити .txt
+[2025-07-31 00:01:23] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:01:23] 🔘 Відповідь користувача: ні
+[2025-07-31 00:01:23] ⏭️ Пропущено: Реквізити .txt
+[2025-07-31 00:01:23] 🏁 Програма завершена
+[2025-07-31 00:03:58] ⚙️ Завантажено config.json: {'.txt': 'C:\\Program Files\\Notepad++\\notepad++.exe', '.jpg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.jpeg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.png': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe'}
+[2025-07-31 00:03:58] 🚀 Старт програми
+[2025-07-31 00:04:04] 🗂️ Обробка файлу 1 з 5: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:04:04] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvfExG2BuSEh-.jpg через C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe
+[2025-07-31 00:04:05] 🕓 Очікування закриття процесу: FSViewer.exe (25208)
+[2025-07-31 00:06:49] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:49] 🪟 Відображення вікна підтвердження оплати для photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] 🟢 Натиснуто ТАК для photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 00:06:51] 🔘 Відповідь користувача: так
+[2025-07-31 00:06:51] 📥 Підтверджено оплату: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] 🛠 Запуск wait_file_release()...
+[2025-07-31 00:06:51] 🛠 Запуск process_paid_file()...
+[2025-07-31 00:06:51] 🔧 Обробка файлу: photo_AQADvfExG2BuSEh-.jpg (.jpg)
+[2025-07-31 00:06:51] 📌 Штамп: Оплачено 2025-07-31 00:06
+[2025-07-31 00:06:51] ➡️ Викликається stamp_image()
+[2025-07-31 00:06:51] ✅ stamp_image() завершено
+[2025-07-31 00:06:51] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] ✅ Опрацьовано та переміщено: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:51] 📤 Запуск send_payment_notification()...
+[2025-07-31 00:06:52] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 00:06:52] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:52] 📦 Знайдено: file_name=photo_AQADvfExG2BuSEh-.jpg, message_id=1375
+[2025-07-31 00:06:52] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1429,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753909612,"message_thread_id":1375,"reply_to_message":{"message_id":1375,"from":{"id":7173765324,"is_bot":false,"first_name":"Pet","last_name":"Wealth business","language_code":"ru"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753788673,"photo":[{"file_id":"AgACAgIAAyEFAASXr2IwAAIFX2iIsQFVcDWYTeGglDSB8CrZMW7TAAK98TEbYG5ISC_8WEVB-pZoAQADAgADcwADNgQ","file_unique_id":"AQADvfExG2BuSEh4","file_size":1027,"width":67,"height":90},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFX2iIsQFVcDWYTeGglDSB8CrZMW7TAAK98TEbYG5ISC_8WEVB-pZoAQADAgADbQADNgQ","file_unique_id":"AQADvfExG2BuSEhy","file_size":17306,"width":240,"height":320},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFX2iIsQFVcDWYTeGglDSB8CrZMW7TAAK98TEbYG5ISC_8WEVB-pZoAQADAgADeAADNgQ","file_unique_id":"AQADvfExG2BuSEh9","file_size":85624,"width":600,"height":800},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFX2iIsQFVcDWYTeGglDSB8CrZMW7TAAK98TEbYG5ISC_8WEVB-pZoAQADAgADeQADNgQ","file_unique_id":"AQADvfExG2BuSEh-","file_size":119731,"width":960,"height":1280}]},"text":"✅ Файл «photo_AQADvfExG2BuSEh-.jpg» оплачено"}}
+[2025-07-31 00:06:52] ✅ Завершено: photo_AQADvfExG2BuSEh-.jpg
+[2025-07-31 00:06:52] 🗂️ Обробка файлу 2 з 5: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:06:52] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvPExG2BuSEh-.jpg через C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe
+[2025-07-31 00:06:54] 🕓 Очікування закриття процесу: FSViewer.exe (14144)
+[2025-07-31 00:08:29] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:29] 🪟 Відображення вікна підтвердження оплати для photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] 🟢 Натиснуто ТАК для photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 00:08:31] 🔘 Відповідь користувача: так
+[2025-07-31 00:08:31] 📥 Підтверджено оплату: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] 🛠 Запуск wait_file_release()...
+[2025-07-31 00:08:31] 🛠 Запуск process_paid_file()...
+[2025-07-31 00:08:31] 🔧 Обробка файлу: photo_AQADvPExG2BuSEh-.jpg (.jpg)
+[2025-07-31 00:08:31] 📌 Штамп: Оплачено 2025-07-31 00:08
+[2025-07-31 00:08:31] ➡️ Викликається stamp_image()
+[2025-07-31 00:08:31] ✅ stamp_image() завершено
+[2025-07-31 00:08:31] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] ✅ Опрацьовано та переміщено: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:31] 📤 Запуск send_payment_notification()...
+[2025-07-31 00:08:32] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 00:08:32] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:32] 📦 Знайдено: file_name=photo_AQADvPExG2BuSEh-.jpg, message_id=1371
+[2025-07-31 00:08:32] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1430,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753909712,"message_thread_id":1371,"reply_to_message":{"message_id":1371,"from":{"id":7173765324,"is_bot":false,"first_name":"Pet","last_name":"Wealth business","language_code":"ru"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753788662,"photo":[{"file_id":"AgACAgIAAyEFAASXr2IwAAIFW2iIsPYmjukMhzcnMIwRexsNvF3VAAK88TEbYG5ISHy0w6P8zmWhAQADAgADcwADNgQ","file_unique_id":"AQADvPExG2BuSEh4","file_size":959,"width":67,"height":90},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFW2iIsPYmjukMhzcnMIwRexsNvF3VAAK88TEbYG5ISHy0w6P8zmWhAQADAgADbQADNgQ","file_unique_id":"AQADvPExG2BuSEhy","file_size":15007,"width":240,"height":320},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFW2iIsPYmjukMhzcnMIwRexsNvF3VAAK88TEbYG5ISHy0w6P8zmWhAQADAgADeAADNgQ","file_unique_id":"AQADvPExG2BuSEh9","file_size":71388,"width":600,"height":800},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFW2iIsPYmjukMhzcnMIwRexsNvF3VAAK88TEbYG5ISHy0w6P8zmWhAQADAgADeQADNgQ","file_unique_id":"AQADvPExG2BuSEh-","file_size":96647,"width":960,"height":1280}]},"text":"✅ Файл «photo_AQADvPExG2BuSEh-.jpg» оплачено"}}
+[2025-07-31 00:08:32] ✅ Завершено: photo_AQADvPExG2BuSEh-.jpg
+[2025-07-31 00:08:32] 🗂️ Обробка файлу 3 з 5: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:08:32] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADw_wxGwvzOUh-.jpg через C:\Program Files (x86)\FastStone Image Viewer\FSViewer.exe
+[2025-07-31 00:08:34] 🕓 Очікування закриття процесу: FSViewer.exe (23032)
+[2025-07-31 00:10:20] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:20] 🪟 Відображення вікна підтвердження оплати для photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 🟢 Натиснуто ТАК для photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 00:10:22] 🔘 Відповідь користувача: так
+[2025-07-31 00:10:22] 📥 Підтверджено оплату: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 🛠 Запуск wait_file_release()...
+[2025-07-31 00:10:22] 🛠 Запуск process_paid_file()...
+[2025-07-31 00:10:22] 🔧 Обробка файлу: photo_AQADw_wxGwvzOUh-.jpg (.jpg)
+[2025-07-31 00:10:22] 📌 Штамп: Оплачено 2025-07-31 00:10
+[2025-07-31 00:10:22] ➡️ Викликається stamp_image()
+[2025-07-31 00:10:22] ✅ stamp_image() завершено
+[2025-07-31 00:10:22] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] ✅ Опрацьовано та переміщено: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 📤 Запуск send_payment_notification()...
+[2025-07-31 00:10:22] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 00:10:22] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:22] 📦 Знайдено: file_name=photo_AQADw_wxGwvzOUh-.jpg, message_id=1361
+[2025-07-31 00:10:23] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1434,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753909823,"message_thread_id":1361,"reply_to_message":{"message_id":1361,"from":{"id":7173765324,"is_bot":false,"first_name":"Pet","last_name":"Wealth business","language_code":"ru"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753695210,"photo":[{"file_id":"AgACAgIAAyEFAASXr2IwAAIFUWiHQ-p1pGtY2aSyCJyYrqhH2veuAALD_DEbC_M5SPKazOmt5NFpAQADAgADcwADNgQ","file_unique_id":"AQADw_wxGwvzOUh4","file_size":1103,"width":67,"height":90},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFUWiHQ-p1pGtY2aSyCJyYrqhH2veuAALD_DEbC_M5SPKazOmt5NFpAQADAgADbQADNgQ","file_unique_id":"AQADw_wxGwvzOUhy","file_size":18500,"width":240,"height":320},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFUWiHQ-p1pGtY2aSyCJyYrqhH2veuAALD_DEbC_M5SPKazOmt5NFpAQADAgADeAADNgQ","file_unique_id":"AQADw_wxGwvzOUh9","file_size":93432,"width":600,"height":800},{"file_id":"AgACAgIAAyEFAASXr2IwAAIFUWiHQ-p1pGtY2aSyCJyYrqhH2veuAALD_DEbC_M5SPKazOmt5NFpAQADAgADeQADNgQ","file_unique_id":"AQADw_wxGwvzOUh-","file_size":130936,"width":960,"height":1280}]},"text":"✅ Файл «photo_AQADw_wxGwvzOUh-.jpg» оплачено"}}
+[2025-07-31 00:10:23] ✅ Завершено: photo_AQADw_wxGwvzOUh-.jpg
+[2025-07-31 00:10:23] 🗂️ Обробка файлу 4 з 5: Жиліна рах 28072025.xls
+[2025-07-31 00:10:23] 📂 Відкриття Excel-файлу: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Жиліна рах 28072025.xls
+[2025-07-31 00:11:45] ✅ Excel закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Жиліна рах 28072025.xls
+[2025-07-31 00:11:45] 🪟 Відображення вікна підтвердження оплати для Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 🟢 Натиснуто ТАК для Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 00:11:48] 🔘 Відповідь користувача: так
+[2025-07-31 00:11:48] 📥 Підтверджено оплату: Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 🛠 Запуск wait_file_release()...
+[2025-07-31 00:11:48] 🛠 Запуск process_paid_file()...
+[2025-07-31 00:11:48] 🔧 Обробка файлу: Жиліна рах 28072025.xls (.xls)
+[2025-07-31 00:11:48] 📌 Штамп: Оплачено 2025-07-31 00:11
+[2025-07-31 00:11:48] ➡️ Викликається stamp_excel()
+[2025-07-31 00:11:48] 🟩 XLS: Додано штамп у C:/Users/la/OneDrive/Рабочий стол/На оплату!/Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] ✅ stamp_excel() завершено
+[2025-07-31 00:11:48] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] ✅ Опрацьовано та переміщено: Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 📤 Запуск send_payment_notification()...
+[2025-07-31 00:11:48] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 00:11:48] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/Жиліна рах 28072025.xls
+[2025-07-31 00:11:48] 📦 Знайдено: file_name=Жиліна рах 28072025.xls, message_id=1368
+[2025-07-31 00:11:49] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1435,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753909909,"message_thread_id":1368,"reply_to_message":{"message_id":1368,"from":{"id":7173765324,"is_bot":false,"first_name":"Pet","last_name":"Wealth business","language_code":"ru"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753708124,"forward_origin":{"type":"user","sender_user":{"id":671609433,"is_bot":false,"first_name":"Igor"},"date":1753708110},"forward_from":{"id":671609433,"is_bot":false,"first_name":"Igor"},"forward_date":1753708110,"document":{"file_name":"Жиліна рах 28072025.xls","mime_type":"application/vnd.ms-excel","file_id":"BQACAgIAAyEFAASXr2IwAAIFWGiHdlzCeO9UeQG3jiyuRs0fZPpkAAJ2jAACmlI5SDWZkN6MZSt6NgQ","file_unique_id":"AgADdowAAppSOUg","file_size":20480}},"text":"✅ Файл «Жиліна рах 28072025.xls» оплачено"}}
+[2025-07-31 00:11:49] ✅ Завершено: Жиліна рах 28072025.xls
+[2025-07-31 00:11:49] 🗂️ Обробка файлу 5 з 5: Реквізити .txt
+[2025-07-31 00:11:49] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/Реквізити .txt через C:\Program Files\Notepad++\notepad++.exe
+[2025-07-31 00:11:51] 🕓 Очікування закриття процесу: notepad++.exe (21748)
+[2025-07-31 00:11:54] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Реквізити .txt
+[2025-07-31 00:11:55] 🪟 Відображення вікна підтвердження оплати для Реквізити .txt
+[2025-07-31 00:12:00] 🟡 Натиснуто НІ для Реквізити .txt
+[2025-07-31 00:12:00] 🧾 Вікно закрите, відповідь: ні
+[2025-07-31 00:12:00] 🔘 Відповідь користувача: ні
+[2025-07-31 00:12:00] ⏭️ Пропущено: Реквізити .txt
+[2025-07-31 00:12:00] 🏁 Програма завершена
+[2025-07-31 23:11:27] ⚙️ Завантажено config.json: {'.txt': 'C:\\Program Files\\Notepad++\\notepad++.exe', '.jpg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.jpeg': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe', '.png': 'C:\\Program Files (x86)\\FastStone Image Viewer\\FSViewer.exe'}
+[2025-07-31 23:11:27] 🚀 Старт програми
+[2025-07-31 23:11:32] 🗂️ Обробка файлу 1 з 2: Рахуно Льодін липень.pdf
+[2025-07-31 23:11:32] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/Рахуно Льодін липень.pdf через C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe
+[2025-07-31 23:11:34] 🕓 Очікування закриття процесу: PDFXEdit.exe (21880)
+[2025-07-31 23:12:36] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Рахуно Льодін липень.pdf
+[2025-07-31 23:12:37] 🪟 Відображення вікна підтвердження оплати для Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] 🟢 Натиснуто ТАК для Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 23:12:39] 🔘 Відповідь користувача: так
+[2025-07-31 23:12:39] 📥 Підтверджено оплату: Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] 🛠 Запуск wait_file_release()...
+[2025-07-31 23:12:39] 🛠 Запуск process_paid_file()...
+[2025-07-31 23:12:39] 🔧 Обробка файлу: Рахуно Льодін липень.pdf (.pdf)
+[2025-07-31 23:12:39] 📌 Штамп: Оплачено 2025-07-31 23:12
+[2025-07-31 23:12:39] ➡️ Викликається stamp_pdf()
+[2025-07-31 23:12:39] ✅ stamp_pdf() завершено
+[2025-07-31 23:12:39] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] ✅ Опрацьовано та переміщено: Рахуно Льодін липень.pdf
+[2025-07-31 23:12:39] 📤 Запуск send_payment_notification()...
+[2025-07-31 23:12:40] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 23:12:40] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/Рахуно Льодін липень.pdf
+[2025-07-31 23:12:40] 📦 Знайдено: file_name=Рахуно Льодін липень.pdf, message_id=1442
+[2025-07-31 23:12:40] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1444,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753992758,"message_thread_id":1442,"reply_to_message":{"message_id":1442,"from":{"id":161197876,"is_bot":false,"first_name":"Олексій","last_name":"Льодін","username":"Alexey_Raid","language_code":"uk","is_premium":true},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753992218,"document":{"file_name":"Рахуно Льодін липень.pdf","mime_type":"application/pdf","file_id":"BQACAgIAAyEFAASXr2IwAAIFomiLzBr58GVMUZ8k4rvdR-51UtETAAJVggACD-ZhSGCVQ6k4tZ9uNgQ","file_unique_id":"AgADVYIAAg_mYUg","file_size":124802},"caption":"/pay","caption_entities":[{"offset":0,"length":4,"type":"bot_command"}]},"text":"✅ Файл «Рахуно Льодін липень.pdf» оплачено"}}
+[2025-07-31 23:12:40] ✅ Завершено: Рахуно Льодін липень.pdf
+[2025-07-31 23:12:40] 🗂️ Обробка файлу 2 з 2: Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:12:40] 📂 Відкриття C:/Users/la/OneDrive/Рабочий стол/На оплату!/Рахунок № ПС-274 від 15.07.2025.pdf через C:\Program Files\Tracker Software\PDF Editor\PDFXEdit.exe
+[2025-07-31 23:12:42] 🕓 Очікування закриття процесу: PDFXEdit.exe (27108)
+[2025-07-31 23:14:18] ✅ Закрито: C:/Users/la/OneDrive/Рабочий стол/На оплату!/Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:18] 🪟 Відображення вікна підтвердження оплати для Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] 🟢 Натиснуто ТАК для Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] 🧾 Вікно закрите, відповідь: так
+[2025-07-31 23:14:20] 🔘 Відповідь користувача: так
+[2025-07-31 23:14:20] 📥 Підтверджено оплату: Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] 🛠 Запуск wait_file_release()...
+[2025-07-31 23:14:20] 🛠 Запуск process_paid_file()...
+[2025-07-31 23:14:20] 🔧 Обробка файлу: Рахунок № ПС-274 від 15.07.2025.pdf (.pdf)
+[2025-07-31 23:14:20] 📌 Штамп: Оплачено 2025-07-31 23:14
+[2025-07-31 23:14:20] ➡️ Викликається stamp_pdf()
+[2025-07-31 23:14:20] ✅ stamp_pdf() завершено
+[2025-07-31 23:14:20] 📦 Спроба перемістити файл до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] 📁 Переміщено до: C:/Users/la/OneDrive/Рабочий стол/На оплату!\Оплачено\Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] ✅ Опрацьовано та переміщено: Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:20] 📤 Запуск send_payment_notification()...
+[2025-07-31 23:14:20] ✅ Підключено до БД: 127.0.0.1:3307/petwealth
+[2025-07-31 23:14:20] 🔍 Пошук у telegram_files: file_path = /root/Automation/Paid/Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:21] 📦 Знайдено: file_name=Рахунок № ПС-274 від 15.07.2025.pdf, message_id=1440
+[2025-07-31 23:14:21] 📤 Telegram: 200 {"ok":true,"result":{"message_id":1445,"from":{"id":7129977699,"is_bot":true,"first_name":"paid_petwealth","username":"paidPW_bot"},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753992859,"message_thread_id":1440,"reply_to_message":{"message_id":1440,"from":{"id":161197876,"is_bot":false,"first_name":"Олексій","last_name":"Льодін","username":"Alexey_Raid","language_code":"uk","is_premium":true},"chat":{"id":-1002544853552,"title":"Оплати Pet Wealth","type":"supergroup"},"date":1753992167,"document":{"file_name":"Рахунок № ПС-274 від 15.07.2025.pdf","mime_type":"application/pdf","file_id":"BQACAgIAAyEFAASXr2IwAAIFoGiLy-fXF7hZb4n2YKXroCBSXTPZAAJTggACD-ZhSFAXbDR6WbyNNgQ","file_unique_id":"AgADU4IAAg_mYUg","file_size":207300},"caption":"/pay","caption_entities":[{"offset":0,"length":4,"type":"bot_command"}]},"text":"✅ Файл «Рахунок № ПС-274 від 15.07.2025.pdf» оплачено"}}
+[2025-07-31 23:14:21] ✅ Завершено: Рахунок № ПС-274 від 15.07.2025.pdf
+[2025-07-31 23:14:21] 🏁 Програма завершена

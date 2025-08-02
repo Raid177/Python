@@ -32,10 +32,10 @@ service = build('sheets', 'v4', credentials=creds)
 
 # Підключення до БД
 connection = pymysql.connect(
-    host=os.getenv("DB_HOST"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_DATABASE"),
+    host=os.getenv("DB_HOST_Serv"),
+    user=os.getenv("DB_USER_Serv"),
+    password=os.getenv("DB_PASSWORD_Serv"),
+    database=os.getenv("DB_DATABASE_Serv"),
     charset="utf8mb4",
     cursorclass=pymysql.cursors.DictCursor
 )

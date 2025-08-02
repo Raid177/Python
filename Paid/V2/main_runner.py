@@ -9,6 +9,33 @@ import winreg
 import time
 import psutil
 import json
+import sys
+import os
+import psutil
+
+# # === Блокуємо запуск другого екземпляру ===
+# def is_already_running():
+#     current_pid = os.getpid()
+#     current_name = os.path.basename(sys.argv[0]).lower()
+
+#     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
+#         try:
+#             if proc.info['pid'] != current_pid:
+#                 cmdline = proc.info.get('cmdline')
+#                 if cmdline and current_name in " ".join(cmdline).lower():
+#                     return True
+#         except (psutil.NoSuchProcess, psutil.AccessDenied):
+#             continue
+#     return False
+
+
+# if is_already_running():
+#     from tkinter import messagebox, Tk
+#     root = Tk()
+#     root.withdraw()
+#     messagebox.showinfo("Запущено", "Програма вже запущена!")
+#     sys.exit()
+
 
 # === 📄 Завантаження конфігурації програм перегляду ===
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")

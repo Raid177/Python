@@ -196,14 +196,18 @@ sheet.values().update(
 print("[OK] Дані оновлені у Google Sheets.")
 
 # === Крок 11. Завантажуємо у БД ===
+# Завантаження .env
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_DATABASE = os.getenv("DB_DATABASE")
+
+DB_HOST = os.getenv("DB_HOST_Serv")
+DB_PORT = int(os.getenv("DB_PORT_Serv", 3307))  # з дефолтом на всякий випадок
+DB_USER = os.getenv("DB_USER_Serv")
+DB_PASSWORD = os.getenv("DB_PASSWORD_Serv")
+DB_DATABASE = os.getenv("DB_DATABASE_Serv")
 
 connection = pymysql.connect(
     host=DB_HOST,
+    port=DB_PORT,
     user=DB_USER,
     password=DB_PASSWORD,
     database=DB_DATABASE

@@ -54,13 +54,15 @@ from dotenv import load_dotenv
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_DATABASE"),
+    "host": os.getenv("DB_HOST_Serv"),
+    "port": int(os.getenv("DB_PORT_Serv", 3306)),  # ✅ дефолт — 3306
+    "user": os.getenv("DB_USER_Serv"),
+    "password": os.getenv("DB_PASSWORD_Serv"),
+    "database": os.getenv("DB_DATABASE_Serv"),
     "charset": "utf8mb4",
     "cursorclass": pymysql.cursors.DictCursor
 }
+
 
 SPREADSHEET_ID = "19mfpQ8XgUSMpGNKQpLtL9ek5OrLj2UlvgUVR39yWubw"
 SHEET_NAME = "фкт_РівніСпівробітників"
