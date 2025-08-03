@@ -1382,3 +1382,430 @@
 [2025-08-02 17:00:40] [FINISH] Загальний час виконання: 105.59 сетакк.
 [2025-08-02 17:00:41] [ERROR] Повторний запуск завершився з помилкою: 1
 [2025-08-02 17:00:41] [FINISH] Загальний час виконання: 146.46 сетакк.
+================================================================================
+[2025-08-03 01:11:17] Запущено з командою: c:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/run_all.py
+================================================================================
+[2025-08-03 01:11:17] [RUN] Виконую скрипт: import_enote_reference.py
+------------------------------------------------------------
+[2025-08-03 01:11:20] [OK] Отримано 6 записів з Єноту
+[2025-08-03 01:11:20] [DELETE] Дані на листі 'дов_АнЗП' очищено.
+[2025-08-03 01:11:20] [OK] Дані успішно оновлено на листі 'дов_АнЗП'.
+[2025-08-03 01:11:20] [TIME] Час виконання скрипта import_enote_reference.py: 3.55 сек.
+[2025-08-03 01:11:20] [RUN] Виконую скрипт: auto_fill_idx.py
+------------------------------------------------------------
+[2025-08-03 01:11:40] [WARN] Нічого не оновлено
+[2025-08-03 01:11:40] [TIME] Час виконання скрипта auto_fill_idx.py: 19.97 сек.
+[2025-08-03 01:11:40] [RUN] Виконую скрипт: diagnose_sheets.py
+------------------------------------------------------------
+[2025-08-03 01:11:43] Traceback (most recent call last):
+[2025-08-03 01:11:43]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 644, in connect
+[2025-08-03 01:11:43]     sock = socket.create_connection(
+[2025-08-03 01:11:43]            ^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:11:43]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\socket.py", line 853, in create_connection
+[2025-08-03 01:11:43]     raise exceptions[0]
+[2025-08-03 01:11:43]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\socket.py", line 838, in create_connection
+[2025-08-03 01:11:43]     sock.connect(sa)
+[2025-08-03 01:11:43] ConnectionRefusedError: [WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение
+[2025-08-03 01:11:43] 
+[2025-08-03 01:11:43] During handling of the above exception, another exception occurred:
+[2025-08-03 01:11:43] 
+[2025-08-03 01:11:43] Traceback (most recent call last):
+[2025-08-03 01:11:43]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\diagnose_sheets.py", line 34, in <module>
+[2025-08-03 01:11:43]     connection = pymysql.connect(
+[2025-08-03 01:11:43]                  ^^^^^^^^^^^^^^^^
+[2025-08-03 01:11:43]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 358, in __init__
+[2025-08-03 01:11:43]     self.connect()
+[2025-08-03 01:11:43]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 711, in connect
+[2025-08-03 01:11:43]     raise exc
+[2025-08-03 01:11:43] pymysql.err.OperationalError: (2003, "Can't connect to MySQL server on '127.0.0.1' ([WinError 10061] Подключение не установлено, т.к. конечный компьютер отверг запрос на подключение)")
+[2025-08-03 01:11:43] [TIME] Час виконання скрипта diagnose_sheets.py: 2.58 сек.
+[2025-08-03 01:11:43] [ERROR] Помилка виконання: diagnose_sheets.py. Зупиняємо.
+[2025-08-03 01:11:43] [FINISH] Загальний час виконання: 26.1 сетакк.
+================================================================================
+[2025-08-03 01:25:32] Запущено з командою: c:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/run_all.py
+================================================================================
+[2025-08-03 01:25:32] [RUN] Виконую скрипт: import_enote_reference.py
+------------------------------------------------------------
+[2025-08-03 01:25:34] [OK] Отримано 6 записів з Єноту
+[2025-08-03 01:25:34] [DELETE] Дані на листі 'дов_АнЗП' очищено.
+[2025-08-03 01:25:34] [OK] Дані успішно оновлено на листі 'дов_АнЗП'.
+[2025-08-03 01:25:34] [TIME] Час виконання скрипта import_enote_reference.py: 2.96 сек.
+[2025-08-03 01:25:34] [RUN] Виконую скрипт: auto_fill_idx.py
+------------------------------------------------------------
+[2025-08-03 01:25:56] [WARN] Нічого не оновлено
+[2025-08-03 01:25:56] [TIME] Час виконання скрипта auto_fill_idx.py: 21.58 сек.
+[2025-08-03 01:25:56] [RUN] Виконую скрипт: diagnose_sheets.py
+------------------------------------------------------------
+[2025-08-03 01:27:13] 
+[2025-08-03 01:27:13] [LOG] Початок перевірки графіка — 2025-08-03 01:25:57
+[2025-08-03 01:27:13] [LOG] Отримано 31 співробітників з Єнота
+[2025-08-03 01:27:13] [LOG] Оновлено дов_Співробітники — 31 рядків
+[2025-08-03 01:27:13] [LOG] Починаємо перевірку клітинок з H2 по AL...
+[2025-08-03 01:27:13] [LOG] Перевірка завершена. Некоректних клітинок: 0, очищено форматів: 275
+[2025-08-03 01:27:13] 
+[2025-08-03 01:27:13] [TIME] Час виконання скрипта diagnose_sheets.py: 77.09 сек.
+[2025-08-03 01:27:13] [RUN] Виконую скрипт: fill_flat_schedule.py
+------------------------------------------------------------
+[2025-08-03 01:28:00] [INFO] Авторизація пройдена. Завантаження існуючих даних...
+[2025-08-03 01:28:00] [OK] Таблиця очищена та заголовок додано.
+[2025-08-03 01:28:00] [INFO] Формування нових рядків...
+[2025-08-03 01:28:00] [OK] Додано 275 актуальних рядків.
+[2025-08-03 01:28:00] [INFO] Перевірка на конфлікти...
+[2025-08-03 01:28:00] [INFO] Виявлено 0 конфлікт(ів)
+[2025-08-03 01:28:00] [INFO] Оновлюємо колонку 'Error'...
+[2025-08-03 01:28:00] [INFO] Формуємо перекреслення...
+[2025-08-03 01:28:00] 
+[2025-08-03 01:28:00] [OK] Конфліктів не знайдено.
+[2025-08-03 01:28:00] 
+[2025-08-03 01:28:00] [OK] Завершено: таблицю оновлено та перевірено на перехльости.
+[2025-08-03 01:28:00] [TIME] Час виконання скрипта fill_flat_schedule.py: 46.69 сек.
+[2025-08-03 01:28:00] [RUN] Виконую скрипт: worktime.py
+------------------------------------------------------------
+[2025-08-03 01:28:17] [INFO] Нічого не видалено.
+[2025-08-03 01:28:17] [OK] Додано: 0, Оновлено: 275, Пропущено: 0
+[2025-08-03 01:28:17] [TIME] Час виконання скрипта worktime.py: 17.61 сек.
+[2025-08-03 01:28:17] [RUN] Виконую скрипт: sync_fkt_UmoviOplaty.py
+------------------------------------------------------------
+[2025-08-03 01:28:32] [START] Скрипт запущено: 2025-08-03 01:28:18
+[2025-08-03 01:28:32] [OK] Отримано 21 рядків із Google Sheets.
+[2025-08-03 01:28:32] [OK] Колонка ID оновлена у Google Sheets.
+[2025-08-03 01:28:32] [OK] Діапазони захищено у Google Sheets.
+[2025-08-03 01:28:32] [OK] Всього змінено ДатаЗакінчення у 0 рядках.
+[2025-08-03 01:28:32] [OK] Rule_ID стабільно присвоєно для всіх рядків.
+[2025-08-03 01:28:32] [OK] Дані оновлені у Google Sheets.
+[2025-08-03 01:28:32] [OK] Дані перезаписані у БД (zp_фктУмовиОплати). Вставлено 21 рядків.
+[2025-08-03 01:28:32] [TIME] Час виконання скрипта sync_fkt_UmoviOplaty.py: 14.4 сек.
+[2025-08-03 01:28:32] [RUN] Виконую скрипт: sync_умови_рівень.py
+------------------------------------------------------------
+[2025-08-03 01:29:34] [2025-08-03 01:28:33] [SYNC] Початок синхронізації рівнів співробітників...
+[2025-08-03 01:29:34] [2025-08-03 01:28:35] [OK] Google Sheets оновлено!
+[2025-08-03 01:29:34] [2025-08-03 01:28:37] [OK] Завантажено: 1 додано, 0 оновлено.
+[2025-08-03 01:29:34] [2025-08-03 01:28:37] [INFO] Початок розрахунку збігів у zp_worktime...
+[2025-08-03 01:29:34] [2025-08-03 01:29:34] [OK] Обробка завершена!
+[2025-08-03 01:29:34] [TIME] Час виконання скрипта sync_умови_рівень.py: 62.58 сек.
+[2025-08-03 01:29:34] [RUN] Виконую скрипт: zp_sales_salary_new.py
+------------------------------------------------------------
+[2025-08-03 01:29:37] HOST: 127.0.0.1
+[2025-08-03 01:29:37] PORT: 3307
+[2025-08-03 01:29:37] USER: olexii_raid
+[2025-08-03 01:29:37] PASS: Z4vBrpT7@9uLMxWg
+[2025-08-03 01:29:37] DB: petwealth
+[2025-08-03 01:29:37] [INFO] Виконуємо SQL-запит...
+[2025-08-03 01:29:37] Traceback (most recent call last):
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1963, in _exec_single_context
+[2025-08-03 01:29:37]     self.dialect.do_execute(
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\default.py", line 943, in do_execute
+[2025-08-03 01:29:37]     cursor.execute(statement, parameters)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\cursors.py", line 153, in execute
+[2025-08-03 01:29:37]     result = self._query(query)
+[2025-08-03 01:29:37]              ^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\cursors.py", line 322, in _query
+[2025-08-03 01:29:37]     conn.query(q)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 558, in query
+[2025-08-03 01:29:37]     self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+[2025-08-03 01:29:37]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 822, in _read_query_result
+[2025-08-03 01:29:37]     result.read()
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 1200, in read
+[2025-08-03 01:29:37]     first_packet = self.connection._read_packet()
+[2025-08-03 01:29:37]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 772, in _read_packet
+[2025-08-03 01:29:37]     packet.raise_for_error()
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\protocol.py", line 221, in raise_for_error
+[2025-08-03 01:29:37]     err.raise_mysql_exception(self._data)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\err.py", line 143, in raise_mysql_exception
+[2025-08-03 01:29:37]     raise errorclass(errno, errval)
+[2025-08-03 01:29:37] pymysql.err.OperationalError: (1142, "SELECT command denied to user 'olexii_raid'@'172.18.0.1' for table 'et_AccumulationRegister_Продажи_RecordType'")
+[2025-08-03 01:29:37] 
+[2025-08-03 01:29:37] The above exception was the direct cause of the following exception:
+[2025-08-03 01:29:37] 
+[2025-08-03 01:29:37] Traceback (most recent call last):
+[2025-08-03 01:29:37]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\zp_sales_salary_new.py", line 158, in <module>
+[2025-08-03 01:29:37]     df = pd.read_sql(sql_query, con=engine)
+[2025-08-03 01:29:37]          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\io\sql.py", line 734, in read_sql
+[2025-08-03 01:29:37]     return pandas_sql.read_query(
+[2025-08-03 01:29:37]            ^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\io\sql.py", line 1839, in read_query
+[2025-08-03 01:29:37]     result = self.execute(sql, params)
+[2025-08-03 01:29:37]              ^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pandas\io\sql.py", line 1662, in execute
+[2025-08-03 01:29:37]     return self.con.exec_driver_sql(sql, *args)
+[2025-08-03 01:29:37]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1775, in exec_driver_sql
+[2025-08-03 01:29:37]     ret = self._execute_context(
+[2025-08-03 01:29:37]           ^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1842, in _execute_context
+[2025-08-03 01:29:37]     return self._exec_single_context(
+[2025-08-03 01:29:37]            ^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1982, in _exec_single_context
+[2025-08-03 01:29:37]     self._handle_dbapi_exception(
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 2351, in _handle_dbapi_exception
+[2025-08-03 01:29:37]     raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\base.py", line 1963, in _exec_single_context
+[2025-08-03 01:29:37]     self.dialect.do_execute(
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\sqlalchemy\engine\default.py", line 943, in do_execute
+[2025-08-03 01:29:37]     cursor.execute(statement, parameters)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\cursors.py", line 153, in execute
+[2025-08-03 01:29:37]     result = self._query(query)
+[2025-08-03 01:29:37]              ^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\cursors.py", line 322, in _query
+[2025-08-03 01:29:37]     conn.query(q)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 558, in query
+[2025-08-03 01:29:37]     self._affected_rows = self._read_query_result(unbuffered=unbuffered)
+[2025-08-03 01:29:37]                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 822, in _read_query_result
+[2025-08-03 01:29:37]     result.read()
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 1200, in read
+[2025-08-03 01:29:37]     first_packet = self.connection._read_packet()
+[2025-08-03 01:29:37]                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\connections.py", line 772, in _read_packet
+[2025-08-03 01:29:37]     packet.raise_for_error()
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\protocol.py", line 221, in raise_for_error
+[2025-08-03 01:29:37]     err.raise_mysql_exception(self._data)
+[2025-08-03 01:29:37]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\pymysql\err.py", line 143, in raise_mysql_exception
+[2025-08-03 01:29:37]     raise errorclass(errno, errval)
+[2025-08-03 01:29:37] sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1142, "SELECT command denied to user 'olexii_raid'@'172.18.0.1' for table 'et_AccumulationRegister_Продажи_RecordType'")
+[2025-08-03 01:29:37] [SQL:
+[2025-08-03 01:29:37] WITH our_table AS (
+[2025-08-03 01:29:37]     -- Призначив (Сотрудник)
+[2025-08-03 01:29:37]     SELECT
+[2025-08-03 01:29:37]         pr.Recorder,
+[2025-08-03 01:29:37]         LineNumber,
+[2025-08-03 01:29:37]         Period,
+[2025-08-03 01:29:37]         Recorder_Type,
+[2025-08-03 01:29:37]         Номенклатура_Key,
+[2025-08-03 01:29:37]         nom.Description AS Ном_Description,
+[2025-08-03 01:29:37]         nom.АналитикаПоЗарплате_Key,
+[2025-08-03 01:29:37]         an.Description AS Ан_Description,
+[2025-08-03 01:29:37]         nom.ВидНоменклатуры,
+[2025-08-03 01:29:37]         nom.Вид_Key,
+[2025-08-03 01:29:37]         pr.Сотрудник AS Співробітник,
+[2025-08-03 01:29:37]         sp.Графік,
+[2025-08-03 01:29:37]         'Призначив' AS Role,
+[2025-08-03 01:29:37]         Количество,
+[2025-08-03 01:29:37]         КоличествоОплачено,
+[2025-08-03 01:29:37]         Стоимость,
+[2025-08-03 01:29:37]         СтоимостьБезСкидок,
+[2025-08-03 01:29:37]         СуммаЗатрат,
+[2025-08-03 01:29:37]         (Стоимость - СуммаЗатрат) AS ВаловийПрибуток
+[2025-08-03 01:29:37]     FROM wealth0_analytics.et_AccumulationRegister_Продажи_RecordType AS pr
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.et_Catalog_Номенклатура AS nom
+[2025-08-03 01:29:37]         ON pr.Номенклатура_Key = nom.Ref_Key
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.et_Catalog_АналитикаПоЗарплате AS an
+[2025-08-03 01:29:37]         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
+[2025-08-03 01:29:37]         ON pr.Сотрудник = sp.Ref_Key
+[2025-08-03 01:29:37]     WHERE pr.Active = 1 AND Period >= '2025-06-01'
+[2025-08-03 01:29:37] 
+[2025-08-03 01:29:37]     UNION ALL
+[2025-08-03 01:29:37] 
+[2025-08-03 01:29:37]     -- Виконавець (Исполнитель)
+[2025-08-03 01:29:37]     SELECT
+[2025-08-03 01:29:37]         pr.Recorder,
+[2025-08-03 01:29:37]         LineNumber,
+[2025-08-03 01:29:37]         Period,
+[2025-08-03 01:29:37]         Recorder_Type,
+[2025-08-03 01:29:37]         Номенклатура_Key,
+[2025-08-03 01:29:37]         nom.Description AS Ном_Description,
+[2025-08-03 01:29:37]         nom.АналитикаПоЗарплате_Key,
+[2025-08-03 01:29:37]         an.Description AS Ан_Description,
+[2025-08-03 01:29:37]         nom.ВидНоменклатуры,
+[2025-08-03 01:29:37]         nom.Вид_Key,
+[2025-08-03 01:29:37]         pr.Исполнитель AS Співробітник,
+[2025-08-03 01:29:37]         sp.Графік,
+[2025-08-03 01:29:37]         'Виконавець' AS Role,
+[2025-08-03 01:29:37]         Количество,
+[2025-08-03 01:29:37]         КоличествоОплачено,
+[2025-08-03 01:29:37]         Стоимость,
+[2025-08-03 01:29:37]         СтоимостьБезСкидок,
+[2025-08-03 01:29:37]         СуммаЗатрат,
+[2025-08-03 01:29:37]         (Стоимость - СуммаЗатрат) AS ВаловийПрибуток
+[2025-08-03 01:29:37]     FROM wealth0_analytics.et_AccumulationRegister_Продажи_RecordType AS pr
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.et_Catalog_Номенклатура AS nom
+[2025-08-03 01:29:37]         ON pr.Номенклатура_Key = nom.Ref_Key
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.et_Catalog_АналитикаПоЗарплате AS an
+[2025-08-03 01:29:37]         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
+[2025-08-03 01:29:37]     LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
+[2025-08-03 01:29:37]         ON pr.Исполнитель = sp.Ref_Key
+[2025-08-03 01:29:37]     WHERE pr.Active = 1 AND Period >= '2025-06-01'
+[2025-08-03 01:29:37] )
+[2025-08-03 01:29:37] SELECT
+[2025-08-03 01:29:37]     o.*,
+[2025-08-03 01:29:37]     w.position,
+[2025-08-03 01:29:37]     w.level,
+[2025-08-03 01:29:37]     w.department,
+[2025-08-03 01:29:37]     w.shift_type,
+[2025-08-03 01:29:37]     w.Rule_ID,
+[2025-08-03 01:29:37]     w.shift_uuid,  -- [NEW] Додаємо shift_uuid з zp_worktime
+[2025-08-03 01:29:37]     CASE
+[2025-08-03 01:29:37]         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив
+[2025-08-03 01:29:37]         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав
+[2025-08-03 01:29:37]         ELSE 0
+[2025-08-03 01:29:37]     END AS ВідсотокПремії,
+[2025-08-03 01:29:37]     ROUND(CASE
+[2025-08-03 01:29:37]         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив * o.Стоимость
+[2025-08-03 01:29:37]         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав * o.Стоимость
+[2025-08-03 01:29:37]         ELSE 0
+[2025-08-03 01:29:37]     END, 2) AS ПреміяСтоимость,
+[2025-08-03 01:29:37]     ROUND(CASE
+[2025-08-03 01:29:37]         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив * o.СтоимостьБезСкидок
+[2025-08-03 01:29:37]         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав * o.СтоимостьБезСкидок
+[2025-08-03 01:29:37]         ELSE 0
+[2025-08-03 01:29:37]     END, 2) AS ПреміяСтоимостьБезСкидок,
+[2025-08-03 01:29:37]     ROUND(CASE
+[2025-08-03 01:29:37]         WHEN o.Role = 'Призначив' THEN pay.Ан_Призначив * o.ВаловийПрибуток
+[2025-08-03 01:29:37]         WHEN o.Role = 'Виконавець' THEN pay.Ан_Виконав * o.ВаловийПрибуток
+[2025-08-03 01:29:37]         ELSE 0
+[2025-08-03 01:29:37]     END, 2) AS ПреміяВаловийПрибуток
+[2025-08-03 01:29:37] FROM our_table o
+[2025-08-03 01:29:37] LEFT JOIN wealth0_analytics.zp_worktime w
+[2025-08-03 01:29:37]     ON o.Графік = w.last_name
+[2025-08-03 01:29:37]     AND o.Period >= w.time_start
+[2025-08-03 01:29:37]     AND o.Period < w.time_end
+[2025-08-03 01:29:37] LEFT JOIN wealth0_analytics.zp_фктУмовиОплати pay
+[2025-08-03 01:29:37]     ON w.Rule_ID = pay.Rule_ID
+[2025-08-03 01:29:37]     AND pay.АнЗП = o.Ан_Description
+[2025-08-03 01:29:37]     AND (pay.ДатаЗакінчення IS NULL OR o.Period < pay.ДатаЗакінчення)
+[2025-08-03 01:29:37] WHERE o.Period >= '2025-05-01'
+[2025-08-03 01:29:37] ]
+[2025-08-03 01:29:37] (Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-08-03 01:29:37] [TIME] Час виконання скрипта zp_sales_salary_new.py: 3.01 сек.
+[2025-08-03 01:29:37] [ERROR] Помилка виконання: zp_sales_salary_new.py. Зупиняємо.
+[2025-08-03 01:29:37] [FINISH] Загальний час виконання: 245.95 сетакк.
+================================================================================
+[2025-08-03 01:37:27] Запущено з командою: c:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/run_all.py
+================================================================================
+[2025-08-03 01:37:27] [RUN] Виконую скрипт: import_enote_reference.py
+------------------------------------------------------------
+[2025-08-03 01:37:30] [OK] Отримано 6 записів з Єноту
+[2025-08-03 01:37:30] [DELETE] Дані на листі 'дов_АнЗП' очищено.
+[2025-08-03 01:37:30] [OK] Дані успішно оновлено на листі 'дов_АнЗП'.
+[2025-08-03 01:37:30] [TIME] Час виконання скрипта import_enote_reference.py: 3.42 сек.
+[2025-08-03 01:37:30] [RUN] Виконую скрипт: auto_fill_idx.py
+------------------------------------------------------------
+[2025-08-03 01:37:52] [WARN] Нічого не оновлено
+[2025-08-03 01:37:52] [TIME] Час виконання скрипта auto_fill_idx.py: 21.63 сек.
+[2025-08-03 01:37:52] [RUN] Виконую скрипт: diagnose_sheets.py
+------------------------------------------------------------
+[2025-08-03 01:39:12] 
+[2025-08-03 01:39:12] [LOG] Початок перевірки графіка — 2025-08-03 01:37:53
+[2025-08-03 01:39:12] [LOG] Отримано 31 співробітників з Єнота
+[2025-08-03 01:39:12] [LOG] Оновлено дов_Співробітники — 31 рядків
+[2025-08-03 01:39:12] [LOG] Починаємо перевірку клітинок з H2 по AL...
+[2025-08-03 01:39:12] [LOG] Перевірка завершена. Некоректних клітинок: 0, очищено форматів: 275
+[2025-08-03 01:39:12] 
+[2025-08-03 01:39:12] [TIME] Час виконання скрипта diagnose_sheets.py: 80.53 сек.
+[2025-08-03 01:39:12] [RUN] Виконую скрипт: fill_flat_schedule.py
+------------------------------------------------------------
+[2025-08-03 01:40:00] [INFO] Авторизація пройдена. Завантаження існуючих даних...
+[2025-08-03 01:40:00] [OK] Таблиця очищена та заголовок додано.
+[2025-08-03 01:40:00] [INFO] Формування нових рядків...
+[2025-08-03 01:40:00] [OK] Додано 275 актуальних рядків.
+[2025-08-03 01:40:00] [INFO] Перевірка на конфлікти...
+[2025-08-03 01:40:00] [INFO] Виявлено 0 конфлікт(ів)
+[2025-08-03 01:40:00] [INFO] Оновлюємо колонку 'Error'...
+[2025-08-03 01:40:00] [INFO] Формуємо перекреслення...
+[2025-08-03 01:40:00] 
+[2025-08-03 01:40:00] [OK] Конфліктів не знайдено.
+[2025-08-03 01:40:00] 
+[2025-08-03 01:40:00] [OK] Завершено: таблицю оновлено та перевірено на перехльости.
+[2025-08-03 01:40:00] [TIME] Час виконання скрипта fill_flat_schedule.py: 47.78 сек.
+[2025-08-03 01:40:00] [RUN] Виконую скрипт: worktime.py
+------------------------------------------------------------
+[2025-08-03 01:40:01] Traceback (most recent call last):
+[2025-08-03 01:40:01]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\worktime.py", line 179, in <module>
+[2025-08-03 01:40:01]     main()
+[2025-08-03 01:40:01]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\worktime.py", line 78, in main
+[2025-08-03 01:40:01]     ).execute()
+[2025-08-03 01:40:01]       ^^^^^^^^^
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\googleapiclient\_helpers.py", line 130, in positional_wrapper
+[2025-08-03 01:40:01]     return wrapped(*args, **kwargs)
+[2025-08-03 01:40:01]            ^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\googleapiclient\http.py", line 923, in execute
+[2025-08-03 01:40:01]     resp, content = _retry_request(
+[2025-08-03 01:40:01]                     ^^^^^^^^^^^^^^^
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\googleapiclient\http.py", line 191, in _retry_request
+[2025-08-03 01:40:01]     resp, content = http.request(uri, method, *args, **kwargs)
+[2025-08-03 01:40:01]                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google_auth_httplib2.py", line 209, in request
+[2025-08-03 01:40:01]     self.credentials.before_request(self._request, method, uri, request_headers)
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\auth\credentials.py", line 239, in before_request
+[2025-08-03 01:40:01]     self._blocking_refresh(request)
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\auth\credentials.py", line 202, in _blocking_refresh
+[2025-08-03 01:40:01]     self.refresh(request)
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\oauth2\credentials.py", line 409, in refresh
+[2025-08-03 01:40:01]     ) = reauth.refresh_grant(
+[2025-08-03 01:40:01]         ^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\oauth2\reauth.py", line 366, in refresh_grant
+[2025-08-03 01:40:01]     _client._handle_error_response(response_data, retryable_error)
+[2025-08-03 01:40:01]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\site-packages\google\oauth2\_client.py", line 69, in _handle_error_response
+[2025-08-03 01:40:01]     raise exceptions.RefreshError(
+[2025-08-03 01:40:01] google.auth.exceptions.RefreshError: ('invalid_scope: Bad Request', {'error': 'invalid_scope', 'error_description': 'Bad Request'})
+[2025-08-03 01:40:01] [TIME] Час виконання скрипта worktime.py: 1.54 сек.
+[2025-08-03 01:40:01] [ERROR] Проблема з авторизацією Google у скрипті: worktime.py.
+[2025-08-03 01:40:35] [RUN] Виконую скрипт: authorize.py
+------------------------------------------------------------
+[2025-08-03 01:40:43] [DELETE] Стерто старий token.json
+[2025-08-03 01:40:43] [INFO] Відкриваємо браузер для авторизації...
+[2025-08-03 01:40:43] [INFO] Якщо браузер не відкриється автоматично, запустіть цей скрипт окремо вручну.
+[2025-08-03 01:40:43] Please visit this URL to authorize this application: https://accounts.google.com/o/oauth2/auth?response_type=code&client_id=70000851824-cpneiii8cofvrugulqqco93kpsgp6ihb.apps.googleusercontent.com&redirect_uri=http%3A%2F%2Flocalhost%3A59770%2F&scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fspreadsheets+https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fdrive.metadata.readonly&state=kkZTSAmGeJc58Gv0QeDnw8yMUe36Ey&access_type=offline
+[2025-08-03 01:40:43] [OK] Авторизація завершена.
+[2025-08-03 01:40:43] [INFO] Отримані scopes: ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive.metadata.readonly']
+[2025-08-03 01:40:43] [TIME] Час виконання скрипта authorize.py: 8.32 сек.
+[2025-08-03 01:40:43] [OK] Авторизація Google пройдена.
+[2025-08-03 01:40:48] [SYNC] Повторний запуск з тими ж параметрами...
+================================================================================
+[2025-08-03 01:40:48] Запущено з командою: c:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/run_all.py
+================================================================================
+[2025-08-03 01:40:48] [RUN] Виконую скрипт: import_enote_reference.py
+------------------------------------------------------------
+[2025-08-03 01:40:51] [OK] Отримано 6 записів з Єноту
+[2025-08-03 01:40:51] [DELETE] Дані на листі 'дов_АнЗП' очищено.
+[2025-08-03 01:40:51] [OK] Дані успішно оновлено на листі 'дов_АнЗП'.
+[2025-08-03 01:40:51] [TIME] Час виконання скрипта import_enote_reference.py: 2.73 сек.
+[2025-08-03 01:40:51] [RUN] Виконую скрипт: auto_fill_idx.py
+------------------------------------------------------------
+[2025-08-03 01:41:12] [WARN] Нічого не оновлено
+[2025-08-03 01:41:12] [TIME] Час виконання скрипта auto_fill_idx.py: 20.85 сек.
+[2025-08-03 01:41:12] [RUN] Виконую скрипт: diagnose_sheets.py
+------------------------------------------------------------
+[2025-08-03 01:42:29] 
+[2025-08-03 01:42:29] [LOG] Початок перевірки графіка — 2025-08-03 01:41:13
+[2025-08-03 01:42:29] [LOG] Отримано 31 співробітників з Єнота
+[2025-08-03 01:42:29] [LOG] Оновлено дов_Співробітники — 31 рядків
+[2025-08-03 01:42:29] [LOG] Починаємо перевірку клітинок з H2 по AL...
+[2025-08-03 01:42:29] [LOG] Перевірка завершена. Некоректних клітинок: 0, очищено форматів: 275
+[2025-08-03 01:42:29] 
+[2025-08-03 01:42:30] [TIME] Час виконання скрипта diagnose_sheets.py: 77.87 сек.
+[2025-08-03 01:42:30] [RUN] Виконую скрипт: fill_flat_schedule.py
+------------------------------------------------------------
+[2025-08-03 01:43:12] [INFO] Авторизація пройдена. Завантаження існуючих даних...
+[2025-08-03 01:43:12] [OK] Таблиця очищена та заголовок додано.
+[2025-08-03 01:43:12] [INFO] Формування нових рядків...
+[2025-08-03 01:43:12] [OK] Додано 275 актуальних рядків.
+[2025-08-03 01:43:12] [INFO] Перевірка на конфлікти...
+[2025-08-03 01:43:12] [INFO] Виявлено 0 конфлікт(ів)
+[2025-08-03 01:43:12] [INFO] Оновлюємо колонку 'Error'...
+[2025-08-03 01:43:12] [INFO] Формуємо перекреслення...
+[2025-08-03 01:43:12] 
+[2025-08-03 01:43:12] [OK] Конфліктів не знайдено.
+[2025-08-03 01:43:12] 
+[2025-08-03 01:43:12] [OK] Завершено: таблицю оновлено та перевірено на перехльости.
+[2025-08-03 01:43:12] [TIME] Час виконання скрипта fill_flat_schedule.py: 42.87 сек.
+[2025-08-03 01:43:12] [RUN] Виконую скрипт: worktime.py
+------------------------------------------------------------
+[2025-08-03 01:43:33] Traceback (most recent call last):
+[2025-08-03 01:43:33]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\worktime.py", line 179, in <module>
+[2025-08-03 01:43:33]     main()
+[2025-08-03 01:43:33]   File "c:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\Google\worktime.py", line 170, in main
+[2025-08-03 01:43:33]     print(f"\U0001f5d1 Видалено: {len(to_delete)}")
+[2025-08-03 01:43:33]   File "C:\Users\la\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1251.py", line 19, in encode
+[2025-08-03 01:43:33]     return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+[2025-08-03 01:43:33]            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[2025-08-03 01:43:33] UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f5d1' in position 0: character maps to <undefined>
+[2025-08-03 01:43:33] [TIME] Час виконання скрипта worktime.py: 20.82 сек.
+[2025-08-03 01:43:33] [ERROR] Помилка виконання: worktime.py. Зупиняємо.
+[2025-08-03 01:43:33] [FINISH] Загальний час виконання: 165.16 сетакк.
+[2025-08-03 01:43:33] [ERROR] Повторний запуск завершився з помилкою: 1
+[2025-08-03 01:43:33] [FINISH] Загальний час виконання: 366.68 сетакк.

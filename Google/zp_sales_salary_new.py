@@ -13,7 +13,7 @@
 Інструкції:
 1. Налаштуйте змінні .env для доступу до БД.
 2. Запустіть скрипт: python zp_sales_salary_loader.py
-3. Перевірте дані у таблиці wealth0_analytics.zp_sales_salary
+3. Перевірте дані у таблиці petwealth.zp_sales_salary
 """
 
 import os
@@ -31,11 +31,6 @@ DB_PASSWORD = os.getenv("DB_PASSWORD_Serv")
 DB_DATABASE = os.getenv("DB_DATABASE_Serv")
 
 # === SQLAlchemy engine ===
-print(f"HOST: {DB_HOST}")
-print(f"PORT: {DB_PORT}")
-print(f"USER: {DB_USER}")
-print(f"PASS: {DB_PASSWORD}")
-print(f"DB: {DB_DATABASE}")
 
 from urllib.parse import quote_plus
 
@@ -72,12 +67,12 @@ WITH our_table AS (
         СтоимостьБезСкидок,
         СуммаЗатрат,
         (Стоимость - СуммаЗатрат) AS ВаловийПрибуток
-    FROM wealth0_analytics.et_AccumulationRegister_Продажи_RecordType AS pr
-    LEFT JOIN wealth0_analytics.et_Catalog_Номенклатура AS nom
+    FROM petwealth.et_AccumulationRegister_Продажи_RecordType AS pr
+    LEFT JOIN petwealth.et_Catalog_Номенклатура AS nom
         ON pr.Номенклатура_Key = nom.Ref_Key
-    LEFT JOIN wealth0_analytics.et_Catalog_АналитикаПоЗарплате AS an
+    LEFT JOIN petwealth.et_Catalog_АналитикаПоЗарплате AS an
         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
-    LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
+    LEFT JOIN petwealth.zp_довСпівробітники AS sp
         ON pr.Сотрудник = sp.Ref_Key
     WHERE pr.Active = 1 AND Period >= '2025-06-01'
 
@@ -104,12 +99,12 @@ WITH our_table AS (
         СтоимостьБезСкидок,
         СуммаЗатрат,
         (Стоимость - СуммаЗатрат) AS ВаловийПрибуток
-    FROM wealth0_analytics.et_AccumulationRegister_Продажи_RecordType AS pr
-    LEFT JOIN wealth0_analytics.et_Catalog_Номенклатура AS nom
+    FROM petwealth.et_AccumulationRegister_Продажи_RecordType AS pr
+    LEFT JOIN petwealth.et_Catalog_Номенклатура AS nom
         ON pr.Номенклатура_Key = nom.Ref_Key
-    LEFT JOIN wealth0_analytics.et_Catalog_АналитикаПоЗарплате AS an
+    LEFT JOIN petwealth.et_Catalog_АналитикаПоЗарплате AS an
         ON nom.АналитикаПоЗарплате_Key = an.Ref_Key
-    LEFT JOIN wealth0_analytics.zp_довСпівробітники AS sp
+    LEFT JOIN petwealth.zp_довСпівробітники AS sp
         ON pr.Исполнитель = sp.Ref_Key
     WHERE pr.Active = 1 AND Period >= '2025-06-01'
 )
@@ -142,11 +137,11 @@ SELECT
         ELSE 0
     END, 2) AS ПреміяВаловийПрибуток
 FROM our_table o
-LEFT JOIN wealth0_analytics.zp_worktime w
+LEFT JOIN petwealth.zp_worktime w
     ON o.Графік = w.last_name
     AND o.Period >= w.time_start
     AND o.Period < w.time_end
-LEFT JOIN wealth0_analytics.zp_фктУмовиОплати pay
+LEFT JOIN petwealth.zp_фктУмовиОплати pay
     ON w.Rule_ID = pay.Rule_ID
     AND pay.АнЗП = o.Ан_Description
     AND (pay.ДатаЗакінчення IS NULL OR o.Period < pay.ДатаЗакінчення)
@@ -161,7 +156,7 @@ print(f"[OK] Отримано {len(df)} рядків")
 # === Очищення таблиці zp_sales_salary ===
 with engine.connect() as conn:
     print("[DELETE] Очищення старих записів...")
-    conn.execute(text("TRUNCATE TABLE wealth0_analytics.zp_sales_salary"))
+    conn.execute(text("TRUNCATE TABLE petwealth.zp_sales_salary"))
 
 # === Завантаження нових даних ===
 print("[LOAD] Завантажуємо дані у zp_sales_salary...")

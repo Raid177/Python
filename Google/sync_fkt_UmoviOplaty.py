@@ -200,7 +200,7 @@ print("[OK] Дані оновлені у Google Sheets.")
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
 DB_HOST = os.getenv("DB_HOST_Serv")
-DB_PORT = int(os.getenv("DB_PORT_Serv", 3307))  # з дефолтом на всякий випадок
+DB_PORT = int(os.getenv("DB_PORT_Serv", 3306))  # з дефолтом на всякий випадок
 DB_USER = os.getenv("DB_USER_Serv")
 DB_PASSWORD = os.getenv("DB_PASSWORD_Serv")
 DB_DATABASE = os.getenv("DB_DATABASE_Serv")

@@ -5,28 +5,24 @@ import time
 from dotenv import load_dotenv
 import os
 
-# Завантажуємо змінні з .env файлу
+# === Завантаження змінних з .env ===
 load_dotenv()
-
-# Параметри для підключення до 1С та БД
 ODATA_BASE_URL = os.getenv('ODATA_URL')
 ODATA_USER = os.getenv('ODATA_USER')
 ODATA_PASSWORD = os.getenv('ODATA_PASSWORD')
-DB_HOST = os.getenv('DB_HOST')
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_DATABASE = os.getenv('DB_DATABASE')
+DB_HOST = os.getenv('DB_HOST_Serv')
+DB_PORT = int(os.getenv('DB_PORT_Serv', 3306))
+DB_USER = os.getenv('DB_USER_Serv')
+DB_PASSWORD = os.getenv('DB_PASSWORD_Serv')
+DB_DATABASE = os.getenv('DB_DATABASE_Serv')
 
-# Підключення до БД
-conn = mysql.connector.connect(host=DB_HOST, user=DB_USER, password=DB_PASSWORD, database=DB_DATABASE)
-cursor = conn.cursor()
+# === Параметри ===
+TABLE_NAME = "et_Catalog_Номенклатура"
+BATCH_SIZE = 1000
+SLEEP_SECONDS = 1
 
-batch_size = 1000  # Кількість записів у пачці
-page_number = 0  # Лічильник пагінації
-total_records = 0  # Загальна кількість отриманих записів
-
-# Перелік полів, які є в БД
-db_fields = [
+# === Поля, які є в БД ===
+FIELDS = [
     'Ref_Key', 'DataVersion', 'DeletionMark', 'Parent_Key', 'IsFolder', 'Code', 'Description',
     'SOVA_UDSМаксимальныйПроцентОплатыБаллами', 'SOVA_UDSНеПрименятьСкидку', 'SOVA_UDSПроцентДополнительногоНачисления', 
     'АналитикаПоЗарплате_Key', 'Артикул', 'Весовой', 'ВестиУчетПоСериям', 'Вид_Key', 'ВидНоменклатуры',
@@ -35,41 +31,60 @@ db_fields = [
     'Predefined', 'PredefinedDataName'
 ]
 
+# === Підключення до БД ===
+conn = mysql.connector.connect(
+    host=DB_HOST, port=DB_PORT,
+    user=DB_USER, password=DB_PASSWORD,
+    database=DB_DATABASE, charset='utf8mb4'
+)
+cursor = conn.cursor()
+
+# === Основна логіка ===
+page_number = 0
+total_records = 0
+
 while True:
-    # Формуємо URL для запиту
-    ODATA_URL = f"{ODATA_BASE_URL}Catalog_Номенклатура?$format=json&$orderby=Ref_Key&$top={batch_size}&$skip={page_number * batch_size}"
+    print(f"\n🔄 Обробка сторінки {page_number + 1}...")
+    url = f"{ODATA_BASE_URL}Catalog_Номенклатура?$format=json&$orderby=Ref_Key&$top={BATCH_SIZE}&$skip={page_number * BATCH_SIZE}"
     
-    response = requests.get(ODATA_URL, auth=(ODATA_USER, ODATA_PASSWORD))
+    t0 = time.time()
+    response = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
+    t1 = time.time()
+
     response.raise_for_status()
     entries = response.json().get('value', [])
-    
     if not entries:
-        break  # Вийти, якщо більше немає записів
-    
-    total_records += len(entries)
-    print(f"Пагінація: {page_number + 1}, Отримано записів всього: {total_records}")
-    
+        break
+
+    print(f"🕐 Отримано {len(entries)} записів за {round(t1 - t0, 1)} сек")
+
+    values = []
     for entry in entries:
-        cursor.execute("SELECT DataVersion FROM et_Catalog_Номенклатура WHERE Ref_Key = %s", (entry['Ref_Key'],))
-        result = cursor.fetchone()
+        row = tuple(entry.get(field, None) for field in FIELDS)
+        values.append(row)
 
-        if not result or result[0] != entry['DataVersion']:
-            values = tuple(entry.get(field) for field in db_fields)
-            placeholders = ', '.join(['%s'] * len(db_fields))
-            columns = ', '.join(db_fields)
-            update_clause = ', '.join([f"{field} = VALUES({field})" for field in db_fields])
-            
-            cursor.execute(f"""
-                INSERT INTO et_Catalog_Номенклатура ({columns})
-                VALUES ({placeholders})
-                ON DUPLICATE KEY UPDATE {update_clause}
-            """, values)
-    
+    placeholders = ', '.join(['%s'] * len(FIELDS))
+    columns = ', '.join([f"`{field}`" for field in FIELDS])
+    update_clause = ', '.join([f"`{field}`=VALUES(`{field}`)" for field in FIELDS if field != 'Ref_Key'])
+
+    insert_sql = f"""
+        INSERT INTO {TABLE_NAME} ({columns})
+        VALUES ({placeholders})
+        ON DUPLICATE KEY UPDATE {update_clause}
+    """
+
+    t2 = time.time()
+    cursor.executemany(insert_sql, values)
     conn.commit()
-    page_number += 1  # Збільшуємо номер сторінки
-    time.sleep(1)  # Пауза між запитами
+    t3 = time.time()
 
-# Завершення роботи
+    print(f"✅ Записано {len(values)} записів у БД за {round(t3 - t2, 1)} сек")
+    total_records += len(values)
+
+    page_number += 1
+    time.sleep(SLEEP_SECONDS)
+
+# === Завершення ===
 cursor.close()
 conn.close()
-print("✅ Дані успішно перенесені в et_Catalog_Номенклатура")
+print(f"\n🏁 Успішно перенесено {total_records} записів у {TABLE_NAME}")

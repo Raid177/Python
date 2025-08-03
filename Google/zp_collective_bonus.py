@@ -21,12 +21,13 @@ from dotenv import load_dotenv
 # [START] Завантаження .env
 load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
-# [START] Підключення до БД
+# [START] Параметри Hetzner (через SSH тунель)
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST"),
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_DATABASE"),
+    "host": os.getenv("DB_HOST_Serv", "127.0.0.1"),
+    "port": int(os.getenv("DB_PORT_Serv", 3306)),
+    "user": os.getenv("DB_USER_Serv"),
+    "password": os.getenv("DB_PASSWORD_Serv"),
+    "database": os.getenv("DB_DATABASE_Serv"),
     "charset": "utf8mb4",
     "cursorclass": pymysql.cursors.DictCursor,
 }
@@ -71,6 +72,7 @@ for row in worktime_rows:
         true_collisions_detected += 1
         print(f"[WARN] Істинна колізія: дубльований shift_uuid={shift_uuid} у таблиці zp_worktime (знайдено {count_row['cnt']} записів)")
 
+    # [STEP] Отримання правил з колективною премією
     cursor.execute("""
         SELECT *
         FROM zp_фктУмовиОплати
@@ -82,7 +84,7 @@ for row in worktime_rows:
         ан_колективний = rule['АнЗП_Колективний']
         відсоток = rule['Ан_Колективний']
 
-        # [INFO] Додаємо фільтр Role = 'Призначив'
+        # [STEP] Продажі для цієї зміни та аналітики
         cursor.execute("""
             SELECT 
                 SUM(Стоимость) AS СуммаСтоимость,
@@ -120,7 +122,6 @@ for row in worktime_rows:
             СтоимостьПремія, СтоимостьБезСкидокПремія, ВаловийПрибутокПремія
         ))
         connection.commit()
-
         total_bonuses += 1
 
 print(f"[FINISH] Обробка завершена: {total_bonuses} записів премій.")

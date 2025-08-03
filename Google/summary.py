@@ -1,5 +1,5 @@
 """
-Скрипт: salary_summary_aggregated.py
+Скрипт: salary_summary_aggregated.py (версія для Hetzner)
 
 Функція:
 - Агрегує зарплату по змінах із таблиць:
@@ -16,18 +16,21 @@ import os
 import pandas as pd
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 
 # === Завантаження .env ===
-load_dotenv(r"C:\Users\la\OneDrive\Pet Wealth\Analytics\Python_script\.env")
+load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
 
-DB_HOST = os.getenv("DB_HOST")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_DATABASE = os.getenv("DB_DATABASE")
+# === Параметри Hetzner (екрануємо пароль!) ===
+DB_HOST = os.getenv("DB_HOST_Serv")
+DB_PORT = int(os.getenv("DB_PORT_Serv", 3306))
+DB_USER = os.getenv("DB_USER_Serv")
+DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD_Serv"))
+DB_DATABASE = os.getenv("DB_DATABASE_Serv")
 
 # === SQLAlchemy engine ===
 engine = create_engine(
-    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_DATABASE}",
+    f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}",
     connect_args={'charset': 'utf8mb4'}
 )
 
@@ -47,8 +50,6 @@ query_worktime = """
     WHERE date_shift >= '2025-05-01'
 """
 df_worktime = pd.read_sql(query_worktime, con=engine)
-
-# Перерахунок Ставки за фактично відпрацьований час
 df_worktime['Ставка'] = (df_worktime['СтавкаГодина'] * df_worktime['DurationShift']).round(2)
 
 # 2️⃣ Премії з zp_sales_salary
@@ -134,28 +135,20 @@ summary_df['ВсьогоЗаЗмінуВаловийПрибуток'] = (
     summary_df.get('КолективнаПреміяВаловийПрибутокПремія_Всього', 0)
 )
 
-# 6️⃣ Консольний підсумок
-total_salary_stoimost = summary_df['ВсьогоЗаЗмінуСтоимость'].sum()
-total_salary_stoimost_bez_skidok = summary_df['ВсьогоЗаЗмінуСтоимостьБезСкидок'].sum()
-total_salary_valovyi_prybutok = summary_df['ВсьогоЗаЗмінуВаловийПрибуток'].sum()
-
+# 6️⃣ Підсумок у консоль
 print("\n===============================")
 print("Загальна зарплата за весь період:")
-print(f"По Стоимость: {total_salary_stoimost:,.2f}")
-print(f"По СтоимостьБезСкидок: {total_salary_stoimost_bez_skidok:,.2f}")
-print(f"По ВаловийПрибуток: {total_salary_valovyi_prybutok:,.2f}")
+print(f"По Стоимость: {summary_df['ВсьогоЗаЗмінуСтоимость'].sum():,.2f}")
+print(f"По СтоимостьБезСкидок: {summary_df['ВсьогоЗаЗмінуСтоимостьБезСкидок'].sum():,.2f}")
+print(f"По ВаловийПрибуток: {summary_df['ВсьогоЗаЗмінуВаловийПрибуток'].sum():,.2f}")
 print("===============================\n")
 
-# 7️⃣ Очистка таблиці zp_summary через TRUNCATE
+# 7️⃣ TRUNCATE таблиці zp_summary
 with engine.begin() as conn:
-    truncate_sql = text("TRUNCATE TABLE zp_summary")
-    conn.execute(truncate_sql)
+    conn.execute(text("TRUNCATE TABLE zp_summary"))
 
-# 8️⃣ Видаляємо поле СтавкаГодина перед записом у БД
-if 'СтавкаГодина' in summary_df.columns:
-    summary_df = summary_df.drop(columns=['СтавкаГодина'])
-
-# 9️⃣ Запис у таблицю zp_summary
+# 8️⃣ Видаляємо СтавкаГодина, запис у БД
+summary_df = summary_df.drop(columns=['СтавкаГодина'], errors='ignore')
 summary_df.reset_index().to_sql(
     'zp_summary',
     con=engine,

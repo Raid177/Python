@@ -33,6 +33,7 @@ service = build('sheets', 'v4', credentials=creds)
 # Підключення до БД
 connection = pymysql.connect(
     host=os.getenv("DB_HOST_Serv"),
+    port=int(os.getenv("DB_PORT_Serv", 3306)),
     user=os.getenv("DB_USER_Serv"),
     password=os.getenv("DB_PASSWORD_Serv"),
     database=os.getenv("DB_DATABASE_Serv"),
@@ -110,6 +111,34 @@ for ref, info in staff_map.items():
 staff_ws.clear()
 header = ["ПІБ", "Графік", "Code", "Ref_Key"]
 staff_ws.update([header] + new_rows)
+
+# === 2б. Зберегти дов_Співробітники в БД ===
+print("[LOG] Оновлюємо таблицю 'zp_довСпівробітники' в БД...")
+
+# Створення таблиці, якщо ще немає
+cursor.execute("""
+    CREATE TABLE IF NOT EXISTS zp_довСпівробітники (
+        ПІБ VARCHAR(255),
+        Графік VARCHAR(255),
+        Code VARCHAR(64),
+        Ref_Key CHAR(36) PRIMARY KEY
+    ) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+""")
+
+# Очищення перед вставкою
+cursor.execute("DELETE FROM zp_довСпівробітники")
+
+# Масив для вставки
+db_rows = [(row[0], row[1], row[2], row[3]) for row in new_rows]
+
+# Вставка даних
+cursor.executemany("""
+    INSERT INTO zp_довСпівробітники (ПІБ, Графік, Code, Ref_Key)
+    VALUES (%s, %s, %s, %s)
+""", db_rows)
+connection.commit()
+
+print(f"[LOG] Дані записано в таблицю zp_довСпівробітники — {len(db_rows)} рядків")
 
 print(f"[LOG] Оновлено дов_Співробітники — {len(new_rows)} рядків")
 
