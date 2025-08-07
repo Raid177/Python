@@ -46,7 +46,7 @@ DB_CONFIG = {
     "host": os.getenv("DB_HOST"),
     "user": os.getenv("DB_USER"),
     "password": os.getenv("DB_PASSWORD"),
-    "database": os.getenv("DB_NAME"),
+    "database": os.getenv("DB_DATABASE"),
 }
 
 interval_patterns = [
@@ -55,8 +55,10 @@ interval_patterns = [
     r"^weekly@\w{3} \d{2}:\d{2}$",
     r"^monthly@\d{1,2} \d{2}:\d{2}$",
     r"^hourly@\d{1,2}$",
+    r"^every@\d+minutes$",
     r"^every@\d+(days|weeks|months)$"
 ]
+
 
 creds = Credentials.from_authorized_user_file(TOKEN_PATH, ["https://www.googleapis.com/auth/spreadsheets"])
 service = build("sheets", "v4", credentials=creds)
