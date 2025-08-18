@@ -42,7 +42,7 @@ def calculate_age(birthdate: str, exam_date: str) -> float:
 
 def get_exam_by_number(exam_number: str = None):
     if not exam_number:
-        exam_number = "000001919"
+        exam_number = "000001534"
         print(f"[DEBUG] Тестовий запуск. Використовується номер: {exam_number}")
 
     # === 1. Document_Анализы ===
@@ -123,9 +123,10 @@ def get_exam_by_number(exam_number: str = None):
     sql = """
     INSERT INTO xr_study_requests (
         ref_key_exam, study_number, study_reason, exam_date, exam_type,
-        patient_name, species_key, breed_key, sex_key, age_years, weight_kg, weight_measured_at, weight_days_old
+        patient_name, species_key, breed_key, sex_key, age_years,
+        weight_kg, weight_measured_at, weight_days_old, status
     )
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON DUPLICATE KEY UPDATE
         study_reason = VALUES(study_reason),
         exam_date = VALUES(exam_date),
@@ -138,6 +139,7 @@ def get_exam_by_number(exam_number: str = None):
         weight_kg = VALUES(weight_kg),
         weight_measured_at = VALUES(weight_measured_at),
         weight_days_old = VALUES(weight_days_old),
+        status = 'waiting',
         updated_at = NOW()
     """
 
@@ -154,8 +156,10 @@ def get_exam_by_number(exam_number: str = None):
         age_years,
         weight_kg,
         weight_measured_at,
-        weight_days_old
+        weight_days_old,
+        "waiting"  # ← вставка
     )
+
 
     cursor.execute(sql, values)
     conn.commit()

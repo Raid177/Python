@@ -55,6 +55,7 @@ credentials.json
 build/
 dist/
 *.egg-info/
+/root/Python/X_Ray_Study/Study
 
 # === Personal files (optional) ===
 notes.txt

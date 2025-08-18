@@ -4024,3 +4024,499 @@ Current chat ID: 713876337
 [2025-08-07 06:00:02,656] INFO: 🚀 Запуск бота...
 [2025-08-07 06:00:03,155] INFO: Scheduler started
 [2025-08-07 06:00:03,155] INFO: Application started
+[2025-08-07 12:00:04,936] INFO: Application is stopping. This might take a moment.
+[2025-08-07 12:00:04,938] INFO: Scheduler has been shut down
+[2025-08-07 12:00:04,948] INFO: Application.stop() complete
+[2025-08-07 12:00:05,861] INFO: 🚀 Запуск бота...
+[2025-08-07 12:00:06,548] INFO: Scheduler started
+[2025-08-07 12:00:06,548] INFO: Application started
+[2025-08-07 18:00:02,126] INFO: Application is stopping. This might take a moment.
+[2025-08-07 18:00:02,129] INFO: Scheduler has been shut down
+[2025-08-07 18:00:02,140] INFO: Application.stop() complete
+[2025-08-07 18:00:03,112] INFO: 🚀 Запуск бота...
+[2025-08-07 18:00:03,753] INFO: Scheduler started
+[2025-08-07 18:00:03,754] INFO: Application started
+[2025-08-07 20:27:03,108] INFO: [ALL] 7173765324 (None): None
+[2025-08-07 20:27:12,561] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGTmiU4ee2zwP5GnvOkw_wSQrJg51PAAIeegACG3SoSHQOsa8t-A1FNgQ
+[2025-08-07 20:27:13,389] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна_Валерія_Олександрівеа_ФОП_0ddb3502_0159_4df2_883a_66464e94ebc3.xls
+[2025-08-07 20:27:13,400] INFO: ✅ Запис про файл додано до БД: Жиліна_Валерія_Олександрівеа_ФОП_0ddb3502_0159_4df2_883a_66464e94ebc3.xls (user_id: None)
+[2025-08-07 20:27:19,417] INFO: [ALL] 7173765324 (None): 49 к
+[2025-08-07 20:27:32,269] INFO: [ALL] 7173765324 (None): N/A
+[2025-08-07 20:30:47,618] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIGUmiU4rO3tlIKkWvFrBQXDhzYXoJbAAJL-zEbEbOhSAoGmik2NL44AQADAgADeQADNgQ
+[2025-08-07 20:30:48,148] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADS_sxGxGzoUh-.jpg
+[2025-08-07 20:30:48,168] INFO: ✅ Запис про файл додано до БД: photo_AQADS_sxGxGzoUh-.jpg (user_id: None)
+[2025-08-08 00:00:04,339] INFO: Application is stopping. This might take a moment.
+[2025-08-08 00:00:04,340] INFO: Scheduler has been shut down
+[2025-08-08 00:00:04,351] INFO: Application.stop() complete
+[2025-08-08 00:00:05,126] INFO: 🚀 Запуск бота...
+[2025-08-08 00:00:05,600] INFO: Scheduler started
+[2025-08-08 00:00:05,600] INFO: Application started
+[2025-08-08 06:00:01,480] INFO: Application is stopping. This might take a moment.
+[2025-08-08 06:00:01,481] INFO: Scheduler has been shut down
+[2025-08-08 06:00:01,492] INFO: Application.stop() complete
+[2025-08-08 06:00:02,335] INFO: 🚀 Запуск бота...
+[2025-08-08 06:00:02,860] INFO: Scheduler started
+[2025-08-08 06:00:02,860] INFO: Application started
+[2025-08-08 09:19:58,687] INFO: [ALL] 7173765324 (None): None
+[2025-08-08 09:20:12,454] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGVmiVlw40khBNyP8SzODZSAu_NfagAAI7cgACuFCoSLIPdRp1LxnhNgQ
+[2025-08-08 09:20:12,770] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна .XLS
+[2025-08-08 09:20:12,785] INFO: ✅ Запис про файл додано до БД: Жиліна .XLS (user_id: None)
+[2025-08-08 09:20:42,290] INFO: [ALL] 7173765324 (None): Сможете сейчас оплатить ?
+Это орозим 
+Чтоб сегодня приехал
+[2025-08-08 09:22:12,845] INFO: [ALL] 713876337 (Dashka_91): Только за орозим
+[2025-08-08 09:22:31,070] INFO: [ALL] 713876337 (Dashka_91): 1897,20 грн
+[2025-08-08 12:00:04,588] INFO: Application is stopping. This might take a moment.
+[2025-08-08 12:00:04,589] INFO: Scheduler has been shut down
+[2025-08-08 12:00:04,599] INFO: Application.stop() complete
+[2025-08-08 12:00:05,279] INFO: 🚀 Запуск бота...
+[2025-08-08 12:00:05,759] INFO: Scheduler started
+[2025-08-08 12:00:05,759] INFO: Application started
+[2025-08-08 18:00:01,728] INFO: Application is stopping. This might take a moment.
+[2025-08-08 18:00:01,729] INFO: Scheduler has been shut down
+[2025-08-08 18:00:01,739] INFO: Application.stop() complete
+[2025-08-08 18:00:02,605] INFO: 🚀 Запуск бота...
+[2025-08-08 18:00:03,174] INFO: Scheduler started
+[2025-08-08 18:00:03,174] INFO: Application started
+[2025-08-09 00:00:04,983] INFO: Application is stopping. This might take a moment.
+[2025-08-09 00:00:04,984] INFO: Scheduler has been shut down
+[2025-08-09 00:00:04,995] INFO: Application.stop() complete
+[2025-08-09 00:00:05,662] INFO: 🚀 Запуск бота...
+[2025-08-09 00:00:06,183] INFO: Scheduler started
+[2025-08-09 00:00:06,184] INFO: Application started
+[2025-08-09 06:00:02,135] INFO: Application is stopping. This might take a moment.
+[2025-08-09 06:00:02,135] INFO: Scheduler has been shut down
+[2025-08-09 06:00:02,146] INFO: Application.stop() complete
+[2025-08-09 06:00:02,924] INFO: 🚀 Запуск бота...
+[2025-08-09 06:00:03,397] INFO: Scheduler started
+[2025-08-09 06:00:03,398] INFO: Application started
+[2025-08-09 08:38:37,755] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-09 12:00:01,315] INFO: Application is stopping. This might take a moment.
+[2025-08-09 12:00:01,317] INFO: Scheduler has been shut down
+[2025-08-09 12:00:01,328] INFO: Application.stop() complete
+[2025-08-09 12:00:02,177] INFO: 🚀 Запуск бота...
+[2025-08-09 12:00:02,697] INFO: Scheduler started
+[2025-08-09 12:00:02,697] INFO: Application started
+[2025-08-09 17:55:40,092] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-09 18:00:01,475] INFO: Application is stopping. This might take a moment.
+[2025-08-09 18:00:01,476] INFO: Scheduler has been shut down
+[2025-08-09 18:00:01,486] INFO: Application.stop() complete
+[2025-08-09 18:00:02,358] INFO: 🚀 Запуск бота...
+[2025-08-09 18:00:02,846] INFO: Scheduler started
+[2025-08-09 18:00:02,846] INFO: Application started
+[2025-08-09 21:42:21,476] INFO: [ALL] 161197876 (Alexey_Raid): 50 коп закрыто
+[2025-08-10 00:00:01,699] INFO: Application is stopping. This might take a moment.
+[2025-08-10 00:00:01,703] INFO: Scheduler has been shut down
+[2025-08-10 00:00:01,713] INFO: Application.stop() complete
+[2025-08-10 00:00:02,747] INFO: 🚀 Запуск бота...
+[2025-08-10 00:00:03,351] INFO: Scheduler started
+[2025-08-10 00:00:03,351] INFO: Application started
+[2025-08-10 06:00:02,034] INFO: Application is stopping. This might take a moment.
+[2025-08-10 06:00:02,036] INFO: Scheduler has been shut down
+[2025-08-10 06:00:02,047] INFO: Application.stop() complete
+[2025-08-10 06:00:02,898] INFO: 🚀 Запуск бота...
+[2025-08-10 06:00:03,466] INFO: Scheduler started
+[2025-08-10 06:00:03,466] INFO: Application started
+[2025-08-10 09:08:17,976] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-10 12:00:01,276] INFO: Application is stopping. This might take a moment.
+[2025-08-10 12:00:01,277] INFO: Scheduler has been shut down
+[2025-08-10 12:00:01,288] INFO: Application.stop() complete
+[2025-08-10 12:00:02,126] INFO: 🚀 Запуск бота...
+[2025-08-10 12:00:02,716] INFO: Scheduler started
+[2025-08-10 12:00:02,716] INFO: Application started
+[2025-08-10 18:00:04,490] INFO: Application is stopping. This might take a moment.
+[2025-08-10 18:00:04,492] INFO: Scheduler has been shut down
+[2025-08-10 18:00:04,503] INFO: Application.stop() complete
+[2025-08-10 18:00:05,178] INFO: 🚀 Запуск бота...
+[2025-08-10 18:00:05,664] INFO: Scheduler started
+[2025-08-10 18:00:05,664] INFO: Application started
+[2025-08-11 00:00:01,676] INFO: Application is stopping. This might take a moment.
+[2025-08-11 00:00:01,677] INFO: Scheduler has been shut down
+[2025-08-11 00:00:01,687] INFO: Application.stop() complete
+[2025-08-11 00:00:02,582] INFO: 🚀 Запуск бота...
+[2025-08-11 00:00:03,067] INFO: Scheduler started
+[2025-08-11 00:00:03,067] INFO: Application started
+[2025-08-11 06:00:04,866] INFO: Application is stopping. This might take a moment.
+[2025-08-11 06:00:04,867] INFO: Scheduler has been shut down
+[2025-08-11 06:00:04,878] INFO: Application.stop() complete
+[2025-08-11 06:00:05,630] INFO: 🚀 Запуск бота...
+[2025-08-11 06:00:06,106] INFO: Scheduler started
+[2025-08-11 06:00:06,107] INFO: Application started
+[2025-08-11 08:56:46,459] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-11 09:01:40,963] INFO: [ALL] 7173765324 (None): None
+[2025-08-11 09:01:46,660] INFO: 🔍 Обробка /pending...
+[2025-08-11 09:01:46,670] INFO: 📥 SQL: Вибірка pending файлів
+[2025-08-11 09:01:46,672] INFO: 📄 Знайдено 10 запис(ів) зі статусом 'pending'
+[2025-08-11 09:01:46,673] INFO: 📨 Обробка: Брабус 08.15.txt (ID: 228, Chat: -1002544853552, MsgID: 1510)
+[2025-08-11 09:01:47,422] INFO: 📨 Обробка: Брабус 08.22.txt (ID: 229, Chat: -1002544853552, MsgID: 1512)
+[2025-08-11 09:01:48,068] INFO: 📨 Обробка: Брабус 08.27.txt (ID: 230, Chat: -1002544853552, MsgID: 1514)
+[2025-08-11 09:01:48,729] INFO: 📨 Обробка: Брабус 09.05.txt (ID: 231, Chat: -1002544853552, MsgID: 1516)
+[2025-08-11 09:01:49,341] INFO: 📨 Обробка: Брабус 09.12.txt (ID: 232, Chat: -1002544853552, MsgID: 1518)
+[2025-08-11 09:01:49,953] INFO: 📨 Обробка: Брабус 09.19.txt (ID: 233, Chat: -1002544853552, MsgID: 1520)
+[2025-08-11 09:01:50,572] INFO: 📨 Обробка: Брабус 09.26.txt (ID: 234, Chat: -1002544853552, MsgID: 1522)
+[2025-08-11 09:01:54,239] INFO: 📨 Обробка: Брабус 10.03.txt (ID: 235, Chat: -1002544853552, MsgID: 1524)
+[2025-08-11 09:01:54,877] INFO: 📨 Обробка: Рахунок № ЛР025296 від 06.08.2025.pdf (ID: 236, Chat: -1002544853552, MsgID: 1540)
+[2025-08-11 09:01:55,550] INFO: 📨 Обробка: photo_AQADS_sxGxGzoUh-.jpg (ID: 248, Chat: -1002544853552, MsgID: 1618)
+[2025-08-11 09:02:03,634] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGYWiZh0RsUCL-tbNK9UMkHihr7a_0AAJ7fgACEvNZSKFdMk2qytkBNgQ
+[2025-08-11 09:02:03,964] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_№_НФ_508_від_14_05_2025.xlsx
+[2025-08-11 09:02:03,974] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_№_НФ_508_від_14_05_2025.xlsx (user_id: None)
+[2025-08-11 09:02:24,561] INFO: [ALL] 7173765324 (None): None
+[2025-08-11 09:02:32,548] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGb2iZh3BV7AJMU-Y1NtYYr41fIqB0AAJ8fgACEvNZSOIntrMEBU6yNgQ
+[2025-08-11 09:02:32,890] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок 2.xlsx
+[2025-08-11 09:02:32,907] INFO: ✅ Запис про файл додано до БД: Рахунок 2.xlsx (user_id: None)
+[2025-08-11 09:02:43,039] INFO: [ALL] 7173765324 (None): None
+[2025-08-11 09:02:49,197] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGcmiZh4IKA3cmnoY_fbH3d-aGC_bwAAKCfgACEvNZSC8uGyozT4wfNgQ
+[2025-08-11 09:02:49,542] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_№_НФ_521_від_22_07_2025.xlsx
+[2025-08-11 09:02:49,555] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_№_НФ_521_від_22_07_2025.xlsx (user_id: None)
+[2025-08-11 09:03:06,025] INFO: [ALL] 7173765324 (None): None
+[2025-08-11 09:03:12,910] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGdWiZh5mKDWJgoQmihCVGjCC-FKERAAKDfgACEvNZSPR6CiAGe5TiNgQ
+[2025-08-11 09:03:13,256] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок 4.xlsx
+[2025-08-11 09:03:13,269] INFO: ✅ Запис про файл додано до БД: Рахунок 4.xlsx (user_id: None)
+[2025-08-11 09:06:49,298] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIGeGiZiHFhNF9u7rNCmSakJIFeP_40AAI2_jEbBX_ISLjeVJePzkX3AQADAgADeQADNgQ
+[2025-08-11 09:06:49,693] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADNv4xGwV_yEh-.jpg
+[2025-08-11 09:06:49,703] INFO: ✅ Запис про файл додано до БД: photo_AQADNv4xGwV_yEh-.jpg (user_id: None)
+[2025-08-11 09:17:14,563] INFO: 🔍 Обробка /pending...
+[2025-08-11 09:17:14,574] INFO: 📥 SQL: Вибірка pending файлів
+[2025-08-11 09:17:14,578] INFO: 📄 Знайдено 15 запис(ів) зі статусом 'pending'
+[2025-08-11 09:17:14,578] INFO: 📨 Обробка: Брабус 08.15.txt (ID: 228, Chat: -1002544853552, MsgID: 1510)
+[2025-08-11 09:17:15,311] INFO: 📨 Обробка: Брабус 08.22.txt (ID: 229, Chat: -1002544853552, MsgID: 1512)
+[2025-08-11 09:17:15,938] INFO: 📨 Обробка: Брабус 08.27.txt (ID: 230, Chat: -1002544853552, MsgID: 1514)
+[2025-08-11 09:17:16,593] INFO: 📨 Обробка: Брабус 09.05.txt (ID: 231, Chat: -1002544853552, MsgID: 1516)
+[2025-08-11 09:17:17,228] INFO: 📨 Обробка: Брабус 09.12.txt (ID: 232, Chat: -1002544853552, MsgID: 1518)
+[2025-08-11 09:17:17,897] INFO: 📨 Обробка: Брабус 09.19.txt (ID: 233, Chat: -1002544853552, MsgID: 1520)
+[2025-08-11 09:17:18,518] INFO: 📨 Обробка: Брабус 09.26.txt (ID: 234, Chat: -1002544853552, MsgID: 1522)
+[2025-08-11 09:17:22,130] INFO: 📨 Обробка: Брабус 10.03.txt (ID: 235, Chat: -1002544853552, MsgID: 1524)
+[2025-08-11 09:17:22,745] INFO: 📨 Обробка: Рахунок № ЛР025296 від 06.08.2025.pdf (ID: 236, Chat: -1002544853552, MsgID: 1540)
+[2025-08-11 09:17:23,337] INFO: 📨 Обробка: photo_AQADS_sxGxGzoUh-.jpg (ID: 248, Chat: -1002544853552, MsgID: 1618)
+[2025-08-11 09:17:23,936] INFO: 📨 Обробка: Рахунок_на_оплату_№_НФ_508_від_14_05_2025.xlsx (ID: 250, Chat: -1002544853552, MsgID: 1633)
+[2025-08-11 09:17:24,524] INFO: 📨 Обробка: Рахунок 2.xlsx (ID: 251, Chat: -1002544853552, MsgID: 1647)
+[2025-08-11 09:17:28,123] INFO: 📨 Обробка: Рахунок_на_оплату_№_НФ_521_від_22_07_2025.xlsx (ID: 252, Chat: -1002544853552, MsgID: 1650)
+[2025-08-11 09:17:28,724] INFO: 📨 Обробка: Рахунок 4.xlsx (ID: 253, Chat: -1002544853552, MsgID: 1653)
+[2025-08-11 09:17:29,329] INFO: 📨 Обробка: photo_AQADNv4xGwV_yEh-.jpg (ID: 254, Chat: -1002544853552, MsgID: 1656)
+[2025-08-11 10:12:42,937] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIGjGiZl9zvbmCI4sd1HnNfvU5FGqicAAJW8DEbm4qhSMiajmbMcI7WAQADAgADeQADNgQ
+[2025-08-11 10:12:43,387] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADVvAxG5uKoUh-.jpg
+[2025-08-11 10:12:43,404] INFO: ✅ Запис про файл додано до БД: photo_AQADVvAxG5uKoUh-.jpg (user_id: None)
+[2025-08-11 12:00:02,047] INFO: Application is stopping. This might take a moment.
+[2025-08-11 12:00:02,049] INFO: Scheduler has been shut down
+[2025-08-11 12:00:02,059] INFO: Application.stop() complete
+[2025-08-11 12:00:02,840] INFO: 🚀 Запуск бота...
+[2025-08-11 12:00:03,417] INFO: Scheduler started
+[2025-08-11 12:00:03,418] INFO: Application started
+[2025-08-11 14:45:53,215] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-11 14:46:05,210] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGkGiZ1_F1cZbPdR5I3GFiGcLCvHnXAAIyfAACWhTQSOkQUK80ypPnNgQ
+[2025-08-11 14:46:05,728] INFO: 📥 Збережено файл: /root/Automation/Paid/2_5244681502557506312.pdf
+[2025-08-11 14:46:05,744] INFO: ✅ Запис про файл додано до БД: 2_5244681502557506312.pdf (user_id: None)
+[2025-08-11 14:46:47,848] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-11 14:46:55,095] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGk2iZ2CdqwaATnO3QnjQciBABa9NsAAI3fAACWhTQSBsAAcZvVnhdJDYE
+[2025-08-11 14:46:55,610] INFO: 📥 Збережено файл: /root/Automation/Paid/2_5244681502557506315.pdf
+[2025-08-11 14:46:55,623] INFO: ✅ Запис про файл додано до БД: 2_5244681502557506315.pdf (user_id: None)
+[2025-08-11 18:00:05,166] INFO: Application is stopping. This might take a moment.
+[2025-08-11 18:00:05,167] INFO: Scheduler has been shut down
+[2025-08-11 18:00:05,177] INFO: Application.stop() complete
+[2025-08-11 18:00:05,943] INFO: 🚀 Запуск бота...
+[2025-08-11 18:00:06,435] INFO: Scheduler started
+[2025-08-11 18:00:06,435] INFO: Application started
+[2025-08-11 22:16:35,491] INFO: 🔍 Обробка /pending...
+[2025-08-11 22:16:35,505] INFO: 📥 SQL: Вибірка pending файлів
+[2025-08-11 22:16:35,510] INFO: 📄 Знайдено 18 запис(ів) зі статусом 'pending'
+[2025-08-11 22:16:35,510] INFO: 📨 Обробка: Брабус 08.15.txt (ID: 228, Chat: -1002544853552, MsgID: 1510)
+[2025-08-11 22:16:36,314] INFO: 📨 Обробка: Брабус 08.22.txt (ID: 229, Chat: -1002544853552, MsgID: 1512)
+[2025-08-11 22:16:36,937] INFO: 📨 Обробка: Брабус 08.27.txt (ID: 230, Chat: -1002544853552, MsgID: 1514)
+[2025-08-11 22:16:37,587] INFO: 📨 Обробка: Брабус 09.05.txt (ID: 231, Chat: -1002544853552, MsgID: 1516)
+[2025-08-11 22:16:38,206] INFO: 📨 Обробка: Брабус 09.12.txt (ID: 232, Chat: -1002544853552, MsgID: 1518)
+[2025-08-11 22:16:38,822] INFO: 📨 Обробка: Брабус 09.19.txt (ID: 233, Chat: -1002544853552, MsgID: 1520)
+[2025-08-11 22:16:39,449] INFO: 📨 Обробка: Брабус 09.26.txt (ID: 234, Chat: -1002544853552, MsgID: 1522)
+[2025-08-11 22:16:43,181] INFO: 📨 Обробка: Брабус 10.03.txt (ID: 235, Chat: -1002544853552, MsgID: 1524)
+[2025-08-11 22:16:43,800] INFO: 📨 Обробка: Рахунок № ЛР025296 від 06.08.2025.pdf (ID: 236, Chat: -1002544853552, MsgID: 1540)
+[2025-08-11 22:16:44,442] INFO: 📨 Обробка: photo_AQADS_sxGxGzoUh-.jpg (ID: 248, Chat: -1002544853552, MsgID: 1618)
+[2025-08-11 22:16:45,069] INFO: 📨 Обробка: Рахунок_на_оплату_№_НФ_508_від_14_05_2025.xlsx (ID: 250, Chat: -1002544853552, MsgID: 1633)
+[2025-08-11 22:16:45,770] INFO: 📨 Обробка: Рахунок 2.xlsx (ID: 251, Chat: -1002544853552, MsgID: 1647)
+[2025-08-11 22:16:49,489] INFO: 📨 Обробка: Рахунок_на_оплату_№_НФ_521_від_22_07_2025.xlsx (ID: 252, Chat: -1002544853552, MsgID: 1650)
+[2025-08-11 22:16:50,106] INFO: 📨 Обробка: Рахунок 4.xlsx (ID: 253, Chat: -1002544853552, MsgID: 1653)
+[2025-08-11 22:16:50,721] INFO: 📨 Обробка: photo_AQADNv4xGwV_yEh-.jpg (ID: 254, Chat: -1002544853552, MsgID: 1656)
+[2025-08-11 22:16:51,327] INFO: 📨 Обробка: photo_AQADVvAxG5uKoUh-.jpg (ID: 255, Chat: -1002544853552, MsgID: 1676)
+[2025-08-11 22:16:51,946] INFO: 📨 Обробка: 2_5244681502557506312.pdf (ID: 256, Chat: -1002544853552, MsgID: 1680)
+[2025-08-11 22:16:55,659] INFO: 📨 Обробка: 2_5244681502557506315.pdf (ID: 257, Chat: -1002544853552, MsgID: 1683)
+[2025-08-11 23:45:58,348] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-11 23:56:25,486] INFO: [ALL] 713876337 (Dashka_91): Нам давали под реализацию препараты
+[2025-08-11 23:56:35,137] INFO: [ALL] 713876337 (Dashka_91): И они зашли
+[2025-08-11 23:57:06,542] INFO: [ALL] 161197876 (Alexey_Raid): а. понял
+[2025-08-11 23:57:28,730] INFO: [ALL] 713876337 (Dashka_91): У нас кределио было под реализацию
+[2025-08-11 23:57:31,919] INFO: [ALL] 713876337 (Dashka_91): Овер зол
+[2025-08-11 23:57:35,478] INFO: [ALL] 713876337 (Dashka_91): N/A
+[2025-08-11 23:57:42,272] INFO: [ALL] 713876337 (Dashka_91): Маропет 60 мг
+[2025-08-11 23:57:52,546] INFO: [ALL] 713876337 (Dashka_91): Из 10 табл осталось 2 шт
+[2025-08-11 23:58:02,805] INFO: [ALL] 713876337 (Dashka_91): Короче торговалась как могла
+[2025-08-11 23:58:10,119] INFO: [ALL] 713876337 (Dashka_91): Из-за этого старые накладные
+[2025-08-12 00:00:04,333] INFO: Application is stopping. This might take a moment.
+[2025-08-12 00:00:04,334] INFO: Scheduler has been shut down
+[2025-08-12 00:00:04,345] INFO: Application.stop() complete
+[2025-08-12 00:00:05,021] INFO: 🚀 Запуск бота...
+[2025-08-12 00:00:05,510] INFO: Scheduler started
+[2025-08-12 00:00:05,511] INFO: Application started
+[2025-08-12 06:00:04,503] INFO: Application is stopping. This might take a moment.
+[2025-08-12 06:00:04,504] INFO: Scheduler has been shut down
+[2025-08-12 06:00:04,515] INFO: Application.stop() complete
+[2025-08-12 06:00:05,132] INFO: 🚀 Запуск бота...
+[2025-08-12 06:00:05,629] INFO: Scheduler started
+[2025-08-12 06:00:05,629] INFO: Application started
+[2025-08-12 12:00:01,689] INFO: Application is stopping. This might take a moment.
+[2025-08-12 12:00:01,692] INFO: Scheduler has been shut down
+[2025-08-12 12:00:01,703] INFO: Application.stop() complete
+[2025-08-12 12:00:02,637] INFO: 🚀 Запуск бота...
+[2025-08-12 12:00:03,270] INFO: Scheduler started
+[2025-08-12 12:00:03,271] INFO: Application started
+[2025-08-12 12:47:21,692] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 12:47:25,821] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGuGibDakpwSb5Ibj1nncgauW56tGEAALidwACUMiZSOmMHxalLwOnNgQ
+[2025-08-12 12:47:26,183] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 4033 от 06 августа 2025 г..xls
+[2025-08-12 12:47:26,203] INFO: ✅ Запис про файл додано до БД: № 4033 от 06 августа 2025 г..xls (user_id: None)
+[2025-08-12 12:47:39,141] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 12:47:46,007] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGu2ibDbtMYvrKN60u8NTacYisXfnLAALhdwACUMiZSHFrxAABNeR8JTYE
+[2025-08-12 12:47:46,415] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 9143 от 06 августа 2025 г..xls
+[2025-08-12 12:47:46,425] INFO: ✅ Запис про файл додано до БД: № 9143 от 06 августа 2025 г..xls (user_id: None)
+[2025-08-12 12:47:52,920] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 12:48:04,409] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGvmibDciXGhYNwhzLL9Tu66ooLNN_AALgdwACUMiZSPs4PKSK7yFwNgQ
+[2025-08-12 12:48:04,766] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 2102 от 06 августа 2025 г..xls
+[2025-08-12 12:48:04,775] INFO: ✅ Запис про файл додано до БД: № 2102 от 06 августа 2025 г..xls (user_id: None)
+[2025-08-12 12:48:26,727] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 12:48:31,306] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGwWibDeqN9OI8CJmxXXj0dpJyy0WBAAKbdgACoQbQSBpVvw91puyfNgQ
+[2025-08-12 12:48:31,613] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 2217 от 11 августа 2025 г..xls
+[2025-08-12 12:48:31,621] INFO: ✅ Запис про файл додано до БД: № 2217 от 11 августа 2025 г..xls (user_id: None)
+[2025-08-12 12:48:40,273] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 12:48:44,779] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGxGibDfjYiqWBS5Q9Zh5ZnLtoDy4sAAKadgACoQbQSKd_abentnjrNgQ
+[2025-08-12 12:48:45,104] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 9376 от 11 августа 2025 г..xls
+[2025-08-12 12:48:45,115] INFO: ✅ Запис про файл додано до БД: № 9376 от 11 августа 2025 г..xls (user_id: None)
+[2025-08-12 13:11:08,824] INFO: [ALL] 7173765324 (None): None
+[2025-08-12 13:11:17,737] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGx2ibEzzmC4jMtMqZoB30Xt-UzNbAAAKldQAC0AvYSCpIlkHUmrcJNgQ
+[2025-08-12 13:11:18,050] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 9382 от 11 августа 2025 г..xls
+[2025-08-12 13:11:18,060] INFO: ✅ Запис про файл додано до БД: № 9382 от 11 августа 2025 г..xls (user_id: None)
+[2025-08-12 18:00:04,865] INFO: Application is stopping. This might take a moment.
+[2025-08-12 18:00:04,866] INFO: Scheduler has been shut down
+[2025-08-12 18:00:04,876] INFO: Application.stop() complete
+[2025-08-12 18:00:05,627] INFO: 🚀 Запуск бота...
+[2025-08-12 18:00:06,151] INFO: Scheduler started
+[2025-08-12 18:00:06,152] INFO: Application started
+[2025-08-12 19:01:09,123] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-13 00:00:02,031] INFO: Application is stopping. This might take a moment.
+[2025-08-13 00:00:02,032] INFO: Scheduler has been shut down
+[2025-08-13 00:00:02,043] INFO: Application.stop() complete
+[2025-08-13 00:00:02,836] INFO: 🚀 Запуск бота...
+[2025-08-13 00:00:03,323] INFO: Scheduler started
+[2025-08-13 00:00:03,324] INFO: Application started
+[2025-08-13 01:33:50,409] INFO: 📎 Тригер: False, файл: None
+[2025-08-13 01:33:50,410] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-08-13 01:34:08,634] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIGy2ibwWClfkW3r-Evr95dxZn1PQNPAAJPdAACWhTgSGuTXYPKa1i5NgQ
+[2025-08-13 01:34:08,970] INFO: 📥 Збережено файл: /root/Automation/Paid/Завдаток за дім корпоратив.txt
+[2025-08-13 01:34:08,988] INFO: ✅ Запис про файл додано до БД: Завдаток за дім корпоратив.txt (user_id: None)
+[2025-08-13 03:43:10,784] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-08-13 06:00:02,196] INFO: Application is stopping. This might take a moment.
+[2025-08-13 06:00:02,196] INFO: Scheduler has been shut down
+[2025-08-13 06:00:02,207] INFO: Application.stop() complete
+[2025-08-13 06:00:02,883] INFO: 🚀 Запуск бота...
+[2025-08-13 06:00:03,372] INFO: Scheduler started
+[2025-08-13 06:00:03,372] INFO: Application started
+[2025-08-13 12:00:04,411] INFO: Application is stopping. This might take a moment.
+[2025-08-13 12:00:04,412] INFO: Scheduler has been shut down
+[2025-08-13 12:00:04,423] INFO: Application.stop() complete
+[2025-08-13 12:00:05,131] INFO: 🚀 Запуск бота...
+[2025-08-13 12:00:05,745] INFO: Scheduler started
+[2025-08-13 12:00:05,746] INFO: Application started
+[2025-08-13 17:15:00,366] INFO: 📎 Тригер: False, файл: None
+[2025-08-13 17:15:00,367] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-08-13 17:15:00,432] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-13 17:15:08,324] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG1WicneQgG7yClPsD3hJWXbm6IdWmAAKvewAChV_gSJsh0gRSB1iCNgQ
+[2025-08-13 17:15:09,091] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_№КМ1308_08_від_13_серпня_2025_р_.pdf
+[2025-08-13 17:15:09,102] INFO: ✅ Запис про файл додано до БД: Рахунок_№КМ1308_08_від_13_серпня_2025_р_.pdf (user_id: None)
+[2025-08-13 18:00:01,538] INFO: Application is stopping. This might take a moment.
+[2025-08-13 18:00:01,539] INFO: Scheduler has been shut down
+[2025-08-13 18:00:01,549] INFO: Application.stop() complete
+[2025-08-13 18:00:02,397] INFO: 🚀 Запуск бота...
+[2025-08-13 18:00:02,926] INFO: Scheduler started
+[2025-08-13 18:00:02,926] INFO: Application started
+[2025-08-14 00:00:01,733] INFO: Application is stopping. This might take a moment.
+[2025-08-14 00:00:01,734] INFO: Scheduler has been shut down
+[2025-08-14 00:00:01,745] INFO: Application.stop() complete
+[2025-08-14 00:00:02,588] INFO: 🚀 Запуск бота...
+[2025-08-14 00:00:03,142] INFO: Scheduler started
+[2025-08-14 00:00:03,143] INFO: Application started
+[2025-08-14 06:00:04,948] INFO: Application is stopping. This might take a moment.
+[2025-08-14 06:00:04,949] INFO: Scheduler has been shut down
+[2025-08-14 06:00:04,959] INFO: Application.stop() complete
+[2025-08-14 06:00:05,720] INFO: 🚀 Запуск бота...
+[2025-08-14 06:00:06,329] INFO: Scheduler started
+[2025-08-14 06:00:06,329] INFO: Application started
+[2025-08-14 07:57:55,795] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-14 07:58:05,528] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG2WidbNOGzx_JY8hp5sOYfidMmWmsAAJGfAACgezpSJ6Td3xY__SLNgQ
+[2025-08-14 07:58:06,049] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок NНАС00001375 від 04_08_2025.pdf
+[2025-08-14 07:58:06,060] INFO: ✅ Запис про файл додано до БД: Рахунок NНАС00001375 від 04_08_2025.pdf (user_id: None)
+[2025-08-14 09:48:55,906] WARNING: ⚠️ 161197876 (Alexey_Raid) — команда лише в групі
+[2025-08-14 09:49:00,184] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-14 12:00:02,061] INFO: Application is stopping. This might take a moment.
+[2025-08-14 12:00:02,062] INFO: Scheduler has been shut down
+[2025-08-14 12:00:02,073] INFO: Application.stop() complete
+[2025-08-14 12:00:02,911] INFO: 🚀 Запуск бота...
+[2025-08-14 12:00:03,437] INFO: Scheduler started
+[2025-08-14 12:00:03,437] INFO: Application started
+[2025-08-14 18:00:01,264] INFO: Application is stopping. This might take a moment.
+[2025-08-14 18:00:01,266] INFO: Scheduler has been shut down
+[2025-08-14 18:00:01,276] INFO: Application.stop() complete
+[2025-08-14 18:00:02,080] INFO: 🚀 Запуск бота...
+[2025-08-14 18:00:02,721] INFO: Scheduler started
+[2025-08-14 18:00:02,721] INFO: Application started
+[2025-08-14 22:55:33,323] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG3GiePzXT8DoiFOos8wThW8J34KZmAAJHgAACPgjxSEahcyYdqq4SNgQ
+[2025-08-14 22:55:33,965] INFO: 📥 Збережено файл: /root/Automation/Paid/Proforma Invoice  (Sales Inv.) 218389598 118535830 150825.pdf
+[2025-08-14 22:55:33,984] INFO: ✅ Запис про файл додано до БД: Proforma Invoice  (Sales Inv.) 218389598 118535830 150825.pdf (user_id: None)
+[2025-08-14 23:36:54,715] INFO: 📎 Тригер: False, файл: None
+[2025-08-14 23:36:54,718] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-08-14 23:36:54,790] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-14 23:37:04,514] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG32ieSObugnzryY0tuofMreaTK2wbAAIIhQACr0HxSKaJUY3qwR8dNgQ
+[2025-08-14 23:37:05,008] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок № ЛР026501 від 14.08.2025.pdf
+[2025-08-14 23:37:05,026] INFO: ✅ Запис про файл додано до БД: Рахунок № ЛР026501 від 14.08.2025.pdf (user_id: None)
+[2025-08-15 00:00:01,417] INFO: Application is stopping. This might take a moment.
+[2025-08-15 00:00:01,418] INFO: Scheduler has been shut down
+[2025-08-15 00:00:01,429] INFO: Application.stop() complete
+[2025-08-15 00:00:02,522] INFO: 🚀 Запуск бота...
+[2025-08-15 00:00:03,152] INFO: Scheduler started
+[2025-08-15 00:00:03,152] INFO: Application started
+[2025-08-15 04:41:13,120] ERROR: ❌ ПОМИЛКА: Bad Gateway
+[2025-08-15 04:41:13,318] ERROR: 📭 Неможливо надіслати повідомлення адміну: Bad Gateway
+[2025-08-15 04:41:14,184] ERROR: ❌ ПОМИЛКА: Bad Gateway
+[2025-08-15 04:41:14,247] ERROR: 📭 Неможливо надіслати повідомлення адміну: Bad Gateway
+[2025-08-15 06:00:04,594] INFO: Application is stopping. This might take a moment.
+[2025-08-15 06:00:04,595] INFO: Scheduler has been shut down
+[2025-08-15 06:00:04,606] INFO: Application.stop() complete
+[2025-08-15 06:00:05,370] INFO: 🚀 Запуск бота...
+[2025-08-15 06:00:05,945] INFO: Scheduler started
+[2025-08-15 06:00:05,946] INFO: Application started
+[2025-08-15 06:02:40,707] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-15 10:24:05,937] INFO: 📎 Тригер: False, файл: None
+[2025-08-15 10:24:05,938] INFO: ℹ️ Пропуск: 7173765324 (unknown) — без тригеру або без файлу
+[2025-08-15 10:24:28,217] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIG5mie4JUEaftgh4a3D3Mb5-0MzR6NAAJ6LDIbSePJSNjkQSUX1GJxAQADAgADeQADNgQ
+[2025-08-15 10:24:28,789] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADeiwyG0njyUh-.jpg
+[2025-08-15 10:24:28,800] INFO: ✅ Запис про файл додано до БД: photo_AQADeiwyG0njyUh-.jpg (user_id: None)
+[2025-08-15 12:00:01,752] INFO: Application is stopping. This might take a moment.
+[2025-08-15 12:00:01,753] INFO: Scheduler has been shut down
+[2025-08-15 12:00:01,763] INFO: Application.stop() complete
+[2025-08-15 12:00:02,644] INFO: 🚀 Запуск бота...
+[2025-08-15 12:00:03,318] INFO: Scheduler started
+[2025-08-15 12:00:03,318] INFO: Application started
+[2025-08-15 14:22:13,381] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG6mifGGWP2GaPtnf_OLGj12ymsGAvAAILgAACPgj5SHAuahI8gS_xNgQ
+[2025-08-15 14:22:13,961] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок № ПС-296 від 15.08.2025.pdf
+[2025-08-15 14:22:13,977] INFO: ✅ Запис про файл додано до БД: Рахунок № ПС-296 від 15.08.2025.pdf (user_id: None)
+[2025-08-15 18:00:04,940] INFO: Application is stopping. This might take a moment.
+[2025-08-15 18:00:04,941] INFO: Scheduler has been shut down
+[2025-08-15 18:00:04,951] INFO: Application.stop() complete
+[2025-08-15 18:00:05,625] INFO: 🚀 Запуск бота...
+[2025-08-15 18:00:06,125] INFO: Scheduler started
+[2025-08-15 18:00:06,125] INFO: Application started
+[2025-08-16 00:00:02,070] INFO: Application is stopping. This might take a moment.
+[2025-08-16 00:00:02,071] INFO: Scheduler has been shut down
+[2025-08-16 00:00:02,081] INFO: Application.stop() complete
+[2025-08-16 00:00:02,843] INFO: 🚀 Запуск бота...
+[2025-08-16 00:00:03,416] INFO: Scheduler started
+[2025-08-16 00:00:03,416] INFO: Application started
+[2025-08-16 06:00:01,231] INFO: Application is stopping. This might take a moment.
+[2025-08-16 06:00:01,231] INFO: Scheduler has been shut down
+[2025-08-16 06:00:01,242] INFO: Application.stop() complete
+[2025-08-16 06:00:01,989] INFO: 🚀 Запуск бота...
+[2025-08-16 06:00:02,531] INFO: Scheduler started
+[2025-08-16 06:00:02,532] INFO: Application started
+[2025-08-16 07:29:27,763] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-16 09:08:01,413] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-08-16 10:59:29,592] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG7GigOmEeRqp82PX3oZbF9CQBoumFAAJkfQACFo8ISbJJ1omCSrTSNgQ
+[2025-08-16 12:00:01,362] INFO: Application is stopping. This might take a moment.
+[2025-08-16 12:00:01,363] INFO: Scheduler has been shut down
+[2025-08-16 12:00:01,374] INFO: Application.stop() complete
+[2025-08-16 12:00:02,235] INFO: 🚀 Запуск бота...
+[2025-08-16 12:00:02,735] INFO: Scheduler started
+[2025-08-16 12:00:02,735] INFO: Application started
+[2025-08-16 18:00:01,523] INFO: Application is stopping. This might take a moment.
+[2025-08-16 18:00:01,526] INFO: Scheduler has been shut down
+[2025-08-16 18:00:01,537] INFO: Application.stop() complete
+[2025-08-16 18:00:02,484] INFO: 🚀 Запуск бота...
+[2025-08-16 18:00:03,026] INFO: Scheduler started
+[2025-08-16 18:00:03,026] INFO: Application started
+[2025-08-17 00:00:01,738] INFO: Application is stopping. This might take a moment.
+[2025-08-17 00:00:01,739] INFO: Scheduler has been shut down
+[2025-08-17 00:00:01,750] INFO: Application.stop() complete
+[2025-08-17 00:00:02,585] INFO: 🚀 Запуск бота...
+[2025-08-17 00:00:03,163] INFO: Scheduler started
+[2025-08-17 00:00:03,163] INFO: Application started
+[2025-08-17 06:00:01,984] INFO: Application is stopping. This might take a moment.
+[2025-08-17 06:00:01,985] INFO: Scheduler has been shut down
+[2025-08-17 06:00:01,996] INFO: Application.stop() complete
+[2025-08-17 06:00:02,821] INFO: 🚀 Запуск бота...
+[2025-08-17 06:00:03,301] INFO: Scheduler started
+[2025-08-17 06:00:03,301] INFO: Application started
+[2025-08-17 06:04:10,092] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-08-17 07:23:32,880] INFO: 📎 Тригер: False, файл: None
+[2025-08-17 07:23:32,881] INFO: ℹ️ Пропуск: 161197876 (Alexey_Raid) — без тригеру або без файлу
+[2025-08-17 07:23:32,945] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-08-17 07:23:40,169] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG72ihWUQ-pGI4dEWiM2AM-_AjxoxyAALLgAACOIcAAUltBX0WBRD2lTYE
+[2025-08-17 07:23:40,598] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок 130.xlsx
+[2025-08-17 07:23:40,613] INFO: ✅ Запис про файл додано до БД: Рахунок 130.xlsx (user_id: None)
+[2025-08-17 07:30:42,296] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG9GihWvJl8olzkf_LsLs2HDfWoT87AAI-dgACFo8QSdbdSjb7BnNENgQ
+[2025-08-17 07:30:42,744] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_2025-07-31_00-29-08.jpg
+[2025-08-17 07:30:42,770] INFO: ✅ Запис про файл додано до БД: photo_2025-07-31_00-29-08.jpg (user_id: None)
+[2025-08-17 07:31:20,015] INFO: 🗑 Файл переміщено до Deleted/: /root/Automation/Paid/Deleted/photo_2025-07-31_00-29-08.jpg
+[2025-08-17 07:31:36,396] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIG-GihWyhDavPfG_HpOPuLhyoJgHvCAAJAdgACFo8QSegAAowgt5rONgQ
+[2025-08-17 07:31:36,800] INFO: 📥 Збережено файл: /root/Automation/Paid/Свинцицький.jpg
+[2025-08-17 07:31:36,819] INFO: ✅ Запис про файл додано до БД: Свинцицький.jpg (user_id: None)
+[2025-08-17 12:00:02,150] INFO: Application is stopping. This might take a moment.
+[2025-08-17 12:00:02,153] INFO: Scheduler has been shut down
+[2025-08-17 12:00:02,163] INFO: Application.stop() complete
+[2025-08-17 12:00:02,926] INFO: 🚀 Запуск бота...
+[2025-08-17 12:00:03,470] INFO: Scheduler started
+[2025-08-17 12:00:03,470] INFO: Application started
+[2025-08-17 18:00:01,245] INFO: Application is stopping. This might take a moment.
+[2025-08-17 18:00:01,246] INFO: Scheduler has been shut down
+[2025-08-17 18:00:01,257] INFO: Application.stop() complete
+[2025-08-17 18:00:02,155] INFO: 🚀 Запуск бота...
+[2025-08-17 18:00:02,712] INFO: Scheduler started
+[2025-08-17 18:00:02,713] INFO: Application started
+[2025-08-18 00:00:01,434] INFO: Application is stopping. This might take a moment.
+[2025-08-18 00:00:01,434] INFO: Scheduler has been shut down
+[2025-08-18 00:00:01,445] INFO: Application.stop() complete
+[2025-08-18 00:00:02,303] INFO: 🚀 Запуск бота...
+[2025-08-18 00:00:02,949] INFO: Scheduler started
+[2025-08-18 00:00:02,950] INFO: Application started
+[2025-08-18 06:00:01,627] INFO: Application is stopping. This might take a moment.
+[2025-08-18 06:00:01,628] INFO: Scheduler has been shut down
+[2025-08-18 06:00:01,638] INFO: Application.stop() complete
+[2025-08-18 06:00:02,493] INFO: 🚀 Запуск бота...
+[2025-08-18 06:00:03,045] INFO: Scheduler started
+[2025-08-18 06:00:03,045] INFO: Application started
+[2025-08-18 12:00:01,813] INFO: Application is stopping. This might take a moment.
+[2025-08-18 12:00:01,814] INFO: Scheduler has been shut down
+[2025-08-18 12:00:01,825] INFO: Application.stop() complete
+[2025-08-18 12:00:02,722] INFO: 🚀 Запуск бота...
+[2025-08-18 12:00:03,384] INFO: Scheduler started
+[2025-08-18 12:00:03,384] INFO: Application started
+[2025-08-18 14:43:47,363] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIG-mijEeyNcOR_LgFprRPmUUikF6iDAAJuAAEyGyA2GUmhJ18iX0cLlAEAAwIAA3kAAzYE
+[2025-08-18 14:43:47,919] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADbgABMhsgNhlJfg.jpg
+[2025-08-18 14:43:47,933] INFO: ✅ Запис про файл додано до БД: photo_AQADbgABMhsgNhlJfg.jpg (user_id: None)
+[2025-08-18 14:44:23,372] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIG_2ijEg5Ol0OVrEGTEYwHaxwacFZwAAJ4_DEbDyUBSQWvKQABiW1E2AEAAwIAA3kAAzYE
+[2025-08-18 14:44:23,811] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADePwxGw8lAUl-.jpg
+[2025-08-18 14:44:23,832] INFO: ✅ Запис про файл додано до БД: photo_AQADePwxGw8lAUl-.jpg (user_id: None)
+[2025-08-18 14:47:31,022] INFO: [ALL] 713876337 (Dashka_91): None
+[2025-08-18 14:47:40,557] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIHBGijEtJ3ZZGlhVxb-g4PWaDzGcsFAAKBfQACIDYZSXw1XkRulhivNgQ
+[2025-08-18 14:47:41,196] INFO: 📥 Збережено файл: /root/Automation/Paid/IMG_0643.pdf
+[2025-08-18 14:47:41,211] INFO: ✅ Запис про файл додано до БД: IMG_0643.pdf (user_id: None)
+[2025-08-18 15:20:54,588] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIHB2ijGp7ChDcKkneU_kU58Q_yUq7tAALf9DEbkRf4SFCeFzJ7MbRxAQADAgADeQADNgQ
+[2025-08-18 15:20:55,081] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQAD3_QxG5EX-Eh-.jpg
+[2025-08-18 15:20:55,096] INFO: ✅ Запис про файл додано до БД: photo_AQAD3_QxG5EX-Eh-.jpg (user_id: None)
+[2025-08-18 15:21:08,578] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIHC2ijGq5oew5SQds6dQ7T_y6LQdu3AALI9TEbkRf4SLHFhq0ZfZhIAQADAgADeQADNgQ
+[2025-08-18 15:21:09,021] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADyPUxG5EX-Eh-.jpg
+[2025-08-18 15:21:09,030] INFO: ✅ Запис про файл додано до БД: photo_AQADyPUxG5EX-Eh-.jpg (user_id: None)
+[2025-08-18 15:49:23,740] INFO: 📎 Тригер: False, файл: None
+[2025-08-18 15:49:23,740] INFO: ℹ️ Пропуск: 713876337 (Dashka_91) — без тригеру або без файлу
+[2025-08-18 15:49:27,706] INFO: [ALL] 713876337 (Dashka_91): None
+[2025-08-18 15:49:32,726] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIHEGijIVegthRIUqCxvURi0u5Zal6AAAJJggACPqnxSC7JwwxbF3zjNgQ
+[2025-08-18 15:49:33,484] INFO: 📥 Збережено файл: /root/Automation/Paid/скан даше (1).pdf
+[2025-08-18 15:49:33,500] INFO: ✅ Запис про файл додано до БД: скан даше (1).pdf (user_id: None)
+[2025-08-18 18:00:01,994] INFO: Application is stopping. This might take a moment.
+[2025-08-18 18:00:01,995] INFO: Scheduler has been shut down
+[2025-08-18 18:00:02,006] INFO: Application.stop() complete
+[2025-08-18 18:00:02,743] INFO: 🚀 Запуск бота...
+[2025-08-18 18:00:03,402] INFO: Scheduler started
+[2025-08-18 18:00:03,403] INFO: Application started
