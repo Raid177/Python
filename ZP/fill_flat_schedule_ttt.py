@@ -7,7 +7,6 @@
 # 4) Пише помилки в колонку Error і перекреслює рядки (без колонки Error)
 
 import os
-import json
 import time
 import random
 from datetime import datetime, timedelta
@@ -22,7 +21,7 @@ SPREADSHEET_NAME = "zp_PetWealth"
 SOURCE_SHEET = "Графік"
 TARGET_SHEET = "фкт_ГрафікПлаский"
 
-# 🔑 шлях до сервісного ключа (захардкожено, як ти просив)
+# 🔑 шлях до сервісного ключа
 SA_JSON_PATH = "/root/Python/_Acces/zppetwealth-770254b6d8c1.json"
 
 SCOPES = [
@@ -103,6 +102,7 @@ def main():
     existing_data = tgt_ws.get_all_values() or []
     if not existing_data:
         existing_data = [HEADER_ROW]
+
     # Збереження користувацьких полів (Факт/Коментар) з попередньої версії
     user_fields = {}
     for row in existing_data[1:]:
@@ -150,7 +150,6 @@ def main():
             if not cell_value:
                 continue
 
-            # Формуємо ключ для витягування попередніх Факт/Коментар
             # Порядок має відповідати першим 8 колонкам HEADER_ROW:
             # [Дата, IDX, Початок, Кінець, Посада, Відділення, ТипЗміни, Прізвище]
             # base: [0]=MM.YYYY, [1]=Посада, [2]=Відділення, [3]=ТипЗміни, [4]=ПочатокЗміни, [5]=КінецьЗміни, [6]=IDX
@@ -222,7 +221,7 @@ def main():
                 except ValueError:
                     row1_index = row2_index = -1
 
-                # Запис у колонку Error (поки локально, потім оновимо в таблиці)
+                # Запис у колонку Error (локально)
                 row1[11] = f"Перетин з №{row2_index}: {date2}, {idx2}, {s2}-{e2}, {pos2}, {vid2}"
                 row2[11] = f"Перетин з №{row1_index}: {date1}, {idx1}, {s1}-{e1}, {pos1}, {vid1}"
 
@@ -231,7 +230,7 @@ def main():
 
     print(f"[INFO] Виявлено {len(conflicts)} конфлікт(ів)")
 
-    # === Оновлюємо колонку Error (ПРАВИЛЬНИЙ ПОРЯДОК АРГУМЕНТІВ) ===
+    # === Оновлюємо колонку Error ШВИДШИМ СПОСОБОМ (по довжині col_values(3)) ===
     print("[INFO] Оновлюємо колонку 'Error'...")
     error_column_values = []
     for row in existing_data_rows:
@@ -239,11 +238,16 @@ def main():
             error_column_values.append([row[11]])
         else:
             error_column_values.append([""])
+
     if error_column_values:
-        # Правильний порядок: range_name, values, ...
+        # визначаємо останній заповнений рядок по колонці "ПочатокЗміни" (3-я колонка)
+        start_row = 2  # з другого (після хедера)
+        date_col = tgt_ws.col_values(3)  # 3 = "ПочатокЗміни"
+        last_row_index = max(len(date_col), start_row - 1)  # захист від порожнього листа
+
         tgt_ws.update(
-            f"L2:L{len(existing_data)}",
-            error_column_values,
+            f"L{start_row}:L{last_row_index}",
+            error_column_values[: max(0, last_row_index - start_row + 1)],
             value_input_option="USER_ENTERED"
         )
 
@@ -271,7 +275,6 @@ def main():
         })
 
     if requests:
-        # Щоб уникати ліміту на розмір запиту, можна чанкувати, але зазвичай вистачає одного виклику
         service.spreadsheets().batchUpdate(
             spreadsheetId=spreadsheet_id,
             body={"requests": requests}

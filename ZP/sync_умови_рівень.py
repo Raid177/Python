@@ -1,44 +1,13 @@
+# -*- coding: utf-8 -*-
 """
 Скрипт для підтягування рівнів співробітників та розрахунку умов оплати у таблиці zp_worktime.
 
-🔹 Скрипт має два основних блоки:
-1️⃣ Синхронізація рівнів співробітників (таблиця zp_фктРівніСпівробітників):
-   - Зчитує дані з Google Sheets.
-   - Виконує триммування текстових полів і підміняє NULL на '' для уникнення дублів.
-   - Перевіряє дублікати (Прізвище, ДатаПочатку, Посада, Відділення, Рівень):
-       • Якщо є дублікати — зупиняє виконання та виводить їх у консоль.
-   - Автоматично розставляє ДатаЗакінчення для попереднього рівня співробітника (якщо є перехід на новий).
-   - Оновлює Google Sheets із датами закінчення.
-   - Завантажує дані у таблицю zp_фктРівніСпівробітників в MySQL:
-       • INSERT ... ON DUPLICATE KEY UPDATE (оновлює або додає рядок).
-   - Логування дій у консоль:
-       • Попередження про дублікати.
-       • Нові та оновлені записи.
-       • Закриття рівнів.
+Блок 1: синхронізація таблиці "фкт_РівніСпівробітників" з Google Sheets у MySQL.
+Блок 2: оновлення полів у zp_worktime на основі рівнів і правил (zp_фктУмовиОплати).
 
-2️⃣ Розрахунок збігів у таблиці zp_worktime:
-   - Підтягує рівень співробітника у zp_worktime з таблиці zp_фктРівніСпівробітників.
-   - Розраховує Rule_ID, Matches та Score для кожного запису, використовуючи таблицю правил zp_фктУмовиОплати.
-   - Записує колізії у поле Colision (якщо знайдено кілька рівнів або кілька Rule_ID з однаковою вагою).
-   - Записує інші помилки у поле ErrorLog.
-   - Оновлює поля:
-       • Matches
-       • Score
-       • СтавкаЗміна
-       • СтавкаГодина
-       • Rule_ID
-       • ErrorLog
-       • Colision
-   - Логування результатів у консоль.
-
-[OK] Важливо:
-- Скрипт виконує обидва блоки по черзі: спочатку синхронізація рівнів, потім обробка zp_worktime.
-- Скрипт зупиняє роботу, якщо знайдено дублікати в Google Sheets.
-"""
-
-
-"""
-Скрипт для підтягування рівнів співробітників та розрахунку умов оплати у таблиці zp_worktime.
+Зміни в цій версії:
+- Авторизація Google: service account JSON (/root/Python/_Acces/zppetwealth-770254b6d8c1.json)
+- ENV loader з require_env() і ключами DB_HOST / DB_PORT / DB_USER / DB_PASSWORD / DB_DATABASE
 """
 
 import os
@@ -46,45 +15,71 @@ import sys
 import pymysql
 import pandas as pd
 from datetime import datetime, timedelta
-from google.oauth2.credentials import Credentials
-from googleapiclient.discovery import build
 from dotenv import load_dotenv
 
-# === Завантаження .env ===
-load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
+# === Google Sheets API (SERVICE ACCOUNT) ===
+from google.oauth2.service_account import Credentials
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
+# ---------- ENV loader ----------
+ENV_PROFILE = os.getenv("ENV_PROFILE", "prod")  # dev | prod
+ENV_PATHS = {
+    "dev":  r"C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env",
+    "prod": "/root/Python/_Acces/.env.prod",
+}
+ENV_PATH = os.getenv("ENV_PATH") or ENV_PATHS.get(ENV_PROFILE)
+if ENV_PATH and os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH, override=True)
+else:
+    load_dotenv(override=True)  # пробує .env у поточній папці
+
+def require_env(name: str) -> str:
+    v = os.getenv(name)
+    if not v:
+        raise SystemExit(f"[ENV ERROR] Missing {name}. Check {ENV_PATH or '.env'}.")
+    return v
+
+# ---------- DB config (увага на назви змінних) ----------
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST_Serv"),
-    "port": int(os.getenv("DB_PORT_Serv", 3306)),  # ✅ дефолт — 3306
-    "user": os.getenv("DB_USER_Serv"),
-    "password": os.getenv("DB_PASSWORD_Serv"),
-    "database": os.getenv("DB_DATABASE_Serv"),
+    "host": require_env("DB_HOST"),
+    "port": int(require_env("DB_PORT")),
+    "user": require_env("DB_USER"),
+    "password": require_env("DB_PASSWORD"),
+    "database": require_env("DB_DATABASE"),
     "charset": "utf8mb4",
-    "cursorclass": pymysql.cursors.DictCursor
+    "cursorclass": pymysql.cursors.DictCursor,
 }
 
-
+# ---------- Google Sheets ----------
+SERVICE_ACCOUNT_FILE = "/root/Python/_Acces/zppetwealth-770254b6d8c1.json"
+SCOPES = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive",
+]
 SPREADSHEET_ID = "19mfpQ8XgUSMpGNKQpLtL9ek5OrLj2UlvgUVR39yWubw"
 SHEET_NAME = "фкт_РівніСпівробітників"
 RANGE_NAME = f"{SHEET_NAME}!A1:Z"
-TOKEN_PATH = "C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/Google/token.json"
-SCOPES = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive"
-]
 
-def log_message(message):
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] {message}")
+def build_sheets_service():
+    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=SCOPES)
+    return build("sheets", "v4", credentials=creds).spreadsheets()
 
+def log_message(message: str):
+    print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}] {message}")
+
+# ---------- Block 1: sync_employee_levels ----------
 def sync_employee_levels():
     log_message("[SYNC] Початок синхронізації рівнів співробітників...")
-    creds = Credentials.from_authorized_user_file(TOKEN_PATH, SCOPES)
-    service = build("sheets", "v4", credentials=creds)
-    sheet = service.spreadsheets()
-    result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
-    values = result.get("values", [])
+    sheet = build_sheets_service()
 
+    try:
+        result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
+    except HttpError as e:
+        log_message(f"[ERROR] Google API error: {e}")
+        sys.exit(1)
+
+    values = result.get("values", [])
     if not values:
         log_message("[ERROR] Дані не знайдено в Google Sheets!")
         return
@@ -92,12 +87,16 @@ def sync_employee_levels():
     header = values[0]
     data = values[1:]
     df = pd.DataFrame(data, columns=header)
+
+    # Дати
     df["ДатаПочатку"] = pd.to_datetime(df["ДатаПочатку"], dayfirst=True, errors="coerce")
     df["ДатаЗакінчення"] = pd.to_datetime(df["ДатаЗакінчення"], dayfirst=True, errors="coerce")
 
+    # Тримм
     for col in ["Прізвище", "Посада", "Відділення", "Рівень"]:
         df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else "")
 
+    # Дублікати
     duplicate_mask = df.duplicated(subset=["Прізвище", "ДатаПочатку", "Посада", "Відділення", "Рівень"], keep=False)
     if duplicate_mask.any():
         log_message("[WARN] В Google Sheets знайдено дублікати, виправте їх перед завантаженням.")
@@ -105,8 +104,10 @@ def sync_employee_levels():
             log_message(f"  - {row['Прізвище']} | {row['ДатаПочатку']} | {row['Посада']} | {row['Відділення']} | {row['Рівень']}")
         sys.exit(1)
 
+    # Сортування
     df.sort_values(by=["Прізвище", "Посада", "Відділення", "ДатаПочатку"], inplace=True)
 
+    # Закриття попередніх рівнів (перехід на новий)
     prev_row = None
     for idx, row in df.iterrows():
         if pd.isnull(row["ДатаПочатку"]):
@@ -120,23 +121,18 @@ def sync_employee_levels():
                     log_message(f"[SYNC] Закрито рівень: {prev_row['Прізвище']} {prev_row['Посада']} {prev_row['Відділення']} → {df.at[prev_row.name, 'ДатаЗакінчення'].date()}")
         prev_row = row if pd.isnull(row["ДатаЗакінчення"]) else None
 
+    # Підготовка до запису назад у Sheets (формат дат dd.mm.yyyy)
     updated_values = [header]
     for _, row in df.iterrows():
-        
         row_out = []
         for col in header:
             val = row.get(col, "")
             if isinstance(val, pd.Timestamp):
-                if pd.isnull(val):
-                    row_out.append("")
-                else:
-                    row_out.append(val.strftime("%d.%m.%Y"))
+                row_out.append("" if pd.isnull(val) else val.strftime("%d.%m.%Y"))
             elif pd.isnull(val):
                 row_out.append("")
             else:
                 row_out.append(str(val))
-
-        
         updated_values.append(row_out)
 
     sheet.values().update(
@@ -147,9 +143,11 @@ def sync_employee_levels():
     ).execute()
     log_message("[OK] Google Sheets оновлено!")
 
+    # Завантаження у БД (ON DUPLICATE KEY UPDATE)
     conn = pymysql.connect(**DB_CONFIG)
     cursor = conn.cursor()
     inserted, updated = 0, 0
+
     for _, row in df.iterrows():
         cursor.execute("""
             INSERT INTO zp_фктРівніСпівробітників (`Прізвище`, `ДатаПочатку`, `ДатаЗакінчення`, `Посада`, `Відділення`, `Рівень`)
@@ -163,6 +161,7 @@ def sync_employee_levels():
             row["ДатаЗакінчення"].strftime("%Y-%m-%d") if pd.notnull(row["ДатаЗакінчення"]) else None,
             row["Посада"], row["Відділення"], row["Рівень"]
         ))
+        # rowcount: 1 -> insert, 2 -> update
         if cursor.rowcount == 1:
             inserted += 1
         elif cursor.rowcount == 2:
@@ -173,6 +172,7 @@ def sync_employee_levels():
     conn.close()
     log_message(f"[OK] Завантажено: {inserted} додано, {updated} оновлено.")
 
+# ---------- Block 2: calculate_worktime_matches ----------
 def calculate_worktime_matches():
     log_message("[INFO] Початок розрахунку збігів у zp_worktime...")
 
@@ -198,24 +198,29 @@ def calculate_worktime_matches():
     cursor.execute("SELECT * FROM zp_фктУмовиОплати")
     rules_rows = cursor.fetchall()
 
+    # Індекс рівнів
     levels_map = {}
     for lvl in levels_rows:
-        key = (lvl['Прізвище'].strip().lower(), lvl['Посада'].strip().lower(), lvl['Відділення'].strip().lower())
+        key = ( (lvl.get('Прізвище') or '').strip().lower(),
+                (lvl.get('Посада') or '').strip().lower(),
+                (lvl.get('Відділення') or '').strip().lower() )
         levels_map.setdefault(key, []).append(lvl)
 
     for work_row in worktime_rows:
         work_date = work_row['date_shift']
-        last_name = work_row['last_name'].strip()
-        position = work_row['position'].strip()
-        department = work_row['department'].strip()
+        last_name = (work_row.get('last_name') or '').strip()
+        position = (work_row.get('position') or '').strip()
+        department = (work_row.get('department') or '').strip()
 
         key_specific = (last_name.lower(), position.lower(), department.lower())
         key_generic = (last_name.lower(), position.lower(), '')
 
         matched_levels = levels_map.get(key_specific, []) + levels_map.get(key_generic, [])
-        matched_levels = [lvl for lvl in matched_levels
-                          if lvl['ДатаПочатку'] <= work_date and
-                          (lvl['ДатаЗакінчення'] is None or lvl['ДатаЗакінчення'] >= work_date)]
+        matched_levels = [
+            lvl for lvl in matched_levels
+            if lvl['ДатаПочатку'] <= work_date and
+               (lvl['ДатаЗакінчення'] is None or lvl['ДатаЗакінчення'] >= work_date)
+        ]
 
         error_messages, colision_messages = [], []
         level_value = None
@@ -227,12 +232,13 @@ def calculate_worktime_matches():
         else:
             error_messages.append("Рівень не знайдено")
 
+        # оновити level у zp_worktime
         cursor.execute("""
             UPDATE zp_worktime SET level=%s WHERE date_shift=%s AND idx=%s
         """, (level_value, work_row['date_shift'], work_row['idx']))
 
+        # Підбір правил
         best_matches = []
-
         for rule in rules_rows:
             if not (rule['ДатаПочатку'] <= work_date and
                     (rule['ДатаЗакінчення'] is None or rule['ДатаЗакінчення'] >= work_date)):
@@ -240,8 +246,8 @@ def calculate_worktime_matches():
 
             matches, score, skip = 0, 0, False
             for field, weight in weights.items():
-                work_val = str(work_row.get(field, '')).strip().lower()
-                rule_val = str(rule.get(field_mapping[field], '')).strip().lower()
+                work_val = str(work_row.get(field, '') or '').strip().lower()
+                rule_val = str(rule.get(field_mapping[field], '') or '').strip().lower()
                 if rule_val:
                     if work_val == rule_val:
                         matches += 1
@@ -260,27 +266,39 @@ def calculate_worktime_matches():
             if len(rule_ids) > 1:
                 colision_messages.append(f"Колізія Rule_ID: {', '.join(map(str, rule_ids))}")
 
+            # ставка на зміну/годину
+            def to_float(v):
+                try:
+                    return float(v) if v is not None and v != '' else 0.0
+                except Exception:
+                    try:
+                        return float(str(v).replace(',', '.'))
+                    except Exception:
+                        return 0.0
+
             if not colision_messages and not error_messages:
                 cursor.execute("""
-                    UPDATE zp_worktime SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
+                    UPDATE zp_worktime
+                    SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
                     WHERE date_shift=%s AND idx=%s
                 """, (
                     top['matches'], top['score'], '',
-                    top['rule']['СтавкаЗміна'],
-                    float(top['rule']['СтавкаЗміна']) / 12 if top['rule']['СтавкаЗміна'] else 0,
+                    to_float(top['rule']['СтавкаЗміна']),
+                    to_float(top['rule']['СтавкаЗміна']) / 12 if to_float(top['rule']['СтавкаЗміна']) else 0.0,
                     top['rule']['Rule_ID'],
                     '',
                     work_row['date_shift'], work_row['idx']
                 ))
             else:
                 cursor.execute("""
-                    UPDATE zp_worktime SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
+                    UPDATE zp_worktime
+                    SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
                     WHERE date_shift=%s AND idx=%s
                 """, (
                     top['matches'], top['score'],
-                    '\n'.join(colision_messages),
+                    '\n'.join(colision_messages) if colision_messages else '',
                     0.0, 0.0, None,
-                    '\n'.join(error_messages),
+                    '\n'.join(error_messages) if error_messages else '',
                     work_row['date_shift'], work_row['idx']
                 ))
 

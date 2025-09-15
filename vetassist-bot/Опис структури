@@ -1,0 +1,11 @@
+
+vetassist-bot/
+├─ bot/
+│  ├─ main.py                 # головний запуск бота
+│  └─ handlers.py             # реєстрація/зв’язка команд з фічами
+├─ features/
+│  └─ patient_control/
+│     ├─ entry.py             # "мейн-блок" фічі (викликає підмодулі)
+│     └─ pipeline.py          # оркестратор: ingest → summarize → enote
+└─ modules/
+   └─ config.py               # читає токени/налаштування з .env

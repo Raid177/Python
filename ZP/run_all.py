@@ -2,16 +2,12 @@
 """
 run_all.py
 
-Скрипт для послідовного або вибіркового запуску модулів підрахунку ЗП.
+Запуск пайплайну підрахунку ЗП:
+- без аргументів: повний запуск всіх скриптів
+- <script.py>: лише цей скрипт
+- from <script.py>: цей і всі наступні
 
-✅ Запускає скрипти у заданій послідовності або з аргументами:
-   - без аргументів: повний запуск всіх скриптів
-   - <script.py>: запуск лише цього скрипта
-   - from <script.py>: запуск цього скрипта та всіх наступних.
-✅ Виводить логи в консоль та записує їх у файл main_log.txt (у батьківській папці), з таймстампом.
-✅ Додає резюме часу виконання кожного скрипта.
-✅ Після виконання всіх скриптів — виводить загальний час виконання.
-✅ Якщо скрипт вивалюється з помилкою авторизації Google, пропонує пройти авторизацію через authorize.py, а потім запуститися заново або завершитися.
+Логи: консоль + ../main_log.txt (із таймстампами та тривалістю)
 """
 
 import subprocess
@@ -32,23 +28,22 @@ SCRIPTS = [
     "sync_умови_рівень.py",
     "zp_sales_salary_new.py",
     "zp_collective_bonus.py",
-    "summary.py"
+    "summary.py",
 ]
 
 # === Шлях до лог-файлу ===
-LOG_FILE = os.path.join(os.path.dirname(__file__), "..", "main_log.txt")
+BASE_DIR = os.path.dirname(__file__)
+LOG_FILE = os.path.join(BASE_DIR, "..", "main_log.txt")
+os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 def current_timestamp():
-    """Отримати таймстамп у форматі [YYYY-MM-DD HH:MM:SS]."""
     return datetime.datetime.now().strftime("[%Y-%m-%d %H:%M:%S]")
 
-def log_write(message):
-    """Запис рядка у лог-файл."""
+def log_write(message: str):
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(message + "\n")
 
-def print_and_log(message):
-    """Вивід у консоль та запис у лог з таймстампом."""
+def print_and_log(message: str):
     line = f"{current_timestamp()} {message}"
     print(line)
     log_write(line)
@@ -61,7 +56,7 @@ run_all.py — запуск скриптів підрахунку ЗП.
 - <назва_скрипта.py> — запуск лише цього скрипта.
 - from <назва_скрипта.py> — запуск цього скрипта та всіх наступних.
 
-Наприклад:
+Приклади:
     python run_all.py
     python run_all.py fill_flat_schedule.py
     python run_all.py from worktime.py
@@ -69,36 +64,31 @@ run_all.py — запуск скриптів підрахунку ЗП.
     print(help_text)
     log_write(help_text)
 
-def run_script(script):
-    """Запускає окремий скрипт, логуючи stdout/stderr та перевіряючи помилки авторизації Google."""
-    script_path = os.path.join(os.path.dirname(__file__), script)
+def run_script(script: str) -> bool:
+    """Запускає окремий скрипт, стрімить stdout у лог, повертає True/False за фактом успіху."""
+    script_path = os.path.join(BASE_DIR, script)
     if not os.path.isfile(script_path):
         print_and_log(f"[WARN] Скрипт не знайдено: {script}")
         return False
-
-    print_and_log(f"[RUN] Виконую скрипт: {script}")
+    print ("-=-=-=-=-=-=-=-=-=-=-=-")
+    print_and_log(f"\n[RUN] Виконую скрипт: {script}")
     log_write("-" * 60)
     start_time = time.time()
+
+    # Використовуємо системне кодування, але безпечніше підстрахувати utf-8
+    encoding = locale.getpreferredencoding(False) or "utf-8"
 
     process = subprocess.Popen(
         [sys.executable, script_path],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
-        encoding=locale.getpreferredencoding(False)  # Використання системного кодування
+        encoding=encoding,
+        cwd=BASE_DIR,   # щоб відносні шляхи скриптів працювали очікувано
+        env=os.environ.copy(),
     )
 
-    error_google_auth = False
-    google_keywords = [
-        "google authorization",
-        "refresh token",
-        "expired token",
-        "refresherror",
-        "invalidgrant",
-        "invalid_scope",
-        "bad request"
-    ]
-
+    # Стрімио stdout у реальному часі
     while True:
         line = process.stdout.readline()
         if not line and process.poll() is not None:
@@ -107,49 +97,24 @@ def run_script(script):
             log_line = f"{current_timestamp()} {line.rstrip()}"
             print(log_line)
             log_write(log_line)
-            if any(keyword in line.lower() for keyword in google_keywords):
-                error_google_auth = True
 
     exit_code = process.wait()
     elapsed_time = round(time.time() - start_time, 2)
     print_and_log(f"[TIME] Час виконання скрипта {script}: {elapsed_time} сек.")
 
     if exit_code != 0:
-        if error_google_auth:
-            print_and_log(f"[ERROR] Проблема з авторизацією Google у скрипті: {script}.")
-            choice = input("Пройти авторизацію? (так/ні): ").strip().lower()
-            if choice in ("так", "y", "yes"):
-                run_script("authorize.py")
-                print_and_log("[OK] Авторизація Google пройдена.")
-                restart = input("Запустити все заново? (так/ні): ").strip().lower()
-                if restart in ("так", "y", "yes"):
-                    print_and_log("[SYNC] Повторний запуск з тими ж параметрами...")
-                    python_exe = sys.executable
-                    try:
-                        subprocess.run([python_exe, sys.argv[0]] + sys.argv[1:], check=True)
-                    except subprocess.CalledProcessError as e:
-                        print_and_log(f"[ERROR] Повторний запуск завершився з помилкою: {e.returncode}")
-                    sys.exit(0)
-                else:
-                    print_and_log("[WARN] Завершення роботи.")
-                    sys.exit(1)
-            else:
-                print_and_log("[WARN] Завершення роботи.")
-                sys.exit(1)
-        else:
-            print_and_log(f"[ERROR] Помилка виконання: {script}. Зупиняємо.")
-            sys.exit(exit_code)
+        print_and_log(f"[ERROR] Помилка виконання: {script} (exit={exit_code}). Зупиняємо.")
+        sys.exit(exit_code)
     return True
 
 def main():
-    # === Логування команди запуску ===
+    # Лог стартової команди
     command_line = " ".join(sys.argv)
     log_write("=" * 80)
     log_write(f"{current_timestamp()} Запущено з командою: {command_line}")
     log_write("=" * 80)
 
     start_all_time = time.time()
-
     args = sys.argv[1:]
 
     try:
@@ -161,11 +126,11 @@ def main():
         elif args[0] == "from" and len(args) == 2:
             try:
                 start_index = SCRIPTS.index(args[1])
-                for script in SCRIPTS[start_index:]:
-                    run_script(script)
             except ValueError:
                 print_and_log(f"[WARN] Скрипт '{args[1]}' не знайдено у списку.")
                 sys.exit(1)
+            for script in SCRIPTS[start_index:]:
+                run_script(script)
         elif len(args) == 1:
             if args[0] in SCRIPTS:
                 run_script(args[0])
@@ -177,7 +142,7 @@ def main():
             print_help()
     finally:
         total_time = round(time.time() - start_all_time, 2)
-        print_and_log(f"[FINISH] Загальний час виконання: {total_time} сетакк.")
+        print_and_log(f"[FINISH] Загальний час виконання: {total_time} сек.")
 
 if __name__ == "__main__":
     main()

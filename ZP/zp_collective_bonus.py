@@ -18,16 +18,30 @@ from datetime import datetime
 import os
 from dotenv import load_dotenv
 
-# [START] Завантаження .env
-load_dotenv("C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env")
+# ========= ENV loader =========
+ENV_PROFILE = os.getenv("ENV_PROFILE", "prod")  # dev | prod
+ENV_PATHS = {
+    "dev":  r"C:/Users/la/OneDrive/Pet Wealth/Analytics/Python_script/.env",
+    "prod": "/root/Python/_Acces/.env.prod",
+}
+ENV_PATH = os.getenv("ENV_PATH") or ENV_PATHS.get(ENV_PROFILE)
+if ENV_PATH and os.path.exists(ENV_PATH):
+    load_dotenv(ENV_PATH, override=True)
+else:
+    load_dotenv(override=True)  # шукає .env у поточній папці
 
+def require_env(name: str) -> str:
+    v = os.getenv(name)
+    if not v:
+        raise SystemExit(f"[ENV ERROR] Missing {name}. Check {ENV_PATH or '.env'}.")
+    
 # [START] Параметри Hetzner (через SSH тунель)
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST_Serv", "127.0.0.1"),
-    "port": int(os.getenv("DB_PORT_Serv", 3306)),
-    "user": os.getenv("DB_USER_Serv"),
-    "password": os.getenv("DB_PASSWORD_Serv"),
-    "database": os.getenv("DB_DATABASE_Serv"),
+    "host": os.getenv("DB_HOST", "127.0.0.1"),
+    "port": int(os.getenv("DB_PORT", 3306)),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASSWORD"),
+    "database": os.getenv("DB_DATABASE"),
     "charset": "utf8mb4",
     "cursorclass": pymysql.cursors.DictCursor,
 }
