@@ -1,44 +1,61 @@
 # handlers.py
-# Завдання: тут зберігаються всі обробники команд для бота.
-# Зараз додаємо команду /kontrol (контроль пацієнтів) та /help.
+# Завдання: обробники команд для VetAssist бота.
+# Підтримує:
+# - /help
+# - /kontrol (команда може бути в будь-якому місці повідомлення; або як reply)
+# - /pick (резервний варіант вибору)
+# - числовий вибір без команди (1,2,3...) після списку
 
+from typing import List, Dict
+import sys, traceback
 from telegram import Update
 from telegram.ext import ContextTypes
 from features.patient_control.resolve import extract_patient_numbers
-from features.patient_control.enote_lookup import get_patient_by_number, get_patient_names_by_numbers
-import sys, traceback
+from features.patient_control.enote_lookup import (
+    get_patient_by_number,
+    get_patient_names_by_numbers,
+)
 
+# =========================
+# /help
+# =========================
 async def help_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Обробник команди /help"""
     await update.message.reply_text(
         "Доступні команди:\n"
         "/start – перевірити, що бот працює\n"
-        "/kontrol – контроль пацієнтів (демо)\n"
+        "/kontrol – контроль пацієнтів (можна писати /kontrol на початку/вкінці повідомлення або зробити reply)\n"
         "/help – ця довідка\n"
     )
 
 
+# =========================
+# /kontrol
+# =========================
 async def kontrol_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     /kontrol:
     - якщо це reply → беремо текст із відповіді
-    - інакше беремо текст після команди в цьому ж повідомленні
+    - інакше беремо весь текст цього повідомлення і прибираємо з нього маркер '/kontrol' де б він не стояв
     - якщо тексту немає → підказка
     - далі: шукаємо номери в шапках; 1 номер → одразу тягнемо GUID; кілька → список і очікування цифри
     """
 
     # 1) Визначаємо джерело тексту
     if update.message.reply_to_message and update.message.reply_to_message.text:
-        raw_text = update.message.reply_to_message.text.strip()
+        full_text = update.message.reply_to_message.text
         print("[/kontrol] using reply_to_message text", file=sys.stderr)
     else:
-        raw_text = (update.message.text or "").partition(" ")[2].strip()
-        print("[/kontrol] using inline text after command; length=", len(raw_text), file=sys.stderr)
+        full_text = (update.message.text or "")
+        print("[/kontrol] using same-message text; length=", len(full_text), file=sys.stderr)
+
+    # Прибираємо всі входження '/kontrol' (на початку, в кінці, посередині, на окремому рядку)
+    raw_text = full_text.replace("/kontrol", "").strip()
 
     if not raw_text:
         await update.message.reply_text(
             "Надішліть /kontrol у відповідь на повідомлення з перепискою "
-            "або напишіть /kontrol <текст переписки>."
+            "або напишіть /kontrol і той самий текст в одному повідомленні."
         )
         return
 
@@ -48,7 +65,7 @@ async def kontrol_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print("[/kontrol] --- RAW END ---", file=sys.stderr)
 
     # 3) Витягуємо номери з шапок повідомлень
-    nums = extract_patient_numbers(raw_text)
+    nums: List[str] = extract_patient_numbers(raw_text)
     print(f"[/kontrol] extracted numbers: {nums}", file=sys.stderr)
 
     if not nums:
@@ -89,7 +106,7 @@ async def kontrol_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["awaiting_pick"] = True
 
     try:
-        name_map = get_patient_names_by_numbers(nums)  # {"1472": "Барні", ...} або ""
+        name_map: Dict[str, str] = get_patient_names_by_numbers(nums)  # {"1472": "Барні", ...} або ""
         print(f"[/kontrol] name_map: {name_map}", file=sys.stderr)
     except Exception:
         print("[/kontrol] ERROR get_patient_names_by_numbers:", file=sys.stderr)
@@ -107,7 +124,11 @@ async def kontrol_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
         + "\n\nНадішліть просто цифру (1, 2, 3...), щоб обрати пацієнта."
     )
 
-async def pick_cmd(update, context):
+
+# =========================
+# /pick (резерв)
+# =========================
+async def pick_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     /pick <значення>
     Приймає або сам номер пацієнта (наприклад: 1472), або порядковий номер у списку (наприклад: 1).
@@ -122,12 +143,11 @@ async def pick_cmd(update, context):
     candidates = context.user_data.get("candidate_patient_numbers", [])
 
     chosen = None
-    # якщо ввели число і воно в межах індексів
     if value.isdigit():
         idx = int(value) - 1
         if 0 <= idx < len(candidates):
             chosen = candidates[idx]
-        elif value in candidates:  # напряму збігається з номером
+        elif value in candidates:
             chosen = value
     else:
         if value in candidates:
@@ -143,19 +163,21 @@ async def pick_cmd(update, context):
     context.user_data["selected_patient_number"] = chosen
     await update.message.reply_text(f"✅ Обрано номер пацієнта: {chosen}\n(Далі — пошук GUID у Єноті)")
 
-from telegram.ext import ContextTypes
 
-async def number_pick_fallback(update, context: ContextTypes.DEFAULT_TYPE):
+# =========================
+# Числовий вибір без команди
+# =========================
+async def number_pick_fallback(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     Якщо користувачеві щойно показали список і він надсилає просто число (1,2,3...),
-    трактуємо це як вибір із candidate_patient_numbers.
+    трактуємо це як вибір із candidate_patient_numbers і одразу тягнемо GUID/кличку.
     """
     text = (update.message.text or "").strip()
     if not text.isdigit():
         return
 
     if not context.user_data.get("awaiting_pick"):
-        return  # ми зараз не в режимі вибору
+        return  # не в режимі вибору — ігноруємо
 
     candidates = context.user_data.get("candidate_patient_numbers", [])
     idx = int(text) - 1
@@ -163,7 +185,27 @@ async def number_pick_fallback(update, context: ContextTypes.DEFAULT_TYPE):
         chosen = candidates[idx]
         context.user_data["selected_patient_number"] = chosen
         context.user_data["awaiting_pick"] = False
-        await update.message.reply_text(f"✅ Обрано номер пацієнта: {chosen}\n(Далі — пошук GUID у Єноті)")
-    else:
-        await update.message.reply_text("Такого пункту немає. Надішли номер із показаного списку.")
 
+        # одразу тягнемо GUID/кличку/власника
+        try:
+            info = get_patient_by_number(chosen)
+        except Exception:
+            traceback.print_exc()
+            await update.message.reply_text(f"Обрано {chosen}, але сталася помилка під час звернення до Єнота.")
+            return
+
+        if not info:
+            await update.message.reply_text(f"Обрано {chosen}, але в Єноті такого пацієнта не знайдено.")
+            return
+
+        context.user_data["patient_ref_key"] = info["ref_key"]
+        await update.message.reply_text(
+            "✅ Обрано пацієнта:\n"
+            f"- Номер: {chosen}\n"
+            f"- Кличка: {info['name']}\n"
+            f"- Власник: {info['owner']}\n"
+            f"- Ref_Key: {info['ref_key']}\n\n"
+            "Готово. Далі — передамо переписку в ChatGPT."
+        )
+    else:
+        await update.message.reply_text("Такого пункту немає. Надішліть номер із показаного списку.")
