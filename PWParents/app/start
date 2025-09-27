@@ -1,0 +1,3 @@
+cd /root/Python/PWParents
+source .venv/bin/activate
+python -m app.main

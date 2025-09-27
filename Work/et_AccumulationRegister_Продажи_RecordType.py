@@ -24,7 +24,7 @@ if not ODATA_URL:
 def get_last_period():
     conn = mysql.connector.connect(
         host=DB_HOST,
-        user=DB_USER,
+        user=DB_USER, 
         password=DB_PASSWORD,
         database=DB_DATABASE
     )
