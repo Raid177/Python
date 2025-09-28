@@ -2,9 +2,10 @@ import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.enums import ParseMode
 from aiogram.client.default import DefaultBotProperties
+
 from core.config import settings
 from infra.logging import setup_logging
-from bot.routers import client, staff
+from bot.routers import client, staff, callbacks
 
 async def main():
     setup_logging(settings.log_level)
@@ -17,7 +18,8 @@ async def main():
     dp = Dispatcher()
     dp.include_router(client.router)
     dp.include_router(staff.router)
-    
+    dp.include_router(callbacks.router)
+
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

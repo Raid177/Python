@@ -1,18 +1,18 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.types import Message
-from aiogram import Bot
-from aiogram.filters import CommandStart        # ← додай
+from aiogram.filters import CommandStart
+
 from core.config import settings
 from core.services.tickets import ensure_ticket
 from core.services.relay import log_and_send_text_to_topic, log_inbound_media_copy
 
 router = Router()
 
-@router.message(CommandStart())                 # ← ОНОВЛЕНО
+@router.message(CommandStart())
 async def start_cmd(message: Message):
     await message.answer(
         "Вітаємо в PetWealth Parents! 🐾\n"
-        "Надішліть своє питання тут — ми створимо тему для команди.\n"
+        "Надішліть своє питання тут — ми створимо (або знайдемо) вашу тему для команди.\n"
         "Надсилаючи повідомлення, ви погоджуєтесь із обробкою звернення в межах політики конфіденційності."
     )
 
@@ -23,4 +23,4 @@ async def inbound_from_client(message: Message, bot: Bot):
     if message.content_type == "text":
         await log_and_send_text_to_topic(bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head)
     else:
-        await log_inbound_media_copy(message, settings.support_group_id, t["thread_id"], t["id"], head)
+        await log_inbound_media_copy(message, settings.support_group_id, t["thread_id"], t["id"], head, bot)
