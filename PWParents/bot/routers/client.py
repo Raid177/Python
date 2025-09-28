@@ -13,13 +13,14 @@ async def start_cmd(message: Message):
     await message.answer(
         "Вітаємо в PetWealth Parents! 🐾\n"
         "Надішліть своє питання тут — ми створимо (або знайдемо) вашу тему для команди.\n"
-        "Надсилаючи повідомлення, ви погоджуєтесь із обробкою звернення в межах політики конфіденційності."
+        "Надсилаючи повідомлення, ви погоджуєтесь із політикою конфіденційності."
     )
 
 @router.message(F.chat.type == "private")
 async def inbound_from_client(message: Message, bot: Bot):
     t = await ensure_ticket(bot, settings.support_group_id, message.from_user.id)
-    head = f"📨 Від клієнта <code>{message.from_user.id}</code>"
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
     if message.content_type == "text":
         await log_and_send_text_to_topic(bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head)
     else:

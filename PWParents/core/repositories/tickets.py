@@ -36,6 +36,11 @@ def update_thread(conn, ticket_id:int, thread_id:int):
     cur.execute("UPDATE pp_tickets SET thread_id=%s WHERE id=%s", (thread_id, ticket_id))
     cur.close()
 
+def set_label(conn, ticket_id:int, label:str|None):
+    cur = conn.cursor()
+    cur.execute("UPDATE pp_tickets SET label=%s WHERE id=%s", (label, ticket_id))
+    cur.close()
+
 def create(conn, client_id:int, thread_id:int=None):
     cur = conn.cursor()
     cur.execute("INSERT INTO pp_tickets (client_user_id, thread_id) VALUES (%s,%s)",

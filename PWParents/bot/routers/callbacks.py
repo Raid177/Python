@@ -3,7 +3,6 @@ from aiogram.types import CallbackQuery
 from aiogram.exceptions import TelegramBadRequest
 
 from core.db import get_conn
-from core.config import settings
 from core.repositories import tickets as repo_t
 from bot.keyboards.common import ticket_actions_kb, prefix_for_staff
 
@@ -43,7 +42,7 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🟡 В роботі | Клієнт: <code>{client_id}</code>\n"
+                text=(f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
                       f"Виконавець: {who}"),
                 reply_markup=ticket_actions_kb(client_id),
             )
@@ -63,7 +62,7 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🟢 Вільно | Клієнт: <code>{client_id}</code>\n"
+                text=(f"🟢 Вільно | Клієнт: <code>{t['label'] or client_id}</code>\n"
                       f"Натисніть «Взяти», щоб призначити виконавця"),
                 reply_markup=ticket_actions_kb(client_id),
             )
@@ -82,7 +81,7 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🔴 Закрито | Клієнт: <code>{client_id}</code>"),
+                text=(f"🔴 Закрито | Клієнт: <code>{t['label'] or client_id}</code>"),
                 reply_markup=None,
             )
         except TelegramBadRequest as e:

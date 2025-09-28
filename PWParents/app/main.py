@@ -6,6 +6,7 @@ from aiogram.client.default import DefaultBotProperties
 from core.config import settings
 from infra.logging import setup_logging
 from bot.routers import client, staff, callbacks
+from bot.routers import client, staff, callbacks, agents
 
 async def main():
     setup_logging(settings.log_level)
@@ -19,6 +20,10 @@ async def main():
     dp.include_router(client.router)
     dp.include_router(staff.router)
     dp.include_router(callbacks.router)
+    dp.include_router(client.router)
+    dp.include_router(staff.router)
+    dp.include_router(callbacks.router)
+    dp.include_router(agents.router)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)

@@ -16,17 +16,15 @@ async def _post_restored_notice_and_card(bot: Bot, support_group_id:int, thread_
         conn.close()
     if not t:
         return
-    # службове повідомлення для саппорту
     await bot.send_message(
         chat_id=support_group_id,
         message_thread_id=thread_id,
         text=f"♻️ Тему відновлено для клієнта <code>{t['client_user_id']}</code> (ticket #{ticket_id}).",
     )
-    # картка з кнопками
     await bot.send_message(
         chat_id=support_group_id,
         message_thread_id=thread_id,
-        text=(f"🟢 Заявка\nКлієнт: <code>{t['client_user_id']}</code>\n"
+        text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
               f"Статус: {t['status']}"),
         reply_markup=ticket_actions_kb(t["client_user_id"]),
     )
@@ -36,26 +34,19 @@ async def log_and_send_text_to_topic(bot: Bot, support_group_id:int, thread_id:i
         sent = await bot.send_message(chat_id=support_group_id, message_thread_id=thread_id, text=f"{head}\n\n{text}")
     except TelegramBadRequest as e:
         if "message thread not found" in str(e).lower():
-            # дістати client_id щоб назвати тему ID<client_id>
             conn = get_conn()
             try:
                 t = repo_t.get_by_id(conn, ticket_id)
                 client_id = t["client_user_id"] if t else None
             finally:
                 conn.close()
-            topic = await bot.create_forum_topic(
-                chat_id=support_group_id,
-                name=f"ID{client_id or ticket_id}"
-            )
-            # оновити thread_id
+            topic = await bot.create_forum_topic(chat_id=support_group_id, name=f"ID{client_id or ticket_id}")
             conn = get_conn()
             try:
                 repo_t.update_thread(conn, ticket_id, topic.message_thread_id)
             finally:
                 conn.close()
-            # службове повідомлення + картка
             await _post_restored_notice_and_card(bot, support_group_id, topic.message_thread_id, ticket_id)
-            # відправити текст
             sent = await bot.send_message(chat_id=support_group_id, message_thread_id=topic.message_thread_id, text=f"{head}\n\n{text}")
         else:
             raise
@@ -76,10 +67,7 @@ async def log_inbound_media_copy(message, support_group_id:int, thread_id:int, t
                 client_id = t["client_user_id"] if t else None
             finally:
                 conn.close()
-            topic = await bot.create_forum_topic(
-                chat_id=support_group_id,
-                name=f"ID{client_id or ticket_id}"
-            )
+            topic = await bot.create_forum_topic(chat_id=support_group_id, name=f"ID{client_id or ticket_id}")
             conn = get_conn()
             try:
                 repo_t.update_thread(conn, ticket_id, topic.message_thread_id)
