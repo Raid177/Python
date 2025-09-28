@@ -1,3 +1,4 @@
+#core/repositories/tickets.py
 def find_open_by_client(conn, client_id:int):
     cur = conn.cursor(dictionary=True)
     cur.execute("""SELECT * FROM pp_tickets

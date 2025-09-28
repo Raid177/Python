@@ -99,3 +99,61 @@ async def btn_nav(message: Message):
         f"☎️ {settings.SUPPORT_PHONE}\n"
         "Google Maps: https://maps.app.goo.gl/Rir8Qgmzotz3RZMU7"
     )
+
+# =============================
+# КЛІЄНТ → ТЕМА САППОРТ-ГРУПИ
+# =============================
+from core.repositories import tickets as repo_t
+from core.services.relay import log_and_send_text_to_topic, log_inbound_media_copy
+from aiogram.filters import CommandStart
+
+async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
+    """
+    Знайти відкритий тікет клієнта або створити новий з темою у службовій групі.
+    Повертає словник тікета (id, client_user_id, thread_id, label, status, ...).
+    """
+    # 1) шукаємо відкритий/в роботі
+    conn = get_conn()
+    try:
+        t = repo_t.find_open_by_client(conn, client_id)  # див. пункт 2 нижче — якщо немає, додамо у репозиторій
+    finally:
+        conn.close()
+    if t:
+        return t
+
+    # 2) створюємо тему і новий тікет
+    topic = await bot.create_forum_topic(chat_id=settings.support_group_id, name=f"ID{client_id}")
+    conn = get_conn()
+    try:
+        ticket_id = repo_t.create(conn, client_id, topic.message_thread_id)  # див. пункт 2 нижче
+        t = repo_t.get_by_id(conn, ticket_id)
+    finally:
+        conn.close()
+
+    # картка в тему
+    await bot.send_message(
+        chat_id=settings.support_group_id,
+        message_thread_id=t["thread_id"],
+        text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
+              f"Статус: {t['status']}")
+    )
+    return t
+
+@router.message(F.chat.type == "private")
+async def inbound_from_client(message: Message, bot: Bot):
+    # відсікаємо службові/команди
+    if message.text and message.text.startswith("/"):
+        return
+    # якщо це співробітник — ігноруємо (щоб не засмічувати теми при їх тестах)
+    if await _is_staff_member(bot, message.from_user.id):
+        return
+
+    # знайти/створити тікет і штовхнути у тему
+    t = await _ensure_ticket_for_client(bot, message.from_user.id)
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
+
+    if message.content_type == "text":
+        await log_and_send_text_to_topic(bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head)
+    else:
+        await log_inbound_media_copy(message, settings.support_group_id, t["thread_id"], t["id"], head, bot)
