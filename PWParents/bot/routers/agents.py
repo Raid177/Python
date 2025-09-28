@@ -1,48 +1,88 @@
-from aiogram import Router, Bot, F
+# bot/routers/agents.py
+from aiogram import Router, F, Bot
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject
+from aiogram.exceptions import TelegramBadRequest
+
 from core.config import settings
 from core.db import get_conn
-from core.repositories.agents import upsert_agent, set_display_name, get_display_name
+from core.repositories import agents as repo_a
+from core.repositories.agents import get_display_name
 
-router = Router()
+import logging
+logger = logging.getLogger(__name__)
 
-async def _is_member(bot: Bot, user_id:int) -> bool:
+router = Router()  # ← СТАВИМО ПЕРЕД ДЕКОРАТОРАМИ
+
+def _is_staff_member_status(status: str) -> bool:
+    return status in ("creator", "administrator", "member")
+
+@router.message(Command("start"), F.chat.type == "private")
+async def start_private(message: Message, bot: Bot):
+    u = message.from_user
+    # перевірка членства у support-групі
+    is_staff = False
     try:
-        cm = await bot.get_chat_member(settings.support_group_id, user_id)
-        return cm.status in ("member","administrator","creator")
-    except Exception:
-        return False
+        cm = await bot.get_chat_member(settings.support_group_id, u.id)
+        is_staff = _is_staff_member_status(getattr(cm, "status", ""))
+    except TelegramBadRequest:
+        pass
 
-@router.message(Command("who"))
-async def who(message: Message):
-    await message.answer(f"Ваш Telegram ID: <code>{message.from_user.id}</code>")
-
-@router.message(Command("start"))
-async def start_agent(message: Message, bot: Bot):
-    if not await _is_member(bot, message.from_user.id):
-        await message.answer("Привіт! Щоб працювати як співробітник, спершу додайся до службової групи з темами.")
+    if not is_staff:
+        await message.answer(
+            "Вітаємо в PetWealth Parents! 🐾\n"
+            "Надішліть своє питання тут — ми створимо (або знайдемо) вашу тему для команди.\n"
+            "Надсилаючи повідомлення, ви погоджуєтесь із політикою конфіденційності."
+        )
         return
+
+    # гарантуємо запис у БД
     conn = get_conn()
     try:
-        current = get_display_name(conn, message.from_user.id)
+        repo_a.upsert_agent(conn, telegram_id=u.id, display_name="", role="doctor", active=1)
+        conn.commit()
     finally:
         conn.close()
-    if current:
-        await message.answer(f"Вітаю! Твоє відображуване ім'я: <b>{current}</b>.\nМожеш змінити: /setname Імʼя Прізвище")
-    else:
-        await message.answer("Вітаю! Ти в групі. Обери імʼя, яке бачитимуть клієнти:\n/setname Імʼя Прізвище")
 
-@router.message(Command("setname"))
-async def setname(message: Message, command: CommandObject, bot: Bot):
-    if not await _is_member(bot, message.from_user.id):
-        await message.answer("Ця команда доступна лише співробітникам групи."); return
+    display = get_display_name(get_conn(), u.id)
+    if display:
+        await message.answer(
+            f"Вітаю! Ти в команді PetWealth 🐾\n"
+            f"• Твоє ім’я для клієнтів: <b>{display}</b>\n"
+            f"• Твій Telegram ID: <a href='tg://user?id={u.id}'>{u.id}</a>\n"
+            f"• У темі групи можна використовувати /assign, /label, /close тощо."
+        )
+    else:
+        await message.answer(
+            "Вітаю! Ти в команді PetWealth 🐾\n"
+            "• Задай ім’я, яке бачитимуть клієнти: /setname Імʼя Прізвище\n"
+            f"• Твій Telegram ID: <a href='tg://user?id={u.id}'>{u.id}</a>\n"
+            "• У темі групи можна використовувати /assign, /label, /close тощо."
+        )
+
+@router.message(Command("setname"), F.chat.type == "private")
+async def setname_private(message: Message, command: CommandObject):
+    logger.info("SETNAME hit: uid=%s text=%r", message.from_user.id, message.text)
     name = (command.args or "").strip()
     if not name:
-        await message.answer("Використання: /setname Імʼя Прізвище"); return
+        await message.answer("Використання: <code>/setname Імʼя Прізвище</code>")
+        return
+
+    uid = message.from_user.id
     conn = get_conn()
     try:
-        upsert_agent(conn, message.from_user.id, name)
+        repo_a.upsert_agent(conn, telegram_id=uid, display_name=name, role="doctor", active=1)
+        conn.commit()
     finally:
         conn.close()
-    await message.answer(f"✅ Імʼя збережено: <b>{name}</b>")
+
+    await message.answer(f"Готово ✅ Ваше ім’я для клієнтів: <b>{name}</b>")
+
+@router.message(Command("who"), F.chat.type == "private")
+async def who_private(message: Message):
+    await message.answer(f"Ваш Telegram ID: <code>{message.from_user.id}</code>")
+
+@router.message(Command("name"), F.chat.type == "private")
+async def name_private(message: Message):
+    display = get_display_name(get_conn(), message.from_user.id)
+    await message.answer(f"Поточне ім’я для клієнтів: <b>{display or '— не задано —'}</b>")

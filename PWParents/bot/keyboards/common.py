@@ -1,3 +1,5 @@
+# bot/keyboards/common.py
+
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from core.db import get_conn
 from core.repositories.agents import get_display_name

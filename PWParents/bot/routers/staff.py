@@ -1,8 +1,8 @@
+#bot/routers/staff.py
 from aiogram import Router, F, Bot
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject
 from aiogram.exceptions import TelegramBadRequest
-
 from core.config import settings
 from core.db import get_conn
 from core.repositories import messages as repo_m
@@ -10,7 +10,6 @@ from core.repositories import tickets as repo_t
 from core.repositories.agents import get_display_name
 from bot.keyboards.common import prefix_for_staff, ticket_actions_kb
 from bot.routers._media import relay_media
-
 from core.repositories import agents as repo_a
 from bot.keyboards.common import assign_agents_kb
 
