@@ -4,32 +4,48 @@ from aiogram.exceptions import TelegramBadRequest
 
 from core.db import get_conn
 from core.repositories import tickets as repo_t
-from bot.keyboards.common import ticket_actions_kb, prefix_for_staff
+from core.repositories import agents as repo_a
+from bot.keyboards.common import ticket_actions_kb, prefix_for_staff, assign_agents_kb
 
 router = Router()
 
 def _parse(data:str):
     try:
-        action, client_id = data.split(":")
-        return action, int(client_id)
+        action, payload = data.split(":", 1)
+        return action, payload
     except Exception:
         return None, None
 
 @router.callback_query(F.data.startswith("pp."))
 async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
-    action, client_id = _parse(cb.data)
+    action, payload = _parse(cb.data)
     if not action:
         return
 
+    # Витягуємо клієнта/тікет
     conn = get_conn()
     try:
-        t = repo_t.find_latest_by_client(conn, client_id)
+        if action in ("pp.take", "pp.transfer", "pp.close"):
+            client_id = int(payload)
+            t = repo_t.find_latest_by_client(conn, client_id)
+        elif action.startswith("pp.assignto"):
+            # payload = "<client_id>:<assignee_id>"
+            p1, p2 = payload.split(":")
+            client_id = int(p1); assignee_id = int(p2)
+            t = repo_t.find_latest_by_client(conn, client_id)
+        elif action.startswith("pp.cancel"):
+            client_id = int(payload)
+            t = repo_t.find_latest_by_client(conn, client_id)
+        else:
+            t = None
     finally:
         conn.close()
+
     if not t:
         await cb.answer("Заявку не знайдено", show_alert=True)
         return
 
+    # --- Дії ---
     if action == "pp.take":
         conn = get_conn()
         try:
@@ -52,23 +68,57 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
         await cb.answer("Взято в роботу")
 
     elif action == "pp.transfer":
+        # Показати список співробітників для вибору (без негайної зміни картки)
         conn = get_conn()
         try:
-            repo_t.assign_to(conn, t["id"], None)
-            repo_t.set_status(conn, t["id"], "open")
+            agents = repo_a.list_active(conn)
         finally:
             conn.close()
+
+        kb = assign_agents_kb(agents, client_id, exclude_id=None)
+        await bot.send_message(
+            chat_id=cb.message.chat.id,
+            message_thread_id=cb.message.message_thread_id,
+            text=f"Кому передати клієнта <b>{t['label'] or client_id}</b>?",
+            reply_markup=kb,
+        )
+        await cb.answer("Оберіть виконавця")
+
+    elif action.startswith("pp.assignto"):
+        # Призначити і повідомити лікаря у приват
+        assignee_id = int(payload.split(":")[1])
+
+        conn = get_conn()
+        try:
+            repo_t.assign_to(conn, t["id"], assignee_id)
+            repo_t.set_status(conn, t["id"], "in_progress")
+        finally:
+            conn.close()
+
+        who = prefix_for_staff(assignee_id).replace("👩‍⚕️ ", "").replace(":", "")
         try:
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🟢 Вільно | Клієнт: <code>{t['label'] or client_id}</code>\n"
-                      f"Натисніть «Взяти», щоб призначити виконавця"),
+                text=(f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
+                      f"Виконавець: {who}"),
                 reply_markup=ticket_actions_kb(client_id),
             )
         except TelegramBadRequest as e:
             if "message is not modified" not in str(e).lower():
                 raise
+
+        # DM виконавцю
+        try:
+            await bot.send_message(
+                chat_id=assignee_id,
+                text=(f"🔔 Вам призначено звернення клієнта <b>{t['label'] or client_id}</b>.\n"
+                      f"Зайдіть у тему в службовій групі й відповідайте від свого імені.")
+            )
+        except Exception:
+            # мовчки ігноруємо, якщо немає /start у бота
+            pass
+
         await cb.answer("Передано")
 
     elif action == "pp.close":
@@ -90,3 +140,6 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
         await bot.send_message(chat_id=t["client_user_id"],
                                text="✅ Звернення закрито. Якщо потрібно — просто напишіть нове повідомлення.")
         await cb.answer("Закрито")
+
+    elif action == "pp.cancel":
+        await cb.answer("Скасовано")
