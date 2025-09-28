@@ -53,3 +53,15 @@ def list_active(conn):
     rows = cur.fetchall()
     cur.close()
     return rows
+
+def get_agent(conn, telegram_id: int) -> dict | None:
+    cur = conn.cursor(dictionary=True)
+    cur.execute(
+        """SELECT display_name, role, active
+           FROM pp_agents
+           WHERE telegram_id=%s AND active=1""",
+        (telegram_id,),
+    )
+    row = cur.fetchone()
+    cur.close()
+    return row

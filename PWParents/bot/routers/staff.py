@@ -9,19 +9,29 @@ from core.db import get_conn
 from core.repositories import messages as repo_m
 from core.repositories import tickets as repo_t
 from core.repositories.agents import get_display_name
-from bot.keyboards.common import prefix_for_staff, ticket_actions_kb, assign_agents_kb
-from bot.routers._media import relay_media
 from core.repositories import agents as repo_a
 
-router = Router()
+from bot.keyboards.common import (
+    prefix_for_staff,
+    ticket_actions_kb,
+    assign_agents_kb,
+)
+from bot.routers._media import relay_media
+from bot.utils.staff_guard import IsSupportMember
 
+router = Router()
 
 # =========================
 # СЛУЖБОВІ КОМАНДИ В ТЕМІ
 # =========================
 
 # /label — мітка для заголовків (Від клієнта …)
-@router.message(Command("label"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+@router.message(
+    Command("label"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),                # <-- перевірка, що автор справді в саппорт-групі
+)
 async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
     new_label = (command.args or "").strip()
     if not new_label:
@@ -41,7 +51,12 @@ async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
 
 
 # /assign — без аргументів показує список з БД; з числовим ID — одразу призначає
-@router.message(Command("assign"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+@router.message(
+    Command("assign"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
 async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
     conn = get_conn()
     try:
@@ -63,7 +78,10 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
             conn.close()
 
         if not agents:
-            await message.answer("Список співробітників порожній. Додайте їх у pp_agents або нехай вони виконають /setname у приваті з ботом.")
+            await message.answer(
+                "Список співробітників порожній. Додайте їх у pp_agents або нехай вони "
+                "виконають /setname у приваті з ботом."
+            )
             return
 
         kb = assign_agents_kb(agents, client_id=t["client_user_id"], exclude_id=None)
@@ -88,8 +106,10 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
         try:
             await bot.send_message(
                 chat_id=tg_id,
-                text=(f"🔔 Вам призначено звернення клієнта <b>{label}</b>.\n"
-                      f"Зайдіть у тему в службовій групі й відповідайте від свого імені.")
+                text=(
+                    f"🔔 Вам призначено звернення клієнта <b>{label}</b>.\n"
+                    f"Зайдіть у тему в службовій групі й відповідайте від свого імені."
+                ),
             )
         except Exception:
             await message.answer("ℹ️ Не вдалося надіслати приватне повідомлення (співробітник не стартував бота).")
@@ -105,7 +125,12 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
 
 
 # /close — закрити звернення
-@router.message(Command("close"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+@router.message(
+    Command("close"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
 async def staff_close(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -117,11 +142,19 @@ async def staff_close(message: Message, bot: Bot):
         conn.close()
 
     await message.answer("🔴 Звернення закрито.")
-    await bot.send_message(chat_id=t["client_user_id"], text="✅ Звернення закрито. Напишіть будь-коли — продовжимо в цій же темі.")
+    await bot.send_message(
+        chat_id=t["client_user_id"],
+        text="✅ Звернення закрито. Напишіть будь-коли — продовжимо в цій же темі.",
+    )
 
 
 # /reopen — перевідкрити вручну
-@router.message(Command("reopen"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+@router.message(
+    Command("reopen"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
 async def staff_reopen(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -142,7 +175,12 @@ async def staff_reopen(message: Message, bot: Bot):
 
 
 # /card — картка з кнопками в поточну тему
-@router.message(Command("card"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+@router.message(
+    Command("card"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
 async def post_card(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -156,8 +194,11 @@ async def post_card(message: Message, bot: Bot):
         await bot.send_message(
             chat_id=message.chat.id,
             message_thread_id=message.message_thread_id,
-            text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
-                  f"Статус: {t['status']}"),
+            text=(
+                f"🟢 Заявка\n"
+                f"Клієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
+                f"Статус: {t['status']}"
+            ),
             reply_markup=ticket_actions_kb(t["client_user_id"]),
         )
     except TelegramBadRequest:
@@ -167,15 +208,14 @@ async def post_card(message: Message, bot: Bot):
 # =====================================
 # ПРОКСІ ВІДПОВІДЕЙ ІЗ ТЕМИ → КЛІЄНТУ
 # =====================================
-# ВАЖЛИВО:
-#  • не матчимо команди (~F.text.startswith("/"))
-#  • не блокуємо інші хендлери (flags={"block": False})
-
+#  • НЕ матчимо команди (~F.text.startswith("/"))
+#  • НЕ блокуємо інші хендлери (flags={"block": False})
 @router.message(
     F.chat.id == settings.support_group_id,
     F.is_topic_message == True,
     ~F.text.startswith("/"),
-    flags={"block": False}
+    IsSupportMember(),
+    flags={"block": False},
 )
 async def outbound_to_client(message: Message, bot: Bot):
     if message.from_user.is_bot:
@@ -183,6 +223,7 @@ async def outbound_to_client(message: Message, bot: Bot):
     if message.new_chat_members or message.left_chat_member or message.pinned_message:
         return
 
+    # знайти тікет за thread_id
     conn = get_conn()
     try:
         t = repo_t.find_by_thread(conn, message.message_thread_id)
@@ -191,19 +232,51 @@ async def outbound_to_client(message: Message, bot: Bot):
     if not t:
         return
 
-    prefix = prefix_for_staff(message.from_user.id)
+    # 🔸 автопризначення, якщо ще порожньо
+    if not t.get("assigned_to"):
+        conn = get_conn()
+        try:
+            repo_t.assign_to(conn, t["id"], message.from_user.id)
+            repo_t.set_status(conn, t["id"], "in_progress")
+        finally:
+            conn.close()
+        # опційне службове повідомлення у тему
+        who_conn = get_conn()
+        try:
+            who = get_display_name(who_conn, message.from_user.id) or message.from_user.id
+        finally:
+            who_conn.close()
+        try:
+            await bot.send_message(
+                chat_id=message.chat.id,
+                message_thread_id=message.message_thread_id,
+                text=f"🟡 Автопризначення: <b>{who}</b>"
+            )
+        except Exception:
+            pass
+
+    # Префікс з розумним fallback
+    fallback = (
+        message.from_user.full_name
+        or (message.from_user.username and f"@{message.from_user.username}")
+        or None
+    )
+    prefix = prefix_for_staff(message.from_user.id, fallback=fallback)
+
+    from bot.service.msglog import log_and_touch  # імпорт тут, щоб уникати циклічних імпортів
 
     if message.content_type == "text":
-        out = await bot.send_message(chat_id=t["client_user_id"], text=f"{prefix}\n\n{message.text}")
-        conn = get_conn()
-        try:
-            repo_m.insert(conn, t["id"], "out", out.message_id, message.text, "text")
-        finally:
-            conn.close()
+        out = await bot.send_message(
+            chat_id=t["client_user_id"],
+            text=f"{prefix}\n\n{message.text}",
+        )
+        # лог + touch_staff
+        log_and_touch(t["id"], "out", out.message_id, message.text, "text")
     else:
         out = await relay_media(bot, message, t["client_user_id"], prefix)
-        conn = get_conn()
-        try:
-            repo_m.insert(conn, t["id"], "out", out.message_id, getattr(message, "caption", None), message.content_type)
-        finally:
-            conn.close()
+        # лог + touch_staff (для медіа з можливим caption)
+        log_and_touch(
+            t["id"], "out", out.message_id,
+            getattr(message, "caption", None),
+            message.content_type
+        )

@@ -1,14 +1,14 @@
+# core/services/relay.py
 from aiogram import Bot
 from aiogram.exceptions import TelegramBadRequest
+
 from core.db import get_conn
-from core.repositories import messages as repo_m
 from core.repositories import tickets as repo_t
 from bot.keyboards.common import ticket_actions_kb
+from bot.service.msglog import log_and_touch
 
-async def _log_in(conn, ticket_id:int, tg_msg_id:int, text:str|None, media_type:str):
-    repo_m.insert(conn, ticket_id, "in", tg_msg_id, text, media_type)
 
-async def _post_restored_notice_and_card(bot: Bot, support_group_id:int, thread_id:int, ticket_id:int):
+async def _post_restored_notice_and_card(bot: Bot, support_group_id: int, thread_id: int, ticket_id: int):
     conn = get_conn()
     try:
         t = repo_t.get_by_id(conn, ticket_id)
@@ -16,6 +16,7 @@ async def _post_restored_notice_and_card(bot: Bot, support_group_id:int, thread_
         conn.close()
     if not t:
         return
+
     await bot.send_message(
         chat_id=support_group_id,
         message_thread_id=thread_id,
@@ -29,7 +30,8 @@ async def _post_restored_notice_and_card(bot: Bot, support_group_id:int, thread_
         reply_markup=ticket_actions_kb(t["client_user_id"]),
     )
 
-async def log_and_send_text_to_topic(bot: Bot, support_group_id:int, thread_id:int, ticket_id:int, text:str, head:str):
+
+async def log_and_send_text_to_topic(bot: Bot, support_group_id: int, thread_id: int, ticket_id: int, text: str, head: str):
     try:
         sent = await bot.send_message(chat_id=support_group_id, message_thread_id=thread_id, text=f"{head}\n\n{text}")
     except TelegramBadRequest as e:
@@ -50,13 +52,12 @@ async def log_and_send_text_to_topic(bot: Bot, support_group_id:int, thread_id:i
             sent = await bot.send_message(chat_id=support_group_id, message_thread_id=topic.message_thread_id, text=f"{head}\n\n{text}")
         else:
             raise
-    conn = get_conn()
-    try:
-        await _log_in(conn, ticket_id, sent.message_id, text, "text")
-    finally:
-        conn.close()
 
-async def log_inbound_media_copy(message, support_group_id:int, thread_id:int, ticket_id:int, head:str, bot: Bot):
+    # лог + touch_client
+    log_and_touch(ticket_id, "in", sent.message_id, text, "text")
+
+
+async def log_inbound_media_copy(message, support_group_id: int, thread_id: int, ticket_id: int, head: str, bot: Bot):
     try:
         sent = await message.copy_to(chat_id=support_group_id, message_thread_id=thread_id, caption=head)
     except TelegramBadRequest as e:
@@ -77,8 +78,6 @@ async def log_inbound_media_copy(message, support_group_id:int, thread_id:int, t
             sent = await message.copy_to(chat_id=support_group_id, message_thread_id=topic.message_thread_id, caption=head)
         else:
             raise
-    conn = get_conn()
-    try:
-        repo_m.insert(conn, ticket_id, "in", sent.message_id, getattr(message, "caption", None), message.content_type)
-    finally:
-        conn.close()
+
+    # лог + touch_client (caption може бути None — це ок)
+    log_and_touch(ticket_id, "in", sent.message_id, getattr(message, "caption", None), message.content_type)

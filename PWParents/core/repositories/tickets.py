@@ -68,3 +68,63 @@ def reopen(conn, ticket_id:int):
     cur.execute("UPDATE pp_tickets SET status='open', closed_at=NULL, assigned_to=NULL WHERE id=%s",
                 (ticket_id,))
     cur.close()
+
+def touch_client(conn, ticket_id: int):
+    cur = conn.cursor()
+    cur.execute("UPDATE pp_tickets SET last_client_msg_at = UTC_TIMESTAMP() WHERE id=%s", (ticket_id,))
+    cur.close()
+
+def touch_staff(conn, ticket_id: int):
+    cur = conn.cursor()
+    cur.execute("UPDATE pp_tickets SET last_staff_msg_at = UTC_TIMESTAMP() WHERE id=%s", (ticket_id,))
+    cur.close()
+
+def mark_reminded(conn, ticket_id: int):
+    cur = conn.cursor()
+    cur.execute("UPDATE pp_tickets SET last_reminder_at=UTC_TIMESTAMP() WHERE id=%s", (ticket_id,))
+    cur.close()
+
+def mark_unassigned_alerted(conn, ticket_id: int):
+    cur = conn.cursor()
+    cur.execute("UPDATE pp_tickets SET last_unassigned_alert_at=UTC_TIMESTAMP() WHERE id=%s", (ticket_id,))
+    cur.close()
+
+def find_idle(conn, min_idle_minutes: int):
+    cur = conn.cursor(dictionary=True)
+    cur.execute(
+        """
+        SELECT
+          id, client_user_id, label, assigned_to, last_client_msg_at, last_reminder_at,
+          TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) AS idle_minutes,
+          TIMESTAMPDIFF(MINUTE, IFNULL(last_reminder_at,'1970-01-01'), UTC_TIMESTAMP()) AS since_last_reminder
+        FROM pp_tickets
+        WHERE status IN ('open','in_progress')
+          AND assigned_to IS NOT NULL
+          AND last_client_msg_at IS NOT NULL
+          AND (last_staff_msg_at IS NULL OR last_staff_msg_at < last_client_msg_at)
+          AND TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) >= %s
+        ORDER BY last_client_msg_at ASC
+        """,
+        (min_idle_minutes,),
+    )
+    rows = cur.fetchall(); cur.close(); return rows
+
+def find_unassigned_idle(conn, min_idle_minutes: int):
+    cur = conn.cursor(dictionary=True)
+    cur.execute(
+        """
+        SELECT
+          id, client_user_id, label, thread_id, last_client_msg_at, last_unassigned_alert_at,
+          TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) AS idle_minutes,
+          TIMESTAMPDIFF(MINUTE, IFNULL(last_unassigned_alert_at,'1970-01-01'), UTC_TIMESTAMP()) AS since_last_alert
+        FROM pp_tickets
+        WHERE status IN ('open','in_progress')
+          AND assigned_to IS NULL
+          AND last_client_msg_at IS NOT NULL
+          AND (last_staff_msg_at IS NULL OR last_staff_msg_at < last_client_msg_at)
+          AND TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) >= %s
+        ORDER BY last_client_msg_at ASC
+        """,
+        (min_idle_minutes,),
+    )
+    rows = cur.fetchall(); cur.close(); return rows
