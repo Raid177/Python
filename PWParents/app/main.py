@@ -29,8 +29,9 @@ async def main():
     dp.message.middleware(health.count_updates_middleware)
 
     # маршрути — БЕЗ дублювань
-    dp.include_router(root.router)     # ← тільки root
     dp.include_router(health.router)   # ← і health (якщо не в root)
+    dp.include_router(root.router)     # ← тільки root
+    
 
     await bot.delete_webhook(drop_pending_updates=True)
 

@@ -1,3 +1,7 @@
 cd /root/Python/PWParents
 source .venv/bin/activate
 python -m app.main
+
+
+
+sudo systemctl restart pwparents.service

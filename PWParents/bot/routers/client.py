@@ -167,7 +167,6 @@ async def client_start(message: Message, bot: Bot):
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
-        # якщо телефона ще нема — створимо порожній запис (upsert робить те саме, але ensure — простіше)
         c = repo_c.get_client(conn, message.from_user.id)
         if not c or not c.get("phone"):
             repo_c.upsert_client(conn, message.from_user.id, None, False)
@@ -208,7 +207,6 @@ async def got_contact(message: Message):
 
 @router.message(F.text == "➡️ Пропустити", F.chat.type == "private")
 async def skip_phone(message: Message):
-    # зафіксувати клієнта навіть без номера
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
@@ -298,12 +296,15 @@ async def btn_nav(message: Message, bot: Bot):
 
 # -------------------- клієнт → тема саппорт-групи --------------------
 
-@router.message(F.chat.type == "private")
+# ВАЖЛИВО: цей catch-all НЕ матчить команди.
+# - бере текст, що НЕ починається з "/"
+# - або будь-які повідомлення без тексту (фото/відео/док)
+@router.message(
+    F.chat.type == "private",
+    (F.text & ~F.text.startswith("/")) | ~F.text
+)
 async def inbound_from_client(message: Message, bot: Bot):
-    # 1) не форвардимо команди
-    if message.text and message.text.startswith("/"):
-        return
-    # 2) не форвардимо тестові повідомлення співробітників
+    # не форвардимо тестові повідомлення співробітників
     if await _is_staff_member(bot, message.from_user.id):
         return
 
@@ -314,7 +315,7 @@ async def inbound_from_client(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    # 3) знайти/створити тікет і проштовхнути в тему
+    # знайти/створити тікет і проштовхнути в тему
     t = await _ensure_ticket_for_client(bot, message.from_user.id)
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
