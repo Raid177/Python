@@ -5595,3 +5595,32 @@ UA403220010000026006310087701
 [2025-09-26 06:47:34,912] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
 [2025-09-27 14:42:47,852] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
 [2025-09-28 06:06:49,038] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-09-29 07:15:43,796] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-09-29 16:30:55,688] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-09-29 16:31:07,875] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-09-29 16:31:18,887] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJQmjaig8QR4W8_kJYIAeCM0qBn5-IAAIYeAACDC3QSu7YIpG3HrZlNgQ
+[2025-09-29 16:31:19,416] INFO: 📥 Збережено файл: /root/Automation/Paid/Рах_№_125_від_26_вересня_2025_р_Жиліна.pdf
+[2025-09-29 16:31:19,432] INFO: ✅ Запис про файл додано до БД: Рах_№_125_від_26_вересня_2025_р_Жиліна.pdf (user_id: None)
+[2025-09-29 16:31:25,007] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJQ2jaihtRY3tzy8tLQxAFyFQZjk3hAAIZeAACDC3QSkcissVivuvsNgQ
+[2025-09-29 16:31:25,457] INFO: 📥 Збережено файл: /root/Automation/Paid/Рах_№_121_від_24_вересня_2025_р_Жиліна.pdf
+[2025-09-29 16:31:25,468] INFO: ✅ Запис про файл додано до БД: Рах_№_121_від_24_вересня_2025_р_Жиліна.pdf (user_id: None)
+[2025-09-29 16:53:55,459] INFO: [ALL] 7173765324 (None): None
+[2025-09-29 16:53:59,114] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJSGjaj3OuLSuAmGex8IhTASQkmWuZAAIpgQACw864SohAgzYtKNpSNgQ
+[2025-09-29 16:53:59,778] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 12311 от 25 сентября 2025 г..xls
+[2025-09-29 16:53:59,793] INFO: ✅ Запис про файл додано до БД: № 12311 от 25 сентября 2025 г..xls (user_id: None)
+[2025-09-29 16:54:08,253] INFO: [ALL] 7173765324 (None): None
+[2025-09-29 16:54:12,073] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJS2jaj4DVrTNr_fNOtbS8a21yCAAB-gACK4EAAsPOuEqfImdGs8GP6zYE
+[2025-09-29 16:54:12,346] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5092 от 25 сентября 2025 г..xls
+[2025-09-29 16:54:12,358] INFO: ✅ Запис про файл додано до БД: № 5092 от 25 сентября 2025 г..xls (user_id: None)
+[2025-09-29 16:54:44,621] INFO: [ALL] 7173765324 (None): None
+[2025-09-29 16:54:48,132] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJTmjaj6TYSwRinSIHkqSYfUGECWQjAAIqgQACw864Splul0HhW0_lNgQ
+[2025-09-29 16:54:48,403] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 12324 от 25 сентября 2025 г..xls
+[2025-09-29 16:54:48,417] INFO: ✅ Запис про файл додано до БД: № 12324 от 25 сентября 2025 г..xls (user_id: None)
+[2025-09-29 16:55:01,161] INFO: [ALL] 7173765324 (None): None
+[2025-09-29 16:55:04,761] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJUWjaj7UNKopSTVwQxo6FmS0t5idSAAIsgQACw864SlCO4LhMC85kNgQ
+[2025-09-29 16:55:05,056] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 3584 от 25 сентября 2025 г..xls
+[2025-09-29 16:55:05,066] INFO: ✅ Запис про файл додано до БД: № 3584 от 25 сентября 2025 г..xls (user_id: None)
+[2025-09-29 16:55:42,660] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIJVGjaj9rTKwxGNwGf7H6MFdOi8-AGAAJh-DEbjKq4SlypaU6SqFKJAQADAgADeQADNgQ
+[2025-09-29 16:55:42,965] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADYfgxG4yquEp-.jpg
+[2025-09-29 16:55:42,976] INFO: ✅ Запис про файл додано до БД: photo_AQADYfgxG4yquEp-.jpg (user_id: None)
+[2025-09-29 17:14:12,146] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)

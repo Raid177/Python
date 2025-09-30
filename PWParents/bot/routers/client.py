@@ -105,32 +105,86 @@ async def btn_nav(message: Message):
 # =============================
 from core.repositories import tickets as repo_t
 from core.services.relay import log_and_send_text_to_topic, log_inbound_media_copy
-from aiogram.filters import CommandStart
+# from aiogram.filters import CommandStart
 
 async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
     """
-    Знайти відкритий тікет клієнта або створити новий з темою у службовій групі.
-    Повертає словник тікета (id, client_user_id, thread_id, label, status, ...).
+    Повертає відкритий тікет клієнта. Якщо відкритого немає —
+    ПЕРЕВІДКРИВАЄ останній тікет і пише в його ж тему.
+    Якщо теми нема/зламана — створює нову і оновлює thread_id в останньому тікеті.
     """
-    # 1) шукаємо відкритий/в роботі
+    # 1) якщо вже є відкритий або "in_progress" — просто повертаємо його
     conn = get_conn()
     try:
-        t = repo_t.find_open_by_client(conn, client_id)  # див. пункт 2 нижче — якщо немає, додамо у репозиторій
+        t = repo_t.find_open_by_client(conn, client_id)
     finally:
         conn.close()
     if t:
         return t
 
-    # 2) створюємо тему і новий тікет
+    # 2) відкритих немає → беремо ОСТАННІЙ тікет цього клієнта
+    conn = get_conn()
+    try:
+        last = repo_t.find_latest_by_client(conn, client_id)
+    finally:
+        conn.close()
+
+    if last:
+        thread_id = last.get("thread_id")
+        # якщо теми немає — створимо нову і прив'яжемо ДО ТОГО Ж тікета
+        if not thread_id:
+            topic = await bot.create_forum_topic(chat_id=settings.support_group_id, name=f"ID{client_id}")
+            conn = get_conn()
+            try:
+                repo_t.update_thread(conn, last["id"], topic.message_thread_id)
+                repo_t.reopen(conn, last["id"])
+                last = repo_t.get_by_id(conn, last["id"])
+            finally:
+                conn.close()
+            # службова нотатка + картка
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=last["thread_id"],
+                text=f"🟢 Перевідкрито звернення клієнта <code>{last['label'] or client_id}</code>."
+            )
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=last["thread_id"],
+                text=(f"🟢 Заявка\nКлієнт: <code>{last['label'] or last['client_user_id']}</code>\n"
+                      f"Статус: {last['status']}")
+            )
+            return last
+
+        # тема існує → просто перевідкриваємо останній тікет і пишемо в нього
+        conn = get_conn()
+        try:
+            repo_t.reopen(conn, last["id"])
+            last = repo_t.get_by_id(conn, last["id"])
+        finally:
+            conn.close()
+
+        await bot.send_message(
+            chat_id=settings.support_group_id,
+            message_thread_id=last["thread_id"],
+            text=f"🟢 Перевідкрито звернення клієнта <code>{last['label'] or client_id}</code>."
+        )
+        await bot.send_message(
+            chat_id=settings.support_group_id,
+            message_thread_id=last["thread_id"],
+            text=(f"🟢 Заявка\nКлієнт: <code>{last['label'] or last['client_user_id']}</code>\n"
+                  f"Статус: {last['status']}")
+        )
+        return last
+
+    # 3) узагалі немає історії → створюємо ПЕРШИЙ тікет і тему
     topic = await bot.create_forum_topic(chat_id=settings.support_group_id, name=f"ID{client_id}")
     conn = get_conn()
     try:
-        ticket_id = repo_t.create(conn, client_id, topic.message_thread_id)  # див. пункт 2 нижче
+        ticket_id = repo_t.create(conn, client_id, topic.message_thread_id)
         t = repo_t.get_by_id(conn, ticket_id)
     finally:
         conn.close()
 
-    # картка в тему
     await bot.send_message(
         chat_id=settings.support_group_id,
         message_thread_id=t["thread_id"],
