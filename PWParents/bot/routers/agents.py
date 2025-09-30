@@ -17,26 +17,22 @@ router = Router()  # ← СТАВИМО ПЕРЕД ДЕКОРАТОРАМИ
 def _is_staff_member_status(status: str) -> bool:
     return status in ("creator", "administrator", "member")
 
-@router.message(Command("start"), F.chat.type == "private")
+@router.message(Command("start"), F.chat.type == "private", flags={"block": False})
 async def start_private(message: Message, bot: Bot):
     u = message.from_user
     # перевірка членства у support-групі
     is_staff = False
     try:
         cm = await bot.get_chat_member(settings.support_group_id, u.id)
-        is_staff = _is_staff_member_status(getattr(cm, "status", ""))
+        is_staff = cm.status in ("creator", "administrator", "member")
     except TelegramBadRequest:
         pass
 
     if not is_staff:
-        await message.answer(
-            "Вітаємо в PetWealth Parents! 🐾\n"
-            "Надішліть своє питання тут — ми створимо (або знайдемо) вашу тему для команди.\n"
-            "Надсилаючи повідомлення, ви погоджуєтесь із політикою конфіденційності."
-        )
+        # НЕ відповідаємо, і головне — НЕ блокуємо (завдяки flags={"block": False})
         return
 
-    # гарантуємо запис у БД
+       # гарантуємо запис у БД
     conn = get_conn()
     try:
         repo_a.upsert_agent(conn, telegram_id=u.id, display_name="", role="doctor", active=1)

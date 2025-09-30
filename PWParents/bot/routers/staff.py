@@ -26,12 +26,7 @@ router = Router()
 # =========================
 
 # /label — мітка для заголовків (Від клієнта …)
-@router.message(
-    Command("label"),
-    F.chat.id == settings.support_group_id,
-    F.is_topic_message == True,
-    IsSupportMember(),                # <-- перевірка, що автор справді в саппорт-групі
-)
+@router.message(Command("label"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
 async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
     new_label = (command.args or "").strip()
     if not new_label:
@@ -47,8 +42,19 @@ async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
     finally:
         conn.close()
 
-    await message.answer(f"✅ Мітку теми оновлено на: <b>{new_label}</b>")
+    # 🔹 спроба перейменувати тему під мітку
+    try:
+        # Telegram дозволяє 1–128 символів у назві
+        await bot.edit_forum_topic(
+            chat_id=settings.support_group_id,
+            message_thread_id=message.message_thread_id,
+            name=new_label[:128]
+        )
+    except Exception:
+        # тихо ігноруємо — тема може бути видалена/недоступна
+        pass
 
+    await message.answer(f"✅ Мітку теми оновлено на: <b>{new_label}</b>")
 
 # /assign — без аргументів показує список з БД; з числовим ID — одразу призначає
 @router.message(
