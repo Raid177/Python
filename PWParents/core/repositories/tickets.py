@@ -37,9 +37,25 @@ def update_thread(conn, ticket_id:int, thread_id:int):
     cur.execute("UPDATE pp_tickets SET thread_id=%s WHERE id=%s", (thread_id, ticket_id))
     cur.close()
 
-def set_label(conn, ticket_id:int, label:str|None):
+def set_label(conn, ticket_id: int, label: str | None):
     cur = conn.cursor()
-    cur.execute("UPDATE pp_tickets SET label=%s WHERE id=%s", (label, ticket_id))
+    # оновлюємо мітку тікета
+    cur.execute(
+        "UPDATE pp_tickets SET label=%s WHERE id=%s",
+        (label, ticket_id),
+    )
+    # продублюємо в картку клієнта (JOIN по ІД клієнта та telegram_id)
+    cur.execute(
+        """
+        UPDATE pp_clients AS c
+        JOIN pp_tickets AS t
+          ON t.id = %s
+         AND t.client_user_id = c.telegram_id
+        SET c.label = %s,
+            c.updated_at = UTC_TIMESTAMP()
+        """,
+        (ticket_id, label),
+    )
     cur.close()
 
 def create(conn, client_id:int, thread_id:int=None):
@@ -59,9 +75,28 @@ def assign_to(conn, ticket_id:int, telegram_id:int | None):
     cur.execute("UPDATE pp_tickets SET assigned_to=%s WHERE id=%s", (telegram_id, ticket_id))
     cur.close()
 
-def close_ticket(conn, ticket_id:int):
+def close_ticket(conn, ticket_id: int):
     cur = conn.cursor()
-    cur.execute("UPDATE pp_tickets SET status='closed', closed_at=NOW() WHERE id=%s", (ticket_id,))
+
+    # 1) закриваємо тікет
+    cur.execute(
+        "UPDATE pp_tickets SET status='closed', closed_at=UTC_TIMESTAMP() WHERE id=%s",
+        (ticket_id,),
+    )
+
+    # 2) інкрементуємо лічильник закритих звернень у pp_clients
+    #    ЗВЕРНИ УВАГУ: тут використовується c.telegram_id  (НЕ telegram_user_id)
+    cur.execute(
+        """
+        UPDATE pp_clients AS c
+        JOIN pp_tickets AS t
+          ON t.id=%s
+         AND t.client_user_id = c.telegram_id
+        SET c.total_closed = COALESCE(c.total_closed, 0) + 1
+        """,
+        (ticket_id,),
+    )
+
     cur.close()
 
 def reopen(conn, ticket_id:int):

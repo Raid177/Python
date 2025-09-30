@@ -25,8 +25,7 @@ PHONE_EXPLAIN = (
     "Це добровільно. Ви можете натиснути «Пропустити»."
 )
 
-
-# --- helpers ---------------------------------------------------------
+# -------------------- helpers --------------------
 
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
     try:
@@ -151,12 +150,11 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
     )
     return t
 
-
-# --- /start + телефон + кнопки --------------------------------------
+# -------------------- /start + телефон + кнопки --------------------
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
-    # якщо співробітник — підкажемо тестувати з не-робочого акаунта
+    # staff — не показуємо клієнтських екранів
     if await _is_staff_member(bot, message.from_user.id):
         await message.answer(
             "Вітаю! Ви у команді PetWealth 🐾\n"
@@ -165,8 +163,11 @@ async def client_start(message: Message, bot: Bot):
         )
         return
 
+    # гарантуємо запис у pp_clients (навіть без номера)
     conn = get_conn()
     try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+        # якщо телефона ще нема — створимо порожній запис (upsert робить те саме, але ensure — простіше)
         c = repo_c.get_client(conn, message.from_user.id)
         if not c or not c.get("phone"):
             repo_c.upsert_client(conn, message.from_user.id, None, False)
@@ -179,9 +180,15 @@ async def client_start(message: Message, bot: Bot):
         reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
     )
 
-
 @router.message(F.contact, F.chat.type == "private")
 async def got_contact(message: Message):
+    # фіксуємо клієнта в БД у будь-якому разі
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
     contact: Contact = message.contact
     if not contact or not contact.phone_number:
         await message.answer(
@@ -199,36 +206,97 @@ async def got_contact(message: Message):
     await message.answer("Дякуємо! Номер збережено ✅", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
-
 @router.message(F.text == "➡️ Пропустити", F.chat.type == "private")
 async def skip_phone(message: Message):
+    # зафіксувати клієнта навіть без номера
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
     await message.answer("Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
+# --------------- кнопки швидкого старту (і подія у тему) ---------------
 
-# Кнопки швидкого старту (MVP)
 @router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private")
-async def btn_current_treatment(message: Message):
+async def btn_current_treatment(message: Message, bot: Bot):
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
+    t = await _ensure_ticket_for_client(bot, message.from_user.id)
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
+
+    await log_and_send_text_to_topic(
+        bot, settings.support_group_id, t["thread_id"], t["id"],
+        "➡️ Кнопка: «🩺 Запитання по поточному лікуванню»", head
+    )
     await message.answer("Опишіть, будь ласка, ваше питання щодо поточного лікування.")
 
 @router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private")
-async def btn_booking(message: Message):
+async def btn_booking(message: Message, bot: Bot):
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
+    t = await _ensure_ticket_for_client(bot, message.from_user.id)
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
+
+    await log_and_send_text_to_topic(
+        bot, settings.support_group_id, t["thread_id"], t["id"],
+        "➡️ Кнопка: «📅 Записатись на прийом»", head
+    )
     await message.answer("Напишіть зручний день/час та ім’я пацієнта.")
 
 @router.message(F.text == "❓ Задати питання", F.chat.type == "private")
-async def btn_question(message: Message):
+async def btn_question(message: Message, bot: Bot):
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
+    t = await _ensure_ticket_for_client(bot, message.from_user.id)
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
+
+    await log_and_send_text_to_topic(
+        bot, settings.support_group_id, t["thread_id"], t["id"],
+        "➡️ Кнопка: «❓ Задати питання»", head
+    )
     await message.answer("Напишіть ваше питання.")
 
 @router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private")
-async def btn_nav(message: Message):
+async def btn_nav(message: Message, bot: Bot):
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
+    t = await _ensure_ticket_for_client(bot, message.from_user.id)
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
+
+    await log_and_send_text_to_topic(
+        bot, settings.support_group_id, t["thread_id"], t["id"],
+        "➡️ Кнопка: «🗺 Як нас знайти»", head
+    )
     await message.answer(
-        "📍 Київ, вул. ...\n🕒 Пн-Нд 08:00–22:00\n"
+        "📍 Київ, прт.Воскресенський 2/1 (Перова). \n🕒 Графік роботи - цілодобово\n"
         f"☎️ {settings.SUPPORT_PHONE}\n"
         "Google Maps: https://maps.app.goo.gl/Rir8Qgmzotz3RZMU7"
     )
 
-
-# --- КЛІЄНТ → тема саппорт-групи ------------------------------------
+# -------------------- клієнт → тема саппорт-групи --------------------
 
 @router.message(F.chat.type == "private")
 async def inbound_from_client(message: Message, bot: Bot):
@@ -239,12 +307,23 @@ async def inbound_from_client(message: Message, bot: Bot):
     if await _is_staff_member(bot, message.from_user.id):
         return
 
+    # гарантуємо запис у pp_clients
+    conn = get_conn()
+    try:
+        repo_c.ensure_exists(conn, message.from_user.id)
+    finally:
+        conn.close()
+
     # 3) знайти/створити тікет і проштовхнути в тему
     t = await _ensure_ticket_for_client(bot, message.from_user.id)
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
 
     if message.content_type == "text":
-        await log_and_send_text_to_topic(bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head)
+        await log_and_send_text_to_topic(
+            bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head
+        )
     else:
-        await log_inbound_media_copy(message, settings.support_group_id, t["thread_id"], t["id"], head, bot)
+        await log_inbound_media_copy(
+            message, settings.support_group_id, t["thread_id"], t["id"], head, bot
+        )
