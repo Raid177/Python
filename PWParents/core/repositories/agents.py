@@ -29,14 +29,17 @@ def upsert_agent(conn, telegram_id: int, display_name: str, role: str = "doctor"
     cur.close()
 
 
-def set_display_name(conn, telegram_id: int, display_name: str):
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE pp_agents SET display_name=%s WHERE telegram_id=%s",
-        (display_name, telegram_id),
-    )
-    cur.close()
-
+def set_display_name(conn, telegram_id: int, display_name: str, activate: bool = True):
+    with conn.cursor() as cur:
+        cur.execute("""
+            INSERT INTO pp_agents (telegram_id, display_name, role, active)
+            VALUES (%s, %s,
+                    COALESCE((SELECT role FROM pp_agents WHERE telegram_id=%s), 'doctor'),
+                    %s)
+            ON DUPLICATE KEY UPDATE
+                display_name = VALUES(display_name),
+                active = CASE WHEN %s=1 THEN 1 ELSE active END
+        """, (telegram_id, display_name, telegram_id, 1 if activate else 0, 1 if activate else 0))
 
 def list_active(conn):
     """
