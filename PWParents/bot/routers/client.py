@@ -34,17 +34,17 @@ def _should_prompt_phone(client_row: dict | None) -> bool:
     """
     Питаємо номер, якщо:
     - телефона немає
-    - і минуло >= 24 год від останньої активності (updated_at, або created_at як fallback)
+    - і минуло >= 24 год від останньої підказки (last_phone_prompt_at)
     """
     if not client_row or client_row.get("phone"):
         return False
 
-    ts = client_row.get("updated_at") or client_row.get("created_at")
-    if not ts:
-        return True
+    last_prompt = client_row.get("last_phone_prompt_at")
+    if not last_prompt:
+        return True  # ще не питали — показуємо
 
-    now = datetime.now(ts.tzinfo) if getattr(ts, "tzinfo", None) else datetime.now()
-    return (now - ts) >= ASK_PHONE_COOLDOWN
+    now = datetime.now(last_prompt.tzinfo) if getattr(last_prompt, "tzinfo", None) else datetime.now()
+    return (now - last_prompt) >= ASK_PHONE_COOLDOWN
 
 
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
@@ -169,55 +169,46 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
-    # staff — не показуємо клієнтських екранів
-    if await _is_staff_member(bot, message.from_user.id):
-        await message.answer(
-            "Вітаю! Ви у команді PetWealth 🐾\n"
-            "Для клієнтів працюємо у темах службової групи. "
-            "Своє ім’я вкажіть командою /setname у приваті бота."
-        )
-        return
+    # якщо це співробітник — показуємо службовий текст і ВИХОДИМО
+    try:
+        cm = await bot.get_chat_member(settings.support_group_id, message.from_user.id)
+        if cm.status in ("creator", "administrator", "member"):
+            await message.answer(
+                "Вітаю! Ви у команді PetWealth 🐾\n"
+                "Для клієнтів працюємо у темах службової групи.\n"
+                "Своє ім’я вкажіть у приваті: /setname Імʼя Прізвище."
+            )
+            return
+    except Exception:
+        pass
 
-    # гарантуємо запис у pp_clients (навіть без номера)
+    # клієнтський сценарій
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
-        c = repo_c.get_client(conn, message.from_user.id)
+        c = repo_c.get_client(conn, message.from_user.id)  # dict або None
         if not c or not c.get("phone"):
+            # збережемо «порожнього» клієнта, щоб точно був запис
             repo_c.upsert_client(conn, message.from_user.id, None, False)
-            c = repo_c.get_client(conn, message.from_user.id)
     finally:
         conn.close()
 
-    # якщо телефону ще немає — показуємо клаву «поділитись номером»
+    # якщо телефон відсутній — даємо клавіатуру “Поділитись номером”
     if not c or not c.get("phone"):
-    # фіксуємо час показу прохання поділитися телефоном
-        conn = get_conn()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE telegram_id = %s",
-                    (message.from_user.id,)
-                )
-            conn.commit()
-        finally:
-            conn.close()
-
         await message.answer(
             "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
             "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
             "Це добровільно. Можна натиснути «Пропустити».",
-            reply_markup=ask_phone_kb()
+            reply_markup=ask_phone_kb(),
         )
         await message.answer(
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
-            reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
+            reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
         )
         return
 
-    # якщо телефон уже є — головне меню
+    # якщо телефон уже є — показуємо головне меню
     await message.answer("Головне меню:", reply_markup=main_menu_kb())
-
 
 @router.message(F.contact, F.chat.type == "private")
 async def got_contact(message: Message):
@@ -336,11 +327,11 @@ async def btn_nav(message: Message, bot: Bot):
     (F.text & ~F.text.startswith("/")) | ~F.text
 )
 async def inbound_from_client(message: Message, bot: Bot):
-    # не форвардимо тестові повідомлення співробітників
+    # 0) співробітників ігноруємо в клієнтському роутері
     if await _is_staff_member(bot, message.from_user.id):
         return
 
-    # гарантуємо запис у pp_clients + дістанемо рядок для правил підказки
+    # 1) гарантуємо запис у pp_clients і беремо рядок
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
@@ -348,20 +339,16 @@ async def inbound_from_client(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    # якщо телефону немає і минуло ≥24 год від останньої активності — підказуємо (але ДІАЛОГ НЕ БЛОКУЄМО)
-    if _should_prompt_phone(client_row):
-        # одразу фіксуємо момент показу, щоб не дратувати користувача повтором
-        conn = get_conn()
-        try:
-            with conn.cursor() as cur:
-                cur.execute(
-                    "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE telegram_id = %s",
-                    (message.from_user.id,)
-                )
-            conn.commit()
-        finally:
-            conn.close()
+    # 2) якщо телефону немає і «тиша» ≥ 24 год — показуємо запит і фіксуємо момент показу,
+    #    ПРИ ЦЬОМУ ДІАЛОГ У ТЕМУ НЕ ШЛЕМО (return)
 
+    # import logging
+    # logger = logging.getLogger(__name__)
+    # logger.info("client_row=%r", client_row)
+
+
+
+    if _should_prompt_phone(client_row):
         await message.answer(
             "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
             "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
@@ -372,23 +359,36 @@ async def inbound_from_client(message: Message, bot: Bot):
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
             reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
         )
+        # фіксуємо, що підказку показали (щоб не смикати частіше ніж раз/24год)
+        conn = get_conn()
+        try:
+            _touch_last_phone_prompt(conn, message.from_user.id)
+            conn.commit()
+        finally:
+            conn.close()
         return
 
-    # знайти/створити тікет і проштовхнути в тему
+    # 3) знайти/створити тікет і проштовхнути в тему
     t = await _ensure_ticket_for_client(bot, message.from_user.id)
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
 
-    # підхопимо «відкладений намір» (якщо був)
+    # 4) підхопити «висячий» intent (натиснену кнопку) і скинути його
     pending_intent = None
     conn = get_conn()
     try:
         with conn.cursor(dictionary=True) as cur:
-            cur.execute("SELECT intent_label FROM pp_client_intents WHERE client_user_id=%s", (message.from_user.id,))
+            cur.execute(
+                "SELECT intent_label FROM pp_client_intents WHERE client_user_id=%s",
+                (message.from_user.id,)
+            )
             row = cur.fetchone()
             if row:
                 pending_intent = row["intent_label"]
-                cur.execute("DELETE FROM pp_client_intents WHERE client_user_id=%s", (message.from_user.id,))
+                cur.execute(
+                    "DELETE FROM pp_client_intents WHERE client_user_id=%s",
+                    (message.from_user.id,)
+                )
         conn.commit()
     finally:
         conn.close()
@@ -398,7 +398,7 @@ async def inbound_from_client(message: Message, bot: Bot):
             bot, settings.support_group_id, t["thread_id"], t["id"], pending_intent, head
         )
 
-    # далі — власне контент клієнта
+    # 5) далі — власне контент клієнта
     if message.content_type == "text":
         await log_and_send_text_to_topic(
             bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head
@@ -413,3 +413,12 @@ async def inbound_from_client(message: Message, bot: Bot):
 async def show_menu(message: Message):
     await message.answer("Головне меню:", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
+
+def _touch_last_phone_prompt(conn, client_id: int):
+    with conn.cursor() as cur:
+        cur.execute("""
+            UPDATE pp_clients
+               SET last_phone_prompt_at = CURRENT_TIMESTAMP
+             WHERE telegram_id = %s
+        """, (client_id,))
+
