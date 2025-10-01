@@ -219,7 +219,7 @@ async def post_card(message: Message, bot: Bot):
 @router.message(
     F.chat.id == settings.support_group_id,
     F.is_topic_message == True,
-    ~F.text.startswith("/"),
+    (F.text & ~F.text.startswith("/")),
     IsSupportMember(),
     flags={"block": False},
 )

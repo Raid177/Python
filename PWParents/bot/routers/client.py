@@ -154,30 +154,32 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
-    # staff — не показуємо клієнтських екранів
+    # якщо це співробітник — нічого не відповідаємо тут;
+    # приватний /start для staff опрацьовує agents.py
     if await _is_staff_member(bot, message.from_user.id):
-        await message.answer(
-            "Вітаю! Ви у команді PetWealth 🐾\n"
-            "Для роботи з клієнтами використовуйте /setname і відповіді в темах службової групи.\n"
-            "Щоб протестувати клієнтський сценарій — напишіть із тестового акаунта."
-        )
         return
 
-    # гарантуємо запис у pp_clients (навіть без номера)
+    # клієнт: гарантуємо запис і дивимось, чи є телефон
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
         c = repo_c.get_client(conn, message.from_user.id)
-        if not c or not c.get("phone"):
+        has_phone = bool(c and c.get("phone"))
+        if not has_phone:
+            # створити/оновити клієнта без номеру (як було у тебе)
             repo_c.upsert_client(conn, message.from_user.id, None, False)
     finally:
         conn.close()
 
-    await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
-    await message.answer(
-        "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
-        reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
-    )
+    if has_phone:
+        await message.answer("Головне меню:", reply_markup=main_menu_kb())
+        await message.answer(WELCOME)
+    else:
+        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
+        await message.answer(
+            "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
+            reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
+        )
 
 @router.message(F.contact, F.chat.type == "private")
 async def got_contact(message: Message):
@@ -328,3 +330,8 @@ async def inbound_from_client(message: Message, bot: Bot):
         await log_inbound_media_copy(
             message, settings.support_group_id, t["thread_id"], t["id"], head, bot
         )
+
+@router.message(Command("menu"), F.chat.type == "private")
+async def show_menu(message: Message):
+    await message.answer("Головне меню:", reply_markup=main_menu_kb())
+    await message.answer(WELCOME)

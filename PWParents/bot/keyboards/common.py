@@ -15,7 +15,9 @@ def ask_phone_kb():
             [KeyboardButton(text="📱 Поділитися номером", request_contact=True)],
             [KeyboardButton(text="➡️ Пропустити")]
         ],
-        resize_keyboard=True, one_time_keyboard=True, selective=True
+        resize_keyboard=True,
+        one_time_keyboard=False,   # ← було True
+        # is_persistent=True        # ← якщо підтримує твій Bot API; інакше прибери
     )
 
 def main_menu_kb():
@@ -26,7 +28,9 @@ def main_menu_kb():
             [KeyboardButton(text="❓ Задати питання")],
             [KeyboardButton(text="🗺 Як нас знайти")]
         ],
-        resize_keyboard=True, one_time_keyboard=False
+        resize_keyboard=True,
+        one_time_keyboard=False,
+        # is_persistent=True
     )
 
 def privacy_inline_kb(url: str):
@@ -67,3 +71,4 @@ def assign_agents_kb(agents: Iterable[dict], client_id: int, exclude_id: int | N
         rows.append([InlineKeyboardButton(text=label, callback_data=f"pp.assignto:{client_id}:{a['telegram_id']}")])
     rows.append([InlineKeyboardButton(text="⬅️ Скасувати", callback_data=f"pp.cancel:{client_id}")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
