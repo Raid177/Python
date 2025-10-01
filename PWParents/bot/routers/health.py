@@ -5,6 +5,8 @@ from aiogram.filters import Command
 from aiogram.types import Message
 from bot.auth import is_allowed, force_refresh, ADMIN_ALERT_CHAT_ID
 from bot.auth import is_allowed, ADMIN_ALERT_CHAT_ID, get_agent_info  # ← додали get_agent_info
+from aiogram import Router, F
+import logging
 
 router = Router()
 START_TS = time.monotonic()
@@ -101,3 +103,11 @@ async def acl_reload_cmd(message: Message, bot: Bot):
 async def test_cmd(message: Message):
     await message.reply("✅ test ok")
 
+@router.message(Command("boom"))
+async def cmd_boom(message: Message):
+    # імітація помилки у коді
+    try:
+        1/0
+    except Exception:
+        logging.getLogger("bot.test").exception("Штучна помилка для перевірки алерта")
+        await message.answer("Згенерував помилку. Перевірте алерт у групі.")

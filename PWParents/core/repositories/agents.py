@@ -52,7 +52,6 @@ def set_display_name(conn, telegram_id: int, display_name: str, activate: bool =
                 (telegram_id, display_name, want_active),
             )
 
-
 def list_active(conn):
     """
     Список активних співробітників для побудови меню призначення.

@@ -5,34 +5,61 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def _get_bool(name: str, default: bool) -> bool:
+    val = os.getenv(name)
+    if val is None:
+        return default
+    return val.strip().lower() in ("1", "true", "yes", "on")
+
+def _get_int(name: str, default: int) -> int:
+    try:
+        return int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+
+def _get_int_or_none(name: str):
+    val = os.getenv(name, "").strip()
+    if not val:
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        return None
+
 @dataclass
 class Settings:
+    # --- Bot ---
     bot_token: str = os.getenv("BOT_TOKEN", "")
     bot_username: str = os.getenv("BOT_USERNAME", "")
-    support_group_id: int = int(os.getenv("SUPPORT_GROUP_ID", "0"))
 
+    # --- Telegram groups/threads ---
+    support_group_id: int = _get_int("SUPPORT_GROUP_ID", 0)
+    admin_alert_chat_id: int | None = _get_int_or_none("ADMIN_ALERT_CHAT_ID")
+    admin_alert_thread_id: int | None = _get_int_or_none("ADMIN_ALERT_THREAD_ID")
+
+    # --- DB ---
     db_host: str = os.getenv("DB_HOST", "127.0.0.1")
-    db_port: int = int(os.getenv("DB_PORT", "3306"))
+    db_port: int = _get_int("DB_PORT", 3306)
     db_user: str = os.getenv("DB_USER", "")
     db_password: str = os.getenv("DB_PASSWORD", "")
     db_name: str = os.getenv("DB_NAME", "")
 
-    log_level: str = os.getenv("LOG_LEVEL", "INFO")
-
-    # Нові поля
+    # --- Misc/links ---
     SUPPORT_PHONE: str = os.getenv("SUPPORT_PHONE", "(044) 33 44 55 1")
     PRIVACY_URL: str = os.getenv("PRIVACY_URL", "https://wealth.pet")
 
-    REMINDER_ENABLED: bool = os.getenv("REMINDER_ENABLED", "true").lower() in ("1","true","yes","on")
-    REMINDER_IDLE_MINUTES: int = int(os.getenv("REMINDER_IDLE_MINUTES", "30"))
-    REMINDER_PING_EVERY_MIN: int = int(os.getenv("REMINDER_PING_EVERY_MIN", "10"))
+    # --- Logging / alerts ---
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+    error_alerts_enabled: bool = _get_bool("ERROR_ALERTS_ENABLED", True)
+    error_alert_min_level: str = os.getenv("ERROR_ALERT_MIN_LEVEL", "ERROR")
 
-    ADMIN_ALERT_CHAT_ID: int = int(os.getenv("ADMIN_ALERT_CHAT_ID", "0"))  # ID групи адміністраторів (або приват чату чергового)
-    ESCALATE_UNASSIGNED: bool = os.getenv("ESCALATE_UNASSIGNED", "true").lower() in ("1","true","yes","on")
-    UNASSIGNED_IDLE_MINUTES: int = int(os.getenv("UNASSIGNED_IDLE_MINUTES", "15"))  # поріг для не призначених
+    # --- Reminders / SLA ---
+    REMINDER_ENABLED: bool = _get_bool("REMINDER_ENABLED", True)
+    REMINDER_IDLE_MINUTES: int = _get_int("REMINDER_IDLE_MINUTES", 30)
+    REMINDER_PING_EVERY_MIN: int = _get_int("REMINDER_PING_EVERY_MIN", 10)
 
-    POST_ASSIGNED_REMINDER_TO_THREAD: bool = os.getenv("POST_ASSIGNED_REMINDER_TO_THREAD", "false").lower() in ("1","true","yes","on")
-
-
+    ESCALATE_UNASSIGNED: bool = _get_bool("ESCALATE_UNASSIGNED", True)
+    UNASSIGNED_IDLE_MINUTES: int = _get_int("UNASSIGNED_IDLE_MINUTES", 15)
+    POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool("POST_ASSIGNED_REMINDER_TO_THREAD", False)
 
 settings = Settings()

@@ -286,3 +286,19 @@ async def outbound_to_client(message: Message, bot: Bot):
             getattr(message, "caption", None),
             message.content_type
         )
+
+# Показати chat_id і thread_id поточної теми
+@router.message(Command("threadinfo"), F.chat.type == "supergroup")
+async def thread_info(message: Message):
+    tid = message.message_thread_id
+    if not tid:
+        await message.answer("ℹ️ Це не гілка (або команда надіслана поза темою).")
+        return
+    await message.answer(
+        f"<b>Thread info</b>\n"
+        f"Chat ID: <code>{message.chat.id}</code>\n"
+        f"Thread ID: <code>{tid}</code>\n"
+        f"(Назву теми Telegram API не віддає; її видно у шапці в інтерфейсі)",
+        parse_mode="HTML",
+        disable_web_page_preview=True,
+    )
