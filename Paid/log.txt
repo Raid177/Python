@@ -5670,3 +5670,13 @@ UA403220010000026006310087701
 [2025-10-01 21:16:55,770] INFO: 📨 Обробка: photo_AQADYfgxG4yquEp-.jpg (ID: 384, Chat: -1002544853552, MsgID: 2388)
 [2025-10-01 21:16:56,379] INFO: 📨 Обробка: № 214231 от 30 сентября 2025 г .XLS (ID: 387, Chat: -1002544853552, MsgID: 2407)
 [2025-10-01 21:16:57,011] INFO: 📨 Обробка: Прийма_рахунок_на_оплату_2025_10_01_11_09_16_21610.pdf (ID: 389, Chat: -1002544853552, MsgID: 2425)
+[2025-10-02 02:29:05,413] INFO: 🔍 Обробка /pending...
+[2025-10-02 02:29:05,421] INFO: 📥 SQL: Вибірка pending файлів
+[2025-10-02 02:29:05,424] INFO: 📄 Знайдено 1 запис(ів) зі статусом 'pending'
+[2025-10-02 02:29:05,424] INFO: 📨 Обробка: Брабус 10.03.txt (ID: 235, Chat: -1002544853552, MsgID: 1524)
+[2025-10-02 02:29:19,151] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJkGjduU88DgK9ZhqyruKmbAPezBusAAJ6fgACDQ7wSsxL-PMO2_6INgQ
+[2025-10-02 02:29:19,571] INFO: 📥 Збережено файл: /root/Automation/Paid/Binotel-September-2025-telecom-invoice.pdf
+[2025-10-02 02:29:19,583] INFO: ✅ Запис про файл додано до БД: Binotel-September-2025-telecom-invoice.pdf (user_id: None)
+[2025-10-02 02:29:32,621] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJkmjduVxGYdQap99tZ8HcTMJb7AyuAAJ7fgACDQ7wSjb5ZVPdVLsNNgQ
+[2025-10-02 02:29:33,015] INFO: 📥 Збережено файл: /root/Automation/Paid/Binotel-September-2025-software-invoice.pdf
+[2025-10-02 02:29:33,025] INFO: ✅ Запис про файл додано до БД: Binotel-September-2025-software-invoice.pdf (user_id: None)

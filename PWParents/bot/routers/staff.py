@@ -19,6 +19,9 @@ from bot.keyboards.common import (
 from bot.routers._media import relay_media
 from bot.utils.staff_guard import IsSupportMember
 
+from core.repositories import clients as repo_c
+
+
 router = Router()
 
 # =========================
@@ -209,6 +212,60 @@ async def post_card(message: Message, bot: Bot):
         )
     except TelegramBadRequest:
         pass
+
+@router.message(
+    Command("client", "phone"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def show_client_info(message: Message):
+    """
+    /client або /phone у темі → показати дані клієнта:
+    - Telegram ID
+    - телефон (якщо є) + статус підтвердження
+    - мітку (label)
+    - скільки закритих тікетів
+    """
+    conn = get_conn()
+    try:
+        t = repo_t.find_by_thread(conn, message.message_thread_id)
+        if not t:
+            await message.answer("ℹ️ Не знайшов тікет, прив’язаний до цієї теми.")
+            return
+
+        client_id = t["client_user_id"]
+        c = repo_c.get_client(conn, client_id)  # очікуємо поля: phone, phone_confirmed, label, total_closed
+    finally:
+        conn.close()
+
+    label = (c and c.get("label")) or client_id
+    phone = (c and c.get("phone")) or "— не вказано —"
+    confirmed = None
+    if c is not None:
+        # phone_confirmed може бути 0/1 або None
+        pc = c.get("phone_confirmed")
+        if pc is None:
+            confirmed = " "
+        else:
+            confirmed = "підтверджено ✅" if int(pc) == 1 else "не підтверджено ❌"
+
+    total_closed = (c and c.get("total_closed")) or 0
+
+    # зручні лінки
+    tg_link = f"tg://user?id={client_id}"
+
+    text = (
+        "<b>Картка клієнта</b>\n"
+        f"• Клієнт: <code>{label}</code>\n"
+        f"• Telegram ID: <a href='{tg_link}'>{client_id}</a>\n"
+        f"• Телефон: <code>{phone}</code>"
+    )
+    if confirmed is not None:
+        text += f" ({confirmed})"
+    text += f"\n• Закритих звернень: <b>{total_closed}</b>"
+
+    await message.answer(text, disable_web_page_preview=True)
 
 
 # =====================================
