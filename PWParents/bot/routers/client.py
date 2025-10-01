@@ -2,6 +2,7 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, Contact
 from aiogram.filters import Command
+from datetime import datetime, timedelta
 
 from core.db import get_conn
 from core.config import settings
@@ -20,12 +21,31 @@ WELCOME = (
 )
 
 PHONE_EXPLAIN = (
-    "Щоб ідентифікувати вас як власника тварини і надалі надсилати нагадування "
+    "Щоб ми ідентифікували вас як власника тварини і надалі надсилали нагадування "
     "про візити/вакцинації, результати аналізів тощо — поділіться номером телефону.\n\n"
     "Це добровільно. Ви можете натиснути «Пропустити»."
 )
 
 # -------------------- helpers --------------------
+
+ASK_PHONE_COOLDOWN = timedelta(hours=24)
+
+def _should_prompt_phone(client_row: dict | None) -> bool:
+    """
+    Питаємо номер, якщо:
+    - телефона немає
+    - і минуло >= 24 год від останньої активності (updated_at, або created_at як fallback)
+    """
+    if not client_row or client_row.get("phone"):
+        return False
+
+    ts = client_row.get("updated_at") or client_row.get("created_at")
+    if not ts:
+        return True
+
+    now = datetime.now(ts.tzinfo) if getattr(ts, "tzinfo", None) else datetime.now()
+    return (now - ts) >= ASK_PHONE_COOLDOWN
+
 
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
     try:
@@ -36,9 +56,7 @@ async def _is_staff_member(bot: Bot, user_id: int) -> bool:
 
 
 async def _client_display_name(bot: Bot, user_id: int) -> str | None:
-    """
-    Ім'я для відображення: first+last або @username. Повертає None, якщо нічого.
-    """
+    """Ім'я для теми: first+last або @username, або None."""
     try:
         ch = await bot.get_chat(user_id)
         parts = []
@@ -56,10 +74,7 @@ async def _client_display_name(bot: Bot, user_id: int) -> str | None:
 
 async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
     """
-    Повертає відкритий тікет клієнта. Якщо відкритого немає —
-    перевідкриває останній і пише в його тему. Якщо теми нема —
-    створює нову. Для першого тікета: назва теми = ім'я клієнта з Telegram
-    (або @username/ID), і одразу ставимо label = цьому імені.
+    Повертає відкритий тікет; якщо нема — бере останній/створює новий і забезпечує тему.
     """
     # 1) відкритий/у роботі — використовуємо
     conn = get_conn()
@@ -154,32 +169,55 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
-    # якщо це співробітник — нічого не відповідаємо тут;
-    # приватний /start для staff опрацьовує agents.py
+    # staff — не показуємо клієнтських екранів
     if await _is_staff_member(bot, message.from_user.id):
+        await message.answer(
+            "Вітаю! Ви у команді PetWealth 🐾\n"
+            "Для клієнтів працюємо у темах службової групи. "
+            "Своє ім’я вкажіть командою /setname у приваті бота."
+        )
         return
 
-    # клієнт: гарантуємо запис і дивимось, чи є телефон
+    # гарантуємо запис у pp_clients (навіть без номера)
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
         c = repo_c.get_client(conn, message.from_user.id)
-        has_phone = bool(c and c.get("phone"))
-        if not has_phone:
-            # створити/оновити клієнта без номеру (як було у тебе)
+        if not c or not c.get("phone"):
             repo_c.upsert_client(conn, message.from_user.id, None, False)
+            c = repo_c.get_client(conn, message.from_user.id)
     finally:
         conn.close()
 
-    if has_phone:
-        await message.answer("Головне меню:", reply_markup=main_menu_kb())
-        await message.answer(WELCOME)
-    else:
-        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
+    # якщо телефону ще немає — показуємо клаву «поділитись номером»
+    if not c or not c.get("phone"):
+    # фіксуємо час показу прохання поділитися телефоном
+        conn = get_conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE telegram_id = %s",
+                    (message.from_user.id,)
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+        await message.answer(
+            "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
+            "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
+            "Це добровільно. Можна натиснути «Пропустити».",
+            reply_markup=ask_phone_kb()
+        )
         await message.answer(
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
             reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
         )
+        return
+
+    # якщо телефон уже є — головне меню
+    await message.answer("Головне меню:", reply_markup=main_menu_kb())
+
 
 @router.message(F.contact, F.chat.type == "private")
 async def got_contact(message: Message):
@@ -207,6 +245,7 @@ async def got_contact(message: Message):
     await message.answer("Дякуємо! Номер збережено ✅", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
+
 @router.message(F.text == "➡️ Пропустити", F.chat.type == "private")
 async def skip_phone(message: Message):
     conn = get_conn()
@@ -218,11 +257,10 @@ async def skip_phone(message: Message):
     await message.answer("Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
-# --------------- кнопки швидкого старту (і подія у тему) ---------------
+# --------------- кнопки швидкого старту (зберігаємо «намір») ---------------
 
 @router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private")
 async def btn_current_treatment(message: Message, bot: Bot):
-    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -235,11 +273,11 @@ async def btn_current_treatment(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час")
+    await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час.")
+
 
 @router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private")
 async def btn_booking(message: Message, bot: Bot):
-    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -252,12 +290,11 @@ async def btn_booking(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    await message.answer("Напишіть, будь ласка, зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинації, діагностика тощо)")
+    await message.answer("Напишіть зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинація, діагностика тощо).")
 
 
 @router.message(F.text == "❓ Задати питання", F.chat.type == "private")
 async def btn_question(message: Message, bot: Bot):
-    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
         with conn.cursor() as cur:
@@ -270,18 +307,18 @@ async def btn_question(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    await message.answer("Напишіть, будь ласка, зручний день/час та ім’я пацієнта.")
+    await message.answer("Напишіть, будь ласка, ваше питання — і ми відповімо якнайшвидше.")
+
 
 @router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private")
 async def btn_nav(message: Message, bot: Bot):
-    # лиш гарантуємо, що клієнт є у БД — і все
+    # просто гарантуємо запис клієнта — і даємо інформацію (нічого в тему не шлемо)
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
     finally:
         conn.close()
 
-    # Відповідь клієнту (без будь-якого логування в тему/групу)
     await message.answer(
         "📍 Київ, прт.Воскресенський 2/1 (Перова).\n"
         "🕒 Графік роботи — цілодобово\n"
@@ -289,34 +326,60 @@ async def btn_nav(message: Message, bot: Bot):
         "Google Maps: https://maps.app.goo.gl/Rir8Qgmzotz3RZMU7"
     )
 
-
 # -------------------- клієнт → тема саппорт-групи --------------------
 
-# ВАЖЛИВО: цей catch-all НЕ матчить команди.
-# - бере текст, що НЕ починається з "/"
-# - або будь-які повідомлення без тексту (фото/відео/док)
+# НЕ матчимо команди. Беремо:
+#  • текст, що НЕ починається з "/"
+#  • або будь-які не-текстові повідомлення (фото/відео/док)
 @router.message(
     F.chat.type == "private",
     (F.text & ~F.text.startswith("/")) | ~F.text
 )
 async def inbound_from_client(message: Message, bot: Bot):
-    # staff ігноруємо
+    # не форвардимо тестові повідомлення співробітників
     if await _is_staff_member(bot, message.from_user.id):
         return
 
-    # гарантований запис клієнта
+    # гарантуємо запис у pp_clients + дістанемо рядок для правил підказки
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
+        client_row = repo_c.get_client(conn, message.from_user.id)
     finally:
         conn.close()
 
-    # знайти/створити тікет
+    # якщо телефону немає і минуло ≥24 год від останньої активності — підказуємо (але ДІАЛОГ НЕ БЛОКУЄМО)
+    if _should_prompt_phone(client_row):
+        # одразу фіксуємо момент показу, щоб не дратувати користувача повтором
+        conn = get_conn()
+        try:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE telegram_id = %s",
+                    (message.from_user.id,)
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
+        await message.answer(
+            "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
+            "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
+            "Це добровільно. Можна натиснути «Пропустити».",
+            reply_markup=ask_phone_kb()
+        )
+        await message.answer(
+            "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
+            reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
+        )
+        return
+
+    # знайти/створити тікет і проштовхнути в тему
     t = await _ensure_ticket_for_client(bot, message.from_user.id)
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
 
-    # --- НОВЕ: підхоплюємо відкладений intent (кнопку)
+    # підхопимо «відкладений намір» (якщо був)
     pending_intent = None
     conn = get_conn()
     try:
@@ -330,7 +393,6 @@ async def inbound_from_client(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    # якщо є висяча кнопка — спочатку її лог у тему
     if pending_intent:
         await log_and_send_text_to_topic(
             bot, settings.support_group_id, t["thread_id"], t["id"], pending_intent, head
@@ -346,6 +408,7 @@ async def inbound_from_client(message: Message, bot: Bot):
             message, settings.support_group_id, t["thread_id"], t["id"], head, bot
         )
 
+# Додаткова команда, щоб руками викликати меню
 @router.message(Command("menu"), F.chat.type == "private")
 async def show_menu(message: Message):
     await message.answer("Головне меню:", reply_markup=main_menu_kb())

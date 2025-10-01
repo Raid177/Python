@@ -98,3 +98,14 @@ def inc_closed(conn, telegram_id: int):
         (telegram_id,),
     )
     cur.close()
+
+def mark_phone_prompted(conn, client_user_id: int):
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE client_user_id = %s",
+            (client_user_id,)
+        )
+        conn.commit()
+    finally:
+        cur.close()
