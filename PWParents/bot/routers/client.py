@@ -222,79 +222,73 @@ async def skip_phone(message: Message):
 
 @router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private")
 async def btn_current_treatment(message: Message, bot: Bot):
+    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
-        repo_c.ensure_exists(conn, message.from_user.id)
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO pp_client_intents (client_user_id, intent_label)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
+            """, (message.from_user.id, "➡️ Кнопка: «🩺 Запитання по поточному лікуванню»"))
+        conn.commit()
     finally:
         conn.close()
 
-    t = await _ensure_ticket_for_client(bot, message.from_user.id)
-    label = t.get("label") or f"{message.from_user.id}"
-    head = f"📨 Від клієнта <code>{label}</code>"
-
-    await log_and_send_text_to_topic(
-        bot, settings.support_group_id, t["thread_id"], t["id"],
-        "➡️ Кнопка: «🩺 Запитання по поточному лікуванню»", head
-    )
-    await message.answer("Опишіть, будь ласка, ваше питання щодо поточного лікування.")
+    await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час")
 
 @router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private")
 async def btn_booking(message: Message, bot: Bot):
+    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
-        repo_c.ensure_exists(conn, message.from_user.id)
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO pp_client_intents (client_user_id, intent_label)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
+            """, (message.from_user.id, "➡️ Кнопка: «📅 Записатись на прийом»"))
+        conn.commit()
     finally:
         conn.close()
 
-    t = await _ensure_ticket_for_client(bot, message.from_user.id)
-    label = t.get("label") or f"{message.from_user.id}"
-    head = f"📨 Від клієнта <code>{label}</code>"
+    await message.answer("Напишіть, будь ласка, зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинації, діагностика тощо)")
 
-    await log_and_send_text_to_topic(
-        bot, settings.support_group_id, t["thread_id"], t["id"],
-        "➡️ Кнопка: «📅 Записатись на прийом»", head
-    )
-    await message.answer("Напишіть зручний день/час та ім’я пацієнта.")
 
 @router.message(F.text == "❓ Задати питання", F.chat.type == "private")
 async def btn_question(message: Message, bot: Bot):
+    # позначаємо «висячу» кнопку
     conn = get_conn()
     try:
-        repo_c.ensure_exists(conn, message.from_user.id)
+        with conn.cursor() as cur:
+            cur.execute("""
+                INSERT INTO pp_client_intents (client_user_id, intent_label)
+                VALUES (%s, %s)
+                ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
+            """, (message.from_user.id, "➡️ Кнопка: «❓ Задати питання»"))
+        conn.commit()
     finally:
         conn.close()
 
-    t = await _ensure_ticket_for_client(bot, message.from_user.id)
-    label = t.get("label") or f"{message.from_user.id}"
-    head = f"📨 Від клієнта <code>{label}</code>"
-
-    await log_and_send_text_to_topic(
-        bot, settings.support_group_id, t["thread_id"], t["id"],
-        "➡️ Кнопка: «❓ Задати питання»", head
-    )
-    await message.answer("Напишіть ваше питання.")
+    await message.answer("Напишіть, будь ласка, зручний день/час та ім’я пацієнта.")
 
 @router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private")
 async def btn_nav(message: Message, bot: Bot):
+    # лиш гарантуємо, що клієнт є у БД — і все
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
     finally:
         conn.close()
 
-    t = await _ensure_ticket_for_client(bot, message.from_user.id)
-    label = t.get("label") or f"{message.from_user.id}"
-    head = f"📨 Від клієнта <code>{label}</code>"
-
-    await log_and_send_text_to_topic(
-        bot, settings.support_group_id, t["thread_id"], t["id"],
-        "➡️ Кнопка: «🗺 Як нас знайти»", head
-    )
+    # Відповідь клієнту (без будь-якого логування в тему/групу)
     await message.answer(
-        "📍 Київ, прт.Воскресенський 2/1 (Перова). \n🕒 Графік роботи - цілодобово\n"
+        "📍 Київ, прт.Воскресенський 2/1 (Перова).\n"
+        "🕒 Графік роботи — цілодобово\n"
         f"☎️ {settings.SUPPORT_PHONE}\n"
         "Google Maps: https://maps.app.goo.gl/Rir8Qgmzotz3RZMU7"
     )
+
 
 # -------------------- клієнт → тема саппорт-групи --------------------
 
@@ -306,22 +300,43 @@ async def btn_nav(message: Message, bot: Bot):
     (F.text & ~F.text.startswith("/")) | ~F.text
 )
 async def inbound_from_client(message: Message, bot: Bot):
-    # не форвардимо тестові повідомлення співробітників
+    # staff ігноруємо
     if await _is_staff_member(bot, message.from_user.id):
         return
 
-    # гарантуємо запис у pp_clients
+    # гарантований запис клієнта
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
     finally:
         conn.close()
 
-    # знайти/створити тікет і проштовхнути в тему
+    # знайти/створити тікет
     t = await _ensure_ticket_for_client(bot, message.from_user.id)
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
 
+    # --- НОВЕ: підхоплюємо відкладений intent (кнопку)
+    pending_intent = None
+    conn = get_conn()
+    try:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute("SELECT intent_label FROM pp_client_intents WHERE client_user_id=%s", (message.from_user.id,))
+            row = cur.fetchone()
+            if row:
+                pending_intent = row["intent_label"]
+                cur.execute("DELETE FROM pp_client_intents WHERE client_user_id=%s", (message.from_user.id,))
+        conn.commit()
+    finally:
+        conn.close()
+
+    # якщо є висяча кнопка — спочатку її лог у тему
+    if pending_intent:
+        await log_and_send_text_to_topic(
+            bot, settings.support_group_id, t["thread_id"], t["id"], pending_intent, head
+        )
+
+    # далі — власне контент клієнта
     if message.content_type == "text":
         await log_and_send_text_to_topic(
             bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head

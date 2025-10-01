@@ -138,7 +138,7 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             if "message is not modified" not in str(e).lower():
                 raise
         await bot.send_message(chat_id=t["client_user_id"],
-                               text="✅ Звернення закрито. Якщо потрібно — просто напишіть нове повідомлення.")
+                               text="✅ Щиро дякуємо за довіру. Якщо знадобиться допомога — пишіть, будемо раді відповісти.")
         await cb.answer("Закрито")
 
     elif action == "pp.cancel":
