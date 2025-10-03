@@ -11,6 +11,8 @@ from core.repositories import tickets as repo_t
 from core.services.relay import log_and_send_text_to_topic, log_inbound_media_copy
 
 from bot.keyboards.common import ask_phone_kb, main_menu_kb, privacy_inline_kb
+from bot.routers._media import relay_media
+
 
 router = Router()
 
@@ -404,9 +406,28 @@ async def inbound_from_client(message: Message, bot: Bot):
             bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head
         )
     else:
-        await log_inbound_media_copy(
-            message, settings.support_group_id, t["thread_id"], t["id"], head, bot
+    # 1) фізично перекидаємо медіа в тему
+        out = await relay_media(
+            bot,
+            message,
+            settings.support_group_id,
+            prefix=head,                 # "📨 Від клієнта <code>...</code>"
+            thread_id=t["thread_id"],
         )
+
+        # 2) логуємо факт (якщо у тебе є таблиця pp_messages і т.п.)
+        try:
+            from bot.service.msglog import log_and_touch  # або твій актуальний логер
+            log_and_touch(
+                t["id"],
+                "in",                      # напрямок
+                out.message_id,            # айді скопійованого повідомлення в темі
+                getattr(message, "caption", None),
+                message.content_type
+            )
+        except Exception:
+            # логер не критичний для доставлення медіа — помилки тут не роняємо
+            pass
 
 # Додаткова команда, щоб руками викликати меню
 @router.message(Command("menu"), F.chat.type == "private")

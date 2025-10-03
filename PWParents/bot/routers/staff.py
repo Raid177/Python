@@ -336,8 +336,12 @@ async def outbound_to_client(message: Message, bot: Bot):
         # лог + touch_staff
         log_and_touch(t["id"], "out", out.message_id, message.text, "text")
     else:
-        out = await relay_media(bot, message, t["client_user_id"], prefix)
-        # лог + touch_staff (для медіа з можливим caption)
+        out = await relay_media(
+            bot,
+            message,
+            t["client_user_id"],
+            prefix=prefix,   # "👩‍⚕️ Ім'я…:" — як у тебе
+        )
         log_and_touch(
             t["id"], "out", out.message_id,
             getattr(message, "caption", None),

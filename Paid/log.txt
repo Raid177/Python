@@ -5680,3 +5680,15 @@ UA403220010000026006310087701
 [2025-10-02 02:29:32,621] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJkmjduVxGYdQap99tZ8HcTMJb7AyuAAJ7fgACDQ7wSjb5ZVPdVLsNNgQ
 [2025-10-02 02:29:33,015] INFO: 📥 Збережено файл: /root/Automation/Paid/Binotel-September-2025-software-invoice.pdf
 [2025-10-02 02:29:33,025] INFO: ✅ Запис про файл додано до БД: Binotel-September-2025-software-invoice.pdf (user_id: None)
+[2025-10-02 06:48:19,950] INFO: Application is stopping. This might take a moment.
+[2025-10-02 06:48:19,953] INFO: Scheduler has been shut down
+[2025-10-02 06:48:19,963] INFO: Application.stop() complete
+[2025-10-02 06:48:21,507] INFO: 🚀 Запуск бота...
+[2025-10-02 06:48:22,260] INFO: Scheduler started
+[2025-10-02 06:48:22,261] INFO: Application started
+[2025-10-02 07:01:54,247] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-02 09:24:38,536] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-10-03 06:56:57,472] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-03 08:59:59,902] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJlGjfZl-D2JABOy7L40oSqQ7MN_eaAAJwkAAC3Er4SgRp5UkPT-cNNgQ
+[2025-10-03 09:00:00,331] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок ФОП Льодін 30.09.2025.pdf
+[2025-10-03 09:00:00,342] INFO: ✅ Запис про файл додано до БД: Рахунок ФОП Льодін 30.09.2025.pdf (user_id: None)
