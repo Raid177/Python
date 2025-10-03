@@ -276,10 +276,11 @@ async def show_client_info(message: Message):
 @router.message(
     F.chat.id == settings.support_group_id,
     F.is_topic_message == True,
-    (F.text & ~F.text.startswith("/")),
+    (F.text & ~F.text.startswith("/")) | ~F.text,   # ← як у клієнтському catch-all
     IsSupportMember(),
     flags={"block": False},
 )
+
 async def outbound_to_client(message: Message, bot: Bot):
     if message.from_user.is_bot:
         return
