@@ -20,7 +20,7 @@ from bot.routers._media import relay_media
 from bot.utils.staff_guard import IsSupportMember
 
 from core.repositories import clients as repo_c
-
+from datetime import datetime, timedelta
 
 router = Router()
 
@@ -364,3 +364,86 @@ async def thread_info(message: Message):
         parse_mode="HTML",
         disable_web_page_preview=True,
     )
+
+    @router.message(
+    Command("close_silent"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+    async def close_silent(message: Message, bot: Bot):
+        conn = get_conn()
+        try:
+            t = repo_t.get_by_thread(conn, message.message_thread_id) or repo_t.find_by_thread(conn, message.message_thread_id)
+            if not t:
+                return
+            repo_t.close_ticket(conn, t["id"])
+            repo_t.clear_snooze(conn, t["id"])  # на всяк — прибираємо snooze
+            conn.commit()
+        finally:
+            conn.close()
+
+        # повідомляємо тільки у тему, КЛІЄНТУ — НІЧОГО
+        await message.answer("🔴 Звернення закрито (тихо).")
+
+@router.message(
+    Command("snooze"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def snooze_cmd(message: Message, command: CommandObject):
+    args = (command.args or "").strip()
+    if not args or not args.isdigit():
+        await message.answer("Використання: <code>/snooze 30</code> — відкласти алерти на 30 хв.")
+        return
+
+    mins = int(args)
+    if mins < 1 or mins > 1440:
+        await message.answer("Значення має бути від 1 до 1440 хв.")
+        return
+
+    until_dt = datetime.utcnow() + timedelta(minutes=mins)
+
+    conn = get_conn()
+    try:
+        t = repo_t.get_by_thread(conn, message.message_thread_id) or repo_t.find_by_thread(conn, message.message_thread_id)
+        if not t:
+            return
+        repo_t.set_snooze_until(conn, t["id"], until_dt)
+        conn.commit()
+    finally:
+        conn.close()
+
+    await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")
+
+@router.message(
+    Command("snooze"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def snooze_cmd(message: Message, command: CommandObject):
+    args = (command.args or "").strip()
+    if not args or not args.isdigit():
+        await message.answer("Використання: <code>/snooze 30</code> — відкласти алерти на 30 хв.")
+        return
+
+    mins = int(args)
+    if mins < 1 or mins > 1440:
+        await message.answer("Значення має бути від 1 до 1440 хв.")
+        return
+
+    until_dt = datetime.utcnow() + timedelta(minutes=mins)
+
+    conn = get_conn()
+    try:
+        t = repo_t.get_by_thread(conn, message.message_thread_id) or repo_t.find_by_thread(conn, message.message_thread_id)
+        if not t:
+            return
+        repo_t.set_snooze_until(conn, t["id"], until_dt)
+        conn.commit()
+    finally:
+        conn.close()
+
+    await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")

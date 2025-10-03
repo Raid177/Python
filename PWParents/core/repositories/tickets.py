@@ -164,3 +164,24 @@ def find_unassigned_idle(conn, min_idle_minutes: int):
         (min_idle_minutes,),
     )
     rows = cur.fetchall(); cur.close(); return rows
+
+from datetime import datetime
+
+def set_snooze_until(conn, ticket_id: int, until_dt: datetime | None) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_tickets SET snooze_until=%s, updated_at=UTC_TIMESTAMP() WHERE id=%s",
+            (until_dt, ticket_id),
+        )
+
+def clear_snooze(conn, ticket_id: int) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_tickets SET snooze_until=NULL, updated_at=UTC_TIMESTAMP() WHERE id=%s",
+            (ticket_id,),
+        )
+
+def get_by_thread(conn, thread_id: int) -> dict | None:
+    with conn.cursor(dictionary=True) as cur:
+        cur.execute("SELECT * FROM pp_tickets WHERE thread_id=%s LIMIT 1", (thread_id,))
+        return cur.fetchone()
