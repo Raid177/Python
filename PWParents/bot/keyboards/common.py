@@ -26,7 +26,8 @@ def main_menu_kb():
             [KeyboardButton(text="🩺 Запитання по поточному лікуванню")],
             [KeyboardButton(text="📅 Записатись на прийом")],
             [KeyboardButton(text="❓ Задати питання")],
-            [KeyboardButton(text="🗺 Як нас знайти")]
+            [KeyboardButton(text="🗺 Як нас знайти")],
+            [KeyboardButton(text="📱 Поділитись номером", request_contact=True)],  # 🔹 ось ця
         ],
         resize_keyboard=True,
         one_time_keyboard=False,
