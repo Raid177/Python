@@ -2,8 +2,6 @@
 from aiogram import Router, F, Bot
 from aiogram.types import Message, Contact
 from aiogram.filters import Command
-from datetime import datetime, timedelta
-
 from core.db import get_conn
 from core.config import settings
 from core.repositories import clients as repo_c
@@ -12,6 +10,7 @@ from core.services.relay import log_and_send_text_to_topic, log_inbound_media_co
 
 from bot.keyboards.common import ask_phone_kb, main_menu_kb, privacy_inline_kb
 from bot.routers._media import relay_media
+from datetime import datetime, timedelta, timezone
 
 
 router = Router()
@@ -30,23 +29,34 @@ PHONE_EXPLAIN = (
 
 # -------------------- helpers --------------------
 
+
+
 ASK_PHONE_COOLDOWN = timedelta(hours=24)
 
-def _should_prompt_phone(client_row: dict | None) -> bool:
+def _should_prompt_phone(c: dict | None) -> bool:
     """
     Питаємо номер, якщо:
-    - телефона немає
-    - і минуло >= 24 год від останньої підказки (last_phone_prompt_at)
+      - запис клієнта є, але телефону немає;
+      - і від останнього показу підказки минуло ≥ 24 год.
     """
-    if not client_row or client_row.get("phone"):
+    if not c:
+        # якщо запису ще нема — дамо підказку один раз (і одразу зафіксуємо показ)
+        return True
+    if c.get("phone"):
         return False
 
-    last_prompt = client_row.get("last_phone_prompt_at")
-    if not last_prompt:
-        return True  # ще не питали — показуємо
+    last = c.get("last_phone_prompt_at")
+    if not last:
+        return True
 
-    now = datetime.now(last_prompt.tzinfo) if getattr(last_prompt, "tzinfo", None) else datetime.now()
-    return (now - last_prompt) >= ASK_PHONE_COOLDOWN
+    # усі порівняння у UTC
+    now = datetime.now(timezone.utc)
+    if last.tzinfo is None:
+        # БД повернула naive datetime — вважаємо, що це UTC
+        last = last.replace(tzinfo=timezone.utc)
+
+    return (now - last) >= ASK_PHONE_COOLDOWN
+
 
 
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
@@ -195,7 +205,7 @@ async def client_start(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    # якщо телефон відсутній — даємо клавіатуру “Поділитись номером”
+       # якщо телефон відсутній — даємо клавіатуру “Поділитись номером”
     if not c or not c.get("phone"):
         await message.answer(
             "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
@@ -207,12 +217,21 @@ async def client_start(message: Message, bot: Bot):
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
             reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
         )
+
+        # 🔹 фіксуємо показ підказки, щоб не смикати частіше ніж раз/24 год
+        conn = get_conn()
+        try:
+            _touch_last_phone_prompt(conn, message.from_user.id)
+            conn.commit()
+        finally:
+            conn.close()
+
         return
 
     # якщо телефон уже є — показуємо головне меню
     await message.answer("Головне меню:", reply_markup=main_menu_kb())
 
-@router.message(F.contact, F.chat.type == "private")
+@router.message(F.contact, F.chat.type == "private", flags={"block": True})
 async def got_contact(message: Message):
     # фіксуємо клієнта в БД у будь-якому разі
     conn = get_conn()
@@ -239,20 +258,23 @@ async def got_contact(message: Message):
     await message.answer(WELCOME)
 
 
-@router.message(F.text == "➡️ Пропустити", F.chat.type == "private")
+@router.message(F.text == "➡️ Пропустити", F.chat.type == "private", flags={"block": True})
 async def skip_phone(message: Message):
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
+        _touch_last_phone_prompt(conn, message.from_user.id)  # ← важливо!
+        conn.commit()
     finally:
         conn.close()
 
     await message.answer("Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
+
 # --------------- кнопки швидкого старту (зберігаємо «намір») ---------------
 
-@router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private")
+@router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private", flags={"block": True})
 async def btn_current_treatment(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -269,7 +291,7 @@ async def btn_current_treatment(message: Message, bot: Bot):
     await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час.")
 
 
-@router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private")
+@router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private", flags={"block": True})
 async def btn_booking(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -286,7 +308,7 @@ async def btn_booking(message: Message, bot: Bot):
     await message.answer("Напишіть зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинація, діагностика тощо).")
 
 
-@router.message(F.text == "❓ Задати питання", F.chat.type == "private")
+@router.message(F.text == "❓ Задати питання", F.chat.type == "private", flags={"block": True})
 async def btn_question(message: Message, bot: Bot):
     conn = get_conn()
     try:
@@ -303,7 +325,7 @@ async def btn_question(message: Message, bot: Bot):
     await message.answer("Напишіть, будь ласка, ваше питання — і ми відповімо якнайшвидше.")
 
 
-@router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private")
+@router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private", flags={"block": True})
 async def btn_nav(message: Message, bot: Bot):
     # просто гарантуємо запис клієнта — і даємо інформацію (нічого в тему не шлемо)
     conn = get_conn()
@@ -437,11 +459,10 @@ async def show_menu(message: Message):
 
 def _touch_last_phone_prompt(conn, client_id: int):
     with conn.cursor() as cur:
-        cur.execute("""
-            UPDATE pp_clients
-               SET last_phone_prompt_at = CURRENT_TIMESTAMP
-             WHERE telegram_id = %s
-        """, (client_id,))
+        cur.execute(
+            "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
+            (client_id,),
+        )
 
 @router.message(Command("help"))
 async def help_cmd(message: Message):

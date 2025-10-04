@@ -3,99 +3,59 @@
 from typing import Optional
 
 def get_client(conn, telegram_id: int) -> Optional[dict]:
-    cur = conn.cursor(dictionary=True)
-    cur.execute(
-        "SELECT telegram_id, phone, label, total_closed, consent_ts, created_at, updated_at "
-        "FROM pp_clients WHERE telegram_id=%s LIMIT 1",
-        (telegram_id,),
-    )
-    row = cur.fetchone()
-    cur.close()
-    return row
+    """
+    Повертаємо всі поля, які читає код (в т.ч. last_phone_prompt_at і phone_confirmed),
+    щоб логіка підказки працювала коректно.
+    """
+    with conn.cursor(dictionary=True) as cur:
+        cur.execute(
+            """
+            SELECT
+                telegram_id,
+                phone,
+                phone_confirmed,
+                label,
+                total_closed,
+                consent_ts,
+                created_at,
+                updated_at,
+                last_phone_prompt_at
+            FROM pp_clients
+            WHERE telegram_id = %s
+            LIMIT 1
+            """,
+            (telegram_id,),
+        )
+        return cur.fetchone()
 
 
 def ensure_exists(conn, telegram_id: int):
     """
     Гарантує наявність запису для клієнта.
-    Якщо такого telegram_id ще немає — створює порожній рядок.
+    НІЧОГО зайвого не перетираємо.
     """
-    cur = conn.cursor()
-    cur.execute(
-        """
-        INSERT INTO pp_clients (telegram_id, created_at, updated_at)
-        VALUES (%s, UTC_TIMESTAMP(), UTC_TIMESTAMP())
-        ON DUPLICATE KEY UPDATE
-          updated_at = UTC_TIMESTAMP()
-        """,
-        (telegram_id,),
-    )
-    cur.close()
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            INSERT INTO pp_clients (telegram_id, created_at, updated_at)
+            VALUES (%s, UTC_TIMESTAMP(), UTC_TIMESTAMP())
+            ON DUPLICATE KEY UPDATE telegram_id = VALUES(telegram_id)
+            """,
+            (telegram_id,),
+        )
+    # commit ззовні або тут — залежно від твоєї політики. Залишу ззовні, як було.
 
-
-# def upsert_client(conn, telegram_id: int, phone: Optional[str], gave_consent: bool, label: Optional[str] = None):
-#     """
-#     Оновлює/створює клієнта:
-#       - якщо передали phone — зберігаємо
-#       - якщо gave_consent=True — виставляємо consent_ts (один раз)
-#       - якщо передали label — оновлюємо label
-#     Інші поля не чіпаємо.
-#     """
-#     cur = conn.cursor()
-
-#     # будуємо SET динамічно, щоб не перетирати зайвого
-#     sets = ["updated_at=UTC_TIMESTAMP()"]
-#     params = []
-
-#     if phone is not None:
-#         sets.append("phone=%s")
-#         params.append(phone)
-
-#     if label is not None:
-#         sets.append("label=%s")
-#         params.append(label)
-
-#     if gave_consent:
-#         sets.append("consent_ts=IFNULL(consent_ts, UTC_TIMESTAMP())")
-
-#     set_sql = ", ".join(sets)
-
-#     # вставка або оновлення
-#     cur.execute(
-#         f"""
-#         INSERT INTO pp_clients (telegram_id, phone, label, consent_ts, created_at, updated_at)
-#         VALUES (%s, %s, %s, %s, UTC_TIMESTAMP(), UTC_TIMESTAMP())
-#         ON DUPLICATE KEY UPDATE {set_sql}
-#         """,
-#         (
-#             telegram_id,
-#             phone,
-#             label,
-#             # при вставці – одразу ставимо consent_ts, якщо дали згоду, інакше NULL
-#             (None if not gave_consent else None)  # значення для VALUES(consent_ts) – не критично, оновиться через ON DUP
-#         ),
-#     )
-
-#     # Якщо це був апдейт без вставки, нам потрібно виконати окремий UPDATE зі
-#     # зібраним SET (бо в ON DUPLICATE ми вже його виконали). Вище ми все закрили через ON DUPLICATE.
-#     # Тут нічого додатково робити не треба.
-
-#     cur.close()
 
 def upsert_client(
     conn,
     telegram_id: int,
     phone: str | None,
-    phone_confirmed: bool | None = None,   # ← нове поле (можна не передавати)
-    gave_consent: bool = False,            # ← як було раніше
-    label: str | None = None,              # ← як було раніше
+    phone_confirmed: bool | None = None,
+    gave_consent: bool = False,
+    label: str | None = None,
 ) -> None:
     """
-    Створює/оновлює клієнта.
-    - Якщо phone передано — оновлюємо phone.
-    - Якщо phone_confirmed передано (True/False) — оновлюємо прапорець; якщо None — не чіпаємо.
-    - Якщо gave_consent=True — одноразово ставимо consent_ts (якщо ще порожньо).
-    - Якщо label передано — оновлюємо label.
-    Інші поля не перетираємо.
+    Створює/оновлює клієнта без зайвих перетирань.
     """
     with conn.cursor() as cur:
         cur.execute(
@@ -105,11 +65,11 @@ def upsert_client(
                 created_at, updated_at
             )
             VALUES (
-                %s,                          -- telegram_id
-                %s,                          -- phone (може бути NULL)
-                %s,                          -- phone_confirmed (може бути NULL -> не оновимо)
-                %s,                          -- label (може бути NULL -> не оновимо)
-                CASE WHEN %s THEN UTC_TIMESTAMP() ELSE NULL END,  -- consent_ts при вставці
+                %s,
+                %s,
+                %s,
+                %s,
+                CASE WHEN %s THEN UTC_TIMESTAMP() ELSE NULL END,
                 UTC_TIMESTAMP(),
                 UTC_TIMESTAMP()
             )
@@ -129,31 +89,31 @@ def upsert_client(
                 bool(gave_consent),
             ),
         )
+    # commit ззовні
+
 
 def set_label(conn, telegram_id: int, label: str):
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE pp_clients SET label=%s, updated_at=UTC_TIMESTAMP() WHERE telegram_id=%s",
-        (label, telegram_id),
-    )
-    cur.close()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_clients SET label=%s, updated_at=UTC_TIMESTAMP() WHERE telegram_id=%s",
+            (label, telegram_id),
+        )
 
 
 def inc_closed(conn, telegram_id: int):
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE pp_clients SET total_closed = total_closed + 1, updated_at=UTC_TIMESTAMP() WHERE telegram_id=%s",
-        (telegram_id,),
-    )
-    cur.close()
-
-def mark_phone_prompted(conn, client_user_id: int):
-    cur = conn.cursor()
-    try:
+    with conn.cursor() as cur:
         cur.execute(
-            "UPDATE pp_clients SET last_phone_prompt_at = NOW() WHERE client_user_id = %s",
-            (client_user_id,)
+            "UPDATE pp_clients SET total_closed = total_closed + 1, updated_at=UTC_TIMESTAMP() WHERE telegram_id=%s",
+            (telegram_id,),
         )
-        conn.commit()
-    finally:
-        cur.close()
+
+
+def mark_phone_prompted(conn, telegram_id: int):
+    """
+    Фіксуємо момент показу підказки. ВАЖЛИВО: фільтр за telegram_id.
+    """
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
+            (telegram_id,),
+        )
