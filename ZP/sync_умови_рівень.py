@@ -189,7 +189,8 @@ def calculate_worktime_matches():
     conn = pymysql.connect(**DB_CONFIG)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM zp_worktime")
+    # ✅ стабільна послідовність
+    cursor.execute("SELECT * FROM zp_worktime ORDER BY date_shift, idx")
     worktime_rows = cursor.fetchall()
 
     cursor.execute("SELECT * FROM zp_фктРівніСпівробітників")
@@ -198,12 +199,14 @@ def calculate_worktime_matches():
     cursor.execute("SELECT * FROM zp_фктУмовиОплати")
     rules_rows = cursor.fetchall()
 
-    # Індекс рівнів
+    # індекс рівнів
     levels_map = {}
     for lvl in levels_rows:
-        key = ( (lvl.get('Прізвище') or '').strip().lower(),
-                (lvl.get('Посада') or '').strip().lower(),
-                (lvl.get('Відділення') or '').strip().lower() )
+        key = (
+            (lvl.get('Прізвище') or '').strip().lower(),
+            (lvl.get('Посада') or '').strip().lower(),
+            (lvl.get('Відділення') or '').strip().lower()
+        )
         levels_map.setdefault(key, []).append(lvl)
 
     for work_row in worktime_rows:
@@ -213,7 +216,7 @@ def calculate_worktime_matches():
         department = (work_row.get('department') or '').strip()
 
         key_specific = (last_name.lower(), position.lower(), department.lower())
-        key_generic = (last_name.lower(), position.lower(), '')
+        key_generic  = (last_name.lower(), position.lower(), '')
 
         matched_levels = levels_map.get(key_specific, []) + levels_map.get(key_generic, [])
         matched_levels = [
@@ -232,13 +235,16 @@ def calculate_worktime_matches():
         else:
             error_messages.append("Рівень не знайдено")
 
-        # оновити level у zp_worktime
+        # оновлюємо level
         cursor.execute("""
             UPDATE zp_worktime SET level=%s WHERE date_shift=%s AND idx=%s
         """, (level_value, work_row['date_shift'], work_row['idx']))
+        work_row['level'] = level_value  # ✅ локально теж
 
-        # Підбір правил
+        # підбір правил
         best_matches = []
+        mismatch_reasons = []  # ✅ збір причин
+
         for rule in rules_rows:
             if not (rule['ДатаПочатку'] <= work_date and
                     (rule['ДатаЗакінчення'] is None or rule['ДатаЗакінчення'] >= work_date)):
@@ -248,11 +254,14 @@ def calculate_worktime_matches():
             for field, weight in weights.items():
                 work_val = str(work_row.get(field, '') or '').strip().lower()
                 rule_val = str(rule.get(field_mapping[field], '') or '').strip().lower()
-                if rule_val:
+                if rule_val:  # поле в правилі не пусте = обов'язкове
                     if work_val == rule_val:
                         matches += 1
                         score += weight
                     else:
+                        mismatch_reasons.append(
+                            f"{field_mapping[field]}: '{work_val}' ≠ '{rule_val}'"
+                        )
                         skip = True
                         break
             if not skip:
@@ -266,10 +275,9 @@ def calculate_worktime_matches():
             if len(rule_ids) > 1:
                 colision_messages.append(f"Колізія Rule_ID: {', '.join(map(str, rule_ids))}")
 
-            # ставка на зміну/годину
             def to_float(v):
                 try:
-                    return float(v) if v is not None and v != '' else 0.0
+                    return float(v) if v not in (None, '') else 0.0
                 except Exception:
                     try:
                         return float(str(v).replace(',', '.'))
@@ -279,12 +287,14 @@ def calculate_worktime_matches():
             if not colision_messages and not error_messages:
                 cursor.execute("""
                     UPDATE zp_worktime
-                    SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
+                    SET Matches=%s, Score=%s, Colision=%s,
+                        СтавкаЗміна=%s, СтавкаГодина=%s,
+                        Rule_ID=%s, ErrorLog=%s
                     WHERE date_shift=%s AND idx=%s
                 """, (
                     top['matches'], top['score'], '',
                     to_float(top['rule']['СтавкаЗміна']),
-                    to_float(top['rule']['СтавкаЗміна']) / 12 if to_float(top['rule']['СтавкаЗміна']) else 0.0,
+                    to_float(top['rule']['СтавкаЗміна'])/12 if to_float(top['rule']['СтавкаЗміна']) else 0.0,
                     top['rule']['Rule_ID'],
                     '',
                     work_row['date_shift'], work_row['idx']
@@ -292,20 +302,36 @@ def calculate_worktime_matches():
             else:
                 cursor.execute("""
                     UPDATE zp_worktime
-                    SET Matches=%s, Score=%s, Colision=%s, СтавкаЗміна=%s, СтавкаГодина=%s, Rule_ID=%s, ErrorLog=%s
+                    SET Matches=%s, Score=%s, Colision=%s,
+                        СтавкаЗміна=%s, СтавкаГодина=%s,
+                        Rule_ID=%s, ErrorLog=%s
                     WHERE date_shift=%s AND idx=%s
                 """, (
                     top['matches'], top['score'],
                     '\n'.join(colision_messages) if colision_messages else '',
                     0.0, 0.0, None,
-                    '\n'.join(error_messages) if error_messages else '',
+                    '\n'.join(error_messages) if error_messages else '\n'.join(mismatch_reasons),
                     work_row['date_shift'], work_row['idx']
                 ))
+        else:
+            # правило не знайдено
+            cursor.execute("""
+                UPDATE zp_worktime
+                SET Matches=%s, Score=%s, Colision=%s,
+                    СтавкаЗміна=%s, СтавкаГодина=%s,
+                    Rule_ID=%s, ErrorLog=%s
+                WHERE date_shift=%s AND idx=%s
+            """, (
+                0, 0, '', 0.0, 0.0, None,
+                '\n'.join(error_messages) if error_messages else '\n'.join(mismatch_reasons),
+                work_row['date_shift'], work_row['idx']
+            ))
 
     conn.commit()
     cursor.close()
     conn.close()
     log_message("[OK] Обробка завершена!")
+
 
 # === MAIN ===
 if __name__ == "__main__":

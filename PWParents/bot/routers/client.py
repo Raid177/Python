@@ -443,3 +443,14 @@ def _touch_last_phone_prompt(conn, client_id: int):
              WHERE telegram_id = %s
         """, (client_id,))
 
+@router.message(Command("help"))
+async def help_cmd(message: Message):
+    await message.answer(
+        "Доступні команди:\n"
+        "/start — головне меню\n"
+        "/menu — кнопки швидкого доступу\n"
+        "/help — ця підказка\n\n"
+        "У службовій групі доступні: /label, /assign, /card, /client, /phone, "
+        "/threadinfo, /close, /close_silent, /reopen, /snooze."
+    )
+

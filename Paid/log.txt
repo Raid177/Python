@@ -5702,3 +5702,19 @@ UA403220010000026006310087701
 [2025-10-03 10:54:07,480] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJm2jfgRm-3zZ_qtOqTBRw4-q1AfB_AALHdAACNRcAAUtZAAFdlv3qNG42BA
 [2025-10-03 10:54:07,782] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна рах 02102025 зміна.xls
 [2025-10-03 10:54:07,797] INFO: ✅ Запис про файл додано до БД: Жиліна рах 02102025 зміна.xls (user_id: None)
+[2025-10-03 16:51:22,004] INFO: [ALL] 7173765324 (None): Ппппр
+[2025-10-03 16:51:51,541] INFO: 📎 Тригер: True, файл: None
+[2025-10-03 16:51:51,565] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-03_16-51-51__paypaidPW_bot.txt
+[2025-10-03 18:03:49,414] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJqWjf5dXCtjF1-mGhol07dnmErOTgAAJZiAACH50AAUv6tgzHDpnEsDYE
+[2025-10-03 18:03:49,801] INFO: 📥 Збережено файл: /root/Automation/Paid/Чекбокс.pdf
+[2025-10-03 18:03:49,816] INFO: ✅ Запис про файл додано до БД: Чекбокс.pdf (user_id: None)
+[2025-10-03 18:04:49,189] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJq2jf5hHxXHjbV7kFNQit5rc7mqj8AAJaiAACH50AAUsoR29wmPcc_jYE
+[2025-10-03 18:07:28,668] INFO: 🗑 Файл переміщено до Deleted/: /root/Automation/Paid/Deleted/Чекбокс.pdf
+[2025-10-03 18:08:21,005] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJr2jf5uSi5GKk8vIYnLb1Q51gueT-AAJiiAACH50AAUuKtOnfTwFdBDYE
+[2025-10-03 18:08:21,280] INFO: 📥 Збережено файл: /root/Automation/Paid/Прийма Чекбкокс.pdf
+[2025-10-03 18:08:21,289] INFO: ✅ Запис про файл додано до БД: Прийма Чекбкокс.pdf (user_id: None)
+[2025-10-04 08:32:17,128] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-10-04 08:32:28,347] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJsWjgsWFe02DkFWCjk_FRdSfthKWoAAJeeQACH50ISzuTf26-NVQMNgQ
+[2025-10-04 08:32:28,710] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна_ea7cfd5e-638e-41a0-b969-77c9f102e720.pdf
+[2025-10-04 08:32:28,729] INFO: ✅ Запис про файл додано до БД: Жиліна_ea7cfd5e-638e-41a0-b969-77c9f102e720.pdf (user_id: None)
+[2025-10-04 22:51:17,718] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)

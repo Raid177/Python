@@ -17,8 +17,14 @@ import datetime
 import time
 import locale
 
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+VENV_PY = os.path.join(PROJECT_ROOT, "venv", "bin", "python")
+if os.path.exists(VENV_PY) and os.path.realpath(sys.executable) != os.path.realpath(VENV_PY):
+    os.execv(VENV_PY, [VENV_PY] + sys.argv)
+
 # === Послідовність скриптів ===
 SCRIPTS = [
+    "truncate_zp_tables.py",
     "import_enote_reference.py",
     "auto_fill_idx.py",
     "diagnose_sheets.py",
