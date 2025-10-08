@@ -1,32 +1,19 @@
-# Це бойова версія 1.5 Працює лише на сервері
+#sudo systemctl restart petwealth_bot.service
+
+# Це бойова версія 1.6 Працює лише на сервері
 # Додано:
-# Паузу 0,5 сек між запитами на pending щоб ТГ АПІ не тормозило при великій кількості
-# Вивід в чат адміну всіх помилок
-# обробку юзернейм для занесення в БД, якщо юзери не мають нікнейм в ТГ
-# можливість "м'якого" видалення файлу з папки оплат по команді /delete
-
-# 1.5
-# текст з повідомлення можна перетворити в платіжку, як реплі так і напряму
-# причесаний код
-# виправлено помилку з аптаймом
-
-#sudo systemctl stop petwealth_bot
-# sudo systemctl status petwealth_bot
+# Автовідсил балансу в 8:45
 
 # === 📦 Версія бота ===
-BOT_VERSION = "1.5"
+BOT_VERSION = "1.6"
 BOT_NOTES = (
     "➕ Нове:\n"
-    "📩 Можливість збереження тексту повідомлення як платіжки\n"
-    "📩 Вивід помилок адміну\n"
-    "👤 Збереження user_id і username напряму\n"
-            
+    "📩Автовідсил балансу\n"
+                
     # "➖ Видалено: —\n"
    
     # "🛠 Виправлено: —"
-    "Коректний вивід аптайму\n"
-    "Причесано код"
-    
+       
 )
 
 
@@ -50,6 +37,8 @@ from telegram import BotCommand
 import asyncio
 from telegram.helpers import escape_markdown
 import re
+from zoneinfo import ZoneInfo
+KYIV_TZ = ZoneInfo("Europe/Kyiv")
 
 #Меню команд
 async def set_bot_commands(app):
@@ -69,7 +58,33 @@ async def on_startup(app):
     # 1) команди
     await set_bot_commands(app)
 
-    # 2) сповіщення адміну
+        # 2) щоденний баланс о 08:45 Europe/Kyiv
+    try:
+        from datetime import time
+        daily_time = time(hour=8, minute=45, tzinfo=KYIV_TZ)
+
+        # приберемо можливий старий job з таким ім’ям
+        for job in app.job_queue.jobs():
+            if job.name == "daily_balance":
+                job.schedule_removal()
+
+        async def send_daily_balance(context: ContextTypes.DEFAULT_TYPE):
+            try:
+                text = _build_balance_text()
+                await context.bot.send_message(chat_id=FALLBACK_CHAT_ID, text=f"🕘 Щоденний баланс (08:45)\n\n{text}")
+            except Exception as e:
+                logger.error(f"❌ Помилка у send_daily_balance: {e}")
+                try:
+                    await notify_admin(context, f"send_daily_balance: {e}")
+                except Exception:
+                    pass
+
+        app.job_queue.run_daily(send_daily_balance, time=daily_time, name="daily_balance")
+        logger.info("⏰ Планувальник: щоденний баланс о 08:45 (Europe/Kyiv) активовано")
+    except Exception as e:
+        logger.error(f"⚠️ Не вдалося запланувати щоденний баланс: {e}")
+
+    # 3) сповіщення адміну
     try:
         text = (
             f"✅ Бот перезапущено\n"
@@ -92,11 +107,13 @@ LOG_FILE = os.path.join(BASE_DIR, "log.txt")
 
 PB_TOKENS = {
     "LOV": env.get("API_TOKEN_LOV"),
-    "ZVO": env.get("API_TOKEN_ZVO")
+    "ZVO": env.get("API_TOKEN_ZVO"),
+    "PMA": env.get("API_TOKEN_PMA")
 }
 PB_ACCOUNTS = {
     "LOV": [env.get("API_АСС_LOV", "")],
-    "ZVO": env.get("API_АСС_ZVO", "").split(",")
+    "ZVO": env.get("API_АСС_ZVO", "").split(","),
+    "PMA": [env.get("API_АСС_PMA", "")],
 }
 
 ODATA_URL = env.get("ODATA_URL")
@@ -547,6 +564,55 @@ async def checkbot_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await update.message.reply_text(text)
 
+def _build_balance_text() -> str:
+    from datetime import datetime
+    today = datetime.now(KYIV_TZ).strftime("%d-%m-%Y")
+    now_iso = datetime.now(KYIV_TZ).strftime("%Y-%m-%dT%H:%M:%S")
+
+    pb_total = 0.0
+    pb_lines = ["🏦 Безготівкові рахунки:"]
+    for name, token in PB_TOKENS.items():
+        for acc in PB_ACCOUNTS.get(name, []):
+            try:
+                url = "https://acp.privatbank.ua/api/statements/balance"
+                headers = {"User-Agent": "PythonClient","token": token,"Content-Type": "application/json;charset=cp1251"}
+                params = {"acc": acc, "startDate": today, "endDate": today}
+                r = requests.get(url, headers=headers, params=params, timeout=(5, 20))
+                r.raise_for_status()
+                data = r.json()
+                for bal in data.get("balances", []):
+                    balance = float(bal.get("balanceOutEq", 0))
+                    if balance:
+                        pb_total += balance
+                        pb_lines.append(f"- {bal.get('nameACC', name)}: {balance:,.2f} грн")
+            except requests.exceptions.RequestException as e:
+                logger.error(f"💥 ПриватБанк {name} ({acc}) — помилка запиту: {e}")
+
+    odata_total = 0.0
+    od_lines = ["", "💵 Готівкові рахунки:"]
+    for cash_name, key in ODATA_ACCOUNTS.items():
+        try:
+            url = (f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance"
+                   f"?Period=datetime'{now_iso}'&$format=json&Condition=ДенежныйСчет_Key eq guid'{key}'")
+            r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD), timeout=(5, 20))
+            r.raise_for_status()
+            data = r.json()
+            rows = data.get("value", [])
+            if rows:
+                amount = float(rows[0].get("СуммаBalance", 0))
+                if amount:
+                    odata_total += amount
+                    od_lines.append(f"- {cash_name}: {amount:,.2f} грн")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"💥 OData {cash_name} — помилка запиту: {e}")
+
+    total = pb_total + odata_total
+    summary = ["", "📊 Разом:",
+               f"- Безготівкові: {pb_total:,.2f} грн",
+               f"- Готівкові: {odata_total:,.2f} грн",
+               f"- 💰 Всього: {total:,.2f} грн"]
+    return "\n".join(pb_lines + od_lines + summary)
+
 # === 💰 /balance ===
 async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if not await check_permission(update, {"admin"}, private_only=True):
@@ -555,73 +621,16 @@ async def balance_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     logger.info(f"💰 /balance запит від {user.id} ({user.username})")
 
-    today = datetime.now().strftime("%d-%m-%Y")
-    now_iso = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
-
-    pb_total = 0.0
-    pb_result = "🏦 Безготівкові рахунки:\n"
-
-    for name, token in PB_TOKENS.items():
-        for acc in PB_ACCOUNTS.get(name, []):
-            try:
-                url = "https://acp.privatbank.ua/api/statements/balance"
-                headers = {
-                    "User-Agent": "PythonClient",
-                    "token": token,
-                    "Content-Type": "application/json;charset=cp1251"
-                }
-                params = {
-                    "acc": acc,
-                    "startDate": today,
-                    "endDate": today
-                }
-                r = requests.get(url, headers=headers, params=params)
-                r.raise_for_status()
-                try:
-                    data = r.json()
-                except Exception as json_err:
-                    logger.error(f"❌ JSON помилка ПриватБанк {name}: {json_err}")
-                    logger.error(f"⚠️ Вміст відповіді: {r.text}")
-                    continue
-
-                for bal in data.get("balances", []):
-                    balance = float(bal.get("balanceOutEq", 0))
-                    if balance:
-                        pb_total += balance
-                        pb_result += f"- {bal.get('nameACC', name)}: {balance:,.2f} грн\n"
-            except requests.exceptions.RequestException as e:
-                logger.error(f"💥 ПриватБанк {name} ({acc}) — помилка запиту: {e}")
-
-    odata_total = 0.0
-    odata_result = "\n💵 Готівкові рахунки:\n"
-
-    for name, key in ODATA_ACCOUNTS.items():
+    try:
+        msg = _build_balance_text()
+        await update.message.reply_text(msg)
+    except Exception as e:
+        logger.error(f"❌ Помилка під час формування/надсилання балансу: {e}")
         try:
-            url = f"{ODATA_URL}AccumulationRegister_ДенежныеСредства/Balance?Period=datetime'{now_iso}'&$format=json&Condition=ДенежныйСчет_Key eq guid'{key}'"
-            r = requests.get(url, auth=(ODATA_USER, ODATA_PASSWORD))
-            r.raise_for_status()
-            try:
-                data = r.json()
-            except Exception as json_err:
-                logger.error(f"❌ JSON помилка OData {name}: {json_err}")
-                logger.error(f"⚠️ Вміст відповіді: {r.text}")
-                continue
-
-            rows = data.get("value", [])
-            if rows:
-                amount = float(rows[0].get("СуммаBalance", 0))
-                if amount:
-                    odata_total += amount
-                    odata_result += f"- {name}: {amount:,.2f} грн\n"
-        except requests.exceptions.RequestException as e:
-            logger.error(f"💥 OData {name} — помилка запиту: {e}")
-
-    total = pb_total + odata_total
-    summary = f"\n📊 Разом:\n- Безготівкові: {pb_total:,.2f} грн\n- Готівкові: {odata_total:,.2f} грн\n- 💰 Всього: {total:,.2f} грн"
-
-    msg = f"{pb_result}{odata_result}{summary}"
-    await update.message.reply_text(msg)
-
+            await notify_admin(context, f"/balance: {e}")
+        except Exception:
+            pass
+        await update.message.reply_text("⚠️ Не вдалося отримати баланс, спробуйте пізніше.")
 
 # === ✅ Обробка кнопки Так / Ні ===
 async def confirm_duplicate_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):

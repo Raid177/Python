@@ -5718,3 +5718,127 @@ UA403220010000026006310087701
 [2025-10-04 08:32:28,710] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна_ea7cfd5e-638e-41a0-b969-77c9f102e720.pdf
 [2025-10-04 08:32:28,729] INFO: ✅ Запис про файл додано до БД: Жиліна_ea7cfd5e-638e-41a0-b969-77c9f102e720.pdf (user_id: None)
 [2025-10-04 22:51:17,718] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-06 10:10:03,724] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:11:57,864] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJu2jja0vvXlRlCmoi5Uk2p9-bM9K5AAJsfQACCWLoSsB807z3RXYWNgQ
+[2025-10-06 10:11:58,257] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 12657 от 30 сентября 2025 г..xls
+[2025-10-06 10:11:58,272] INFO: ✅ Запис про файл додано до БД: № 12657 от 30 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:12:14,547] INFO: 📎 Тригер: True, файл: None
+[2025-10-06 10:12:14,563] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-06_10-12-14__paypaidPW_bot.txt
+[2025-10-06 10:12:18,754] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:12:27,247] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJwGjja9L6ZtOwtf-C1smHhgipedFgAALwfwACr37hSj3DR-yJ5hFoNgQ
+[2025-10-06 10:12:27,681] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5194 от 30 сентября 2025 г..xls
+[2025-10-06 10:12:27,691] INFO: ✅ Запис про файл додано до БД: № 5194 от 30 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:12:36,861] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:12:40,220] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJw2jja-R6fRkfJ7Uh8Su36R4CjLyRAALvfwACr37hSjh7u715LUkzNgQ
+[2025-10-06 10:12:40,567] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5195 от 30 сентября 2025 г..xls
+[2025-10-06 10:12:40,577] INFO: ✅ Запис про файл додано до БД: № 5195 от 30 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:12:49,538] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:12:53,955] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJxmjja_EXwps_TvBDG-SJloWnvF6sAALxfwACr37hSuU9Rbor6VNQNgQ
+[2025-10-06 10:12:54,322] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 12604 от 30 сентября 2025 г..xls
+[2025-10-06 10:12:54,334] INFO: ✅ Запис про файл додано до БД: № 12604 от 30 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:13:02,866] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:13:07,989] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJyWjja_4COLW2_zIYEIZEDtLbNTp8AALyfwACr37hSpCHcGRILK9iNgQ
+[2025-10-06 10:13:08,408] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 80 от 30 сентября 2025 г..xls
+[2025-10-06 10:13:08,422] INFO: ✅ Запис про файл додано до БД: № 80 от 30 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:14:02,357] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:14:05,782] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJzGjjbDoPL3mxblP9bMFAGAb6CFpPAAJOfgAC-_uISrLtZRo0NEUXNgQ
+[2025-10-06 10:14:06,171] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 3462 от 22 сентября 2025 г..xls
+[2025-10-06 10:14:06,183] INFO: ✅ Запис про файл додано до БД: № 3462 от 22 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:14:14,090] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:14:17,841] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJz2jjbEZSUk7XKgMWv-4qVF4TNeV7AAJPfgAC-_uISiNuOhoVWPWNNgQ
+[2025-10-06 10:14:18,182] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5008 от 22 сентября 2025 г..xls
+[2025-10-06 10:14:18,209] INFO: ✅ Запис про файл додано до БД: № 5008 от 22 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:14:26,334] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 10:14:29,646] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJ0mjjbFK8A4Y6ylMqbwWZKW-wHHKqAAJQfgAC-_uISlz-yGs3o00PNgQ
+[2025-10-06 10:14:30,004] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 12054 от 22 сентября 2025 г..xls
+[2025-10-06 10:14:30,015] INFO: ✅ Запис про файл додано до БД: № 12054 от 22 сентября 2025 г..xls (user_id: None)
+[2025-10-06 10:16:30,014] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIJ1WjjbMQgkkmwZPqBE9X6ARNMjeHIAAJSAAEyG7yqGUvmvru3EN8uHAEAAwIAA3kAAzYE
+[2025-10-06 10:16:30,512] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADUgABMhu8qhlLfg.jpg
+[2025-10-06 10:16:30,521] INFO: ✅ Запис про файл додано до БД: photo_AQADUgABMhu8qhlLfg.jpg (user_id: None)
+[2025-10-06 10:18:24,296] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIJ2WjjbTdymtBhbZbL5uZOI5OAfScDAAJTAzIbbKMYSxBWk9j9_PNsAQADAgADeQADNgQ
+[2025-10-06 10:18:24,835] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADUwMyG2yjGEt-.jpg
+[2025-10-06 10:18:24,845] INFO: ✅ Запис про файл додано до БД: photo_AQADUwMyG2yjGEt-.jpg (user_id: None)
+[2025-10-06 10:49:57,988] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-10-06 12:55:18,857] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-10-06 17:56:03,510] INFO: [ALL] 7173765324 (None): None
+[2025-10-06 17:56:25,973] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJ3Wjj2INxLuC9UFVA0xM1DZ3RMicFAAKRhwAC8fIYSy1v-M3OhVKUNgQ
+[2025-10-06 17:56:26,708] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_8 149,00.pdf
+[2025-10-06 17:56:26,720] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна_8 149,00.pdf (user_id: None)
+[2025-10-07 11:14:14,511] INFO: 📎 Тригер: True, файл: None
+[2025-10-07 11:14:14,530] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-07_11-14-14_____21_6159.txt
+[2025-10-07 12:22:32,690] INFO: 📎 Тригер: True, файл: None
+[2025-10-07 12:22:32,710] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-07_12-22-32__paypaidPW_bot.txt
+[2025-10-07 12:22:32,916] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-10-07 15:13:31,260] INFO: 📎 Тригер: True, файл: None
+[2025-10-07 15:13:31,276] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-07_15-13-31__paypaidPW_bot.txt
+[2025-10-07 15:13:31,628] INFO: [ALL] 161197876 (Alexey_Raid): None
+[2025-10-07 15:13:43,683] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIJ42jk29hj9HDyDe1C2R3w2p7vXz0KAAKoigACLU8pSwNxXhjJmVzNNgQ
+[2025-10-07 15:13:44,327] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок № ЛР032714 від 07.10.2025.pdf
+[2025-10-07 15:13:44,342] INFO: ✅ Запис про файл додано до БД: Рахунок № ЛР032714 від 07.10.2025.pdf (user_id: None)
+[2025-10-07 17:34:27,705] INFO: [ALL] 7173765324 (None): None
+[2025-10-07 17:34:31,220] INFO: 🔍 Обробка /pending...
+[2025-10-07 17:34:31,224] INFO: 📥 SQL: Вибірка pending файлів
+[2025-10-07 17:34:31,226] INFO: 📄 Знайдено 6 запис(ів) зі статусом 'pending'
+[2025-10-07 17:34:31,227] INFO: 📨 Обробка: Брабус 10.03.txt (ID: 235, Chat: -1002544853552, MsgID: 1524)
+[2025-10-07 17:34:32,169] INFO: 📨 Обробка: Жиліна рах 02102025.xls (ID: 395, Chat: -1002544853552, MsgID: 2454)
+[2025-10-07 17:34:32,216] WARNING: ❌ Повідомлення недоступне: Message to be replied not found
+[2025-10-07 17:34:32,305] INFO: 📝 Спроба оновити статус на 'invalid' для ID 395
+[2025-10-07 17:34:32,315] INFO: ✅ Статус оновлено успішно
+[2025-10-07 17:34:32,315] INFO: 📨 Обробка: photo_AQADUgABMhu8qhlLfg.jpg (ID: 410, Chat: -1002544853552, MsgID: 2517)
+[2025-10-07 17:34:32,909] INFO: 📨 Обробка: photo_AQADUwMyG2yjGEt-.jpg (ID: 411, Chat: -1002544853552, MsgID: 2521)
+[2025-10-07 17:34:33,508] INFO: 📨 Обробка: 2025-10-07_11-14-14_____21_6159.txt (ID: 413, Chat: -1002544853552, MsgID: 2528)
+[2025-10-07 17:34:34,117] INFO: 📨 Обробка: Рахунок № ЛР032714 від 07.10.2025.pdf (ID: 416, Chat: -1002544853552, MsgID: 2547)
+[2025-10-07 17:34:47,598] INFO: [ALL] 7173765324 (None): None
+[2025-10-07 17:34:51,095] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKAAFo5SUHmGH1GK5FuqxlPKgEnLbmcgACg4YAAnMwKUuJvF3gwaXK-zYE
+[2025-10-07 17:34:51,362] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 5358 от 07 октября 2025 г..xls
+[2025-10-07 17:34:51,370] INFO: ✅ Запис про файл додано до БД: № 5358 от 07 октября 2025 г..xls (user_id: None)
+[2025-10-07 17:34:57,978] INFO: [ALL] 7173765324 (None): None
+[2025-10-07 17:35:01,249] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKA2jlJRF3SgVCwRDnbkwGHu2qYKvAAAKFhgACczApS1GXvtOHhet5NgQ
+[2025-10-07 17:35:01,527] INFO: 📥 Збережено файл: /root/Automation/Paid/№ 13043 от 07 октября 2025 г..xls
+[2025-10-07 17:35:01,534] INFO: ✅ Запис про файл додано до БД: № 13043 от 07 октября 2025 г..xls (user_id: None)
+[2025-10-07 17:53:54,032] INFO: [ALL] 7173765324 (None): None
+[2025-10-07 17:53:57,408] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKBmjlKYEFvVMXcvzwz6CRcotUacIUAAIFfQACqgEoS-mdB0DH6dYlNgQ
+[2025-10-07 17:53:57,789] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна рах 07102025.xls
+[2025-10-07 17:53:57,805] INFO: ✅ Запис про файл додано до БД: Жиліна рах 07102025.xls (user_id: None)
+[2025-10-07 21:33:09,703] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-10-08 09:13:23,689] INFO: [ALL] 7173765324 (None): None
+[2025-10-08 09:13:27,797] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKCWjmAQO3GehBM8L4xzRuu5l7BvzSAAIsfQACoWqISgRXIV49qOi6NgQ
+[2025-10-08 09:13:28,367] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна 19.09-2_ec5e8997-1eb8-474e-a329-f8360866f7f3.pdf
+[2025-10-08 09:13:28,382] INFO: ✅ Запис про файл додано до БД: Жиліна 19.09-2_ec5e8997-1eb8-474e-a329-f8360866f7f3.pdf (user_id: None)
+[2025-10-08 09:13:37,422] INFO: [ALL] 7173765324 (None): None
+[2025-10-08 09:13:41,156] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKDGjmARGhmY3-NJMEuKc_0An7TTF9AAItfQACoWqISizVYQsJEANINgQ
+[2025-10-08 09:13:41,654] INFO: 📥 Збережено файл: /root/Automation/Paid/Жиліна 19.09_767344ec-63f7-4d44-9ef4-94daea4376ef.pdf
+[2025-10-08 09:13:41,667] INFO: ✅ Запис про файл додано до БД: Жиліна 19.09_767344ec-63f7-4d44-9ef4-94daea4376ef.pdf (user_id: None)
+[2025-10-08 14:27:05,916] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIKD2jmSoWyXdNLVHffX0wH7gFBGC9IAAJP9zEbTsFwSod8JXj70z_LAQADAgADeQADNgQ
+[2025-10-08 14:27:06,163] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADT_cxG07BcEp-.jpg
+[2025-10-08 14:27:06,174] INFO: ✅ Запис про файл додано до БД: photo_AQADT_cxG07BcEp-.jpg (user_id: None)
+[2025-10-08 16:49:34,520] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIKE2jma-o7jaU5WQlmEuuR0g8p4tXQAAI0-zEb4LsxS6HRhcD-sS6lAQADAgADeQADNgQ
+[2025-10-08 16:49:34,796] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADNPsxG-C7MUt-.jpg
+[2025-10-08 16:49:34,809] INFO: ✅ Запис про файл додано до БД: photo_AQADNPsxG-C7MUt-.jpg (user_id: None)
+[2025-10-08 23:28:05,833] INFO: 📎 Тригер: True, файл: None
+[2025-10-08 23:28:05,854] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-08_23-28-05__pay____.txt
+[2025-10-09 01:07:33,656] INFO: Application is stopping. This might take a moment.
+[2025-10-09 01:07:33,658] INFO: Scheduler has been shut down
+[2025-10-09 01:07:33,669] INFO: Application.stop() complete
+[2025-10-09 01:07:34,593] INFO: 🚀 Запуск бота...
+[2025-10-09 01:07:35,293] INFO: Scheduler started
+[2025-10-09 01:07:35,294] INFO: Application started
+[2025-10-09 01:07:46,913] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-09 01:16:29,339] INFO: Application is stopping. This might take a moment.
+[2025-10-09 01:16:29,340] INFO: Scheduler has been shut down
+[2025-10-09 01:16:29,351] INFO: Application.stop() complete
+[2025-10-09 01:16:29,995] INFO: 🚀 Запуск бота...
+[2025-10-09 01:16:30,712] INFO: Scheduler started
+[2025-10-09 01:16:30,713] INFO: Application started
+[2025-10-09 01:16:33,265] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-09 01:37:40,965] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-09 01:40:52,866] INFO: Application is stopping. This might take a moment.
+[2025-10-09 01:40:52,867] INFO: Scheduler has been shut down
+[2025-10-09 01:40:52,878] INFO: Application.stop() complete
+[2025-10-09 01:40:53,925] INFO: 🚀 Запуск бота...
+[2025-10-09 01:40:54,308] INFO: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+[2025-10-09 01:40:54,308] INFO: ⏰ Планувальник: щоденний баланс о 08:45 (Europe/Kyiv) активовано
+[2025-10-09 01:40:54,540] INFO: Added job "daily_balance" to job store "default"
+[2025-10-09 01:40:54,541] INFO: Scheduler started
+[2025-10-09 01:40:54,541] INFO: Application started
+[2025-10-09 01:41:00,187] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)

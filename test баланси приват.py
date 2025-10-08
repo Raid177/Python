@@ -1,30 +1,59 @@
+import os
 import requests
+from datetime import datetime
+from dotenv import load_dotenv
 
-# API ПриватБанку
-API_URL = "https://acp.privatbank.ua/api/statements/balance"
+# ---------- CONFIG ----------
+load_dotenv("/root/Python/.env")
 
-# Реквізити для тесту
-ACCOUNT = "UA453052990000026004005203890"
-DATE = "15-03-2025"  # Вказуємо дату
-TOKEN = "3da9b621-1706-4100-94b6-1937f8455a0figKu+L4PGCl0nGd6R1mJYAu4rGaQ+U4JdaCIB9wnMD8anoMVvoAXRRWJdZLOy42URibaY7rxj+3yUj5MXdoG1/DV4UH+WIXbAWir/p7NE/Bcet8gX7y5N8z/bu1Yp8Ct5CS+Pshd9GKyXiYouPm3svxgnOCY80iO+MDWvIeHsT9/mxFRx01M7gB40AMwlv+bXlWor+dECVKz2SbOOfzrymjRj0OqPvFYslVPrQviUuMWKTrIc17jjGVWO8ySuwr1Fw=="  # Підстав свій токен
-
-# Формуємо заголовки (тут важливий `token`, а не `Authorization`)
-headers = {
-    "User-Agent": "PythonClient",
-    "token": TOKEN,
-    "Content-Type": "application/json;charset=cp1251"
+PB_TOKENS = {
+    "LOV": os.getenv("API_TOKEN_LOV"),
+    "ZVO": os.getenv("API_TOKEN_ZVO"),
+    "PMA": os.getenv("API_TOKEN_PMA"),
 }
 
-# Формуємо параметри (запит в URL)
-params = {
-    "acc": ACCOUNT,
-    "startDate": DATE,
-    "endDate": DATE
+PB_ACCOUNTS = {
+    "LOV": [os.getenv("API_АСС_LOV")],
+    "ZVO": [acc.strip() for acc in os.getenv("API_АСС_ZVO", "").split(",") if acc.strip()],
+    "PMA": [os.getenv("API_АСС_PMA")],
 }
 
-# Виконуємо запит
-response = requests.get(API_URL, headers=headers, params=params)
+# ---------- MAIN ----------
+today = datetime.now().strftime("%d-%m-%Y")
+url = "https://acp.privatbank.ua/api/statements/balance"
 
-# Виводимо відповідь API
-print(f"Статус-код: {response.status_code}")
-print(f"Відповідь API: {response.text}")
+total = 0.0
+
+for name, token in PB_TOKENS.items():
+    if not token:
+        print(f"⚠️  {name}: токен відсутній у .env")
+        continue
+    print(f"\n{name} ({len(PB_ACCOUNTS.get(name, []))} рахунки):")
+
+    for acc in PB_ACCOUNTS.get(name, []):
+        try:
+            headers = {
+                "User-Agent": "PythonClient",
+                "token": token,
+                "Content-Type": "application/json;charset=cp1251"
+            }
+            params = {"acc": acc, "startDate": today, "endDate": today}
+            r = requests.get(url, headers=headers, params=params, timeout=(5, 20))
+            r.raise_for_status()
+
+            data = r.json()
+            balances = data.get("balances", [])
+            if not balances:
+                print(f"   ❌ Немає даних для {acc}")
+                continue
+
+            for bal in balances:
+                bal_name = bal.get("nameACC", acc)
+                amount = float(bal.get("balanceOutEq", 0))
+                print(f"   💰 {bal_name}: {amount:,.2f} грн")
+                total += amount
+
+        except Exception as e:
+            print(f"   💥 Помилка для {acc}: {e}")
+
+print(f"\n📊 Загальний баланс усіх рахунків: {total:,.2f} грн")

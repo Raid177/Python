@@ -91,11 +91,13 @@ LOG_FILE = os.path.join(BASE_DIR, "log.txt")
 
 PB_TOKENS = {
     "LOV": env.get("API_TOKEN_LOV"),
-    "ZVO": env.get("API_TOKEN_ZVO")
+    "ZVO": env.get("API_TOKEN_ZVO"),
+    "PMA": env.get("API_TOKEN_PMA")
 }
 PB_ACCOUNTS = {
     "LOV": [env.get("API_АСС_LOV", "")],
-    "ZVO": env.get("API_АСС_ZVO", "").split(",")
+    "ZVO": env.get("API_АСС_ZVO", "").split(","),
+    "PMA": [env.get("API_АСС_PMA", "")],
 }
 
 ODATA_URL = env.get("ODATA_URL")
