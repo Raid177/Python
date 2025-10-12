@@ -5842,3 +5842,37 @@ UA403220010000026006310087701
 [2025-10-09 01:40:54,541] INFO: Scheduler started
 [2025-10-09 01:40:54,541] INFO: Application started
 [2025-10-09 01:41:00,187] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-09 01:45:47,455] INFO: [ALL] 161197876 (Alexey_Raid): /status
+[2025-10-09 07:31:09,775] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-09 08:45:00,009] INFO: Running job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-10 08:45:00 EEST)" (scheduled at 2025-10-09 08:45:00+03:00)
+[2025-10-09 08:45:01,954] INFO: Job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-10 08:45:00 EEST)" executed successfully
+[2025-10-09 13:02:47,479] INFO: 📎 Тригер: True, файл: None
+[2025-10-09 13:02:47,505] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-09_13-02-47__pay__.__.txt
+[2025-10-10 04:10:45,274] ERROR: ❌ ПОМИЛКА: Bad Gateway
+[2025-10-10 04:10:45,439] ERROR: 📭 Неможливо надіслати повідомлення адміну: Bad Gateway
+[2025-10-10 04:10:46,325] ERROR: ❌ ПОМИЛКА: Bad Gateway
+[2025-10-10 04:10:46,375] ERROR: 📭 Неможливо надіслати повідомлення адміну: Bad Gateway
+[2025-10-10 04:10:47,877] ERROR: ❌ ПОМИЛКА: Bad Gateway
+[2025-10-10 04:10:47,926] ERROR: 📭 Неможливо надіслати повідомлення адміну: Bad Gateway
+[2025-10-10 07:06:19,588] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-10 08:45:00,005] INFO: Running job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-11 08:45:00 EEST)" (scheduled at 2025-10-10 08:45:00+03:00)
+[2025-10-10 08:45:04,549] INFO: Job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-11 08:45:00 EEST)" executed successfully
+[2025-10-10 10:50:07,171] INFO: [ALL] 7173765324 (None): None
+[2025-10-10 10:50:11,223] INFO: 📎 Тригер: True, файл: BQACAgIAAyEFAASXr2IwAAIKJWjouq-2EgABIDGm5v50iZibL17C8QACzoMAAgS2SEtkxG3jE23oODYE
+[2025-10-10 10:50:12,041] INFO: 📥 Збережено файл: /root/Automation/Paid/Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна.pdf
+[2025-10-10 10:50:12,051] INFO: ✅ Запис про файл додано до БД: Рахунок_на_оплату_ФОП_Жиліна_Валерія_Олександрівна.pdf (user_id: None)
+[2025-10-10 11:16:10,336] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIKKGjowMUvaKYPHyft0I79Q-uY2dVXAAKd9TEbFztJS9yc0WsAAZAgQgEAAwIAA3kAAzYE
+[2025-10-10 11:16:10,652] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADnfUxGxc7SUt-.jpg
+[2025-10-10 11:16:10,664] INFO: ✅ Запис про файл додано до БД: photo_AQADnfUxGxc7SUt-.jpg (user_id: None)
+[2025-10-10 12:40:36,708] INFO: 📎 Тригер: True, файл: AgACAgIAAyEFAASXr2IwAAIKLGjo1JBKO-DYgvd-VEGPWx9qd7TYAAKe-TEb6k9JSz_XHcOXzu0jAQADAgADeQADNgQ
+[2025-10-10 12:40:37,268] INFO: 📥 Збережено файл: /root/Automation/Paid/photo_AQADnvkxG-pPSUt-.jpg
+[2025-10-10 12:40:37,279] INFO: ✅ Запис про файл додано до БД: photo_AQADnvkxG-pPSUt-.jpg (user_id: None)
+[2025-10-10 19:06:33,101] INFO: 📎 Тригер: True, файл: None
+[2025-10-10 19:06:33,123] INFO: 📝 Текст збережено як файл і додано в БД: 2025-10-10_19-06-33__pay___.txt
+[2025-10-11 07:24:16,837] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-11 08:45:00,007] INFO: Running job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-12 08:45:00 EEST)" (scheduled at 2025-10-11 08:45:00+03:00)
+[2025-10-11 08:45:02,315] INFO: Job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-12 08:45:00 EEST)" executed successfully
+[2025-10-11 22:13:34,216] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)
+[2025-10-12 08:45:00,005] INFO: Running job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-13 08:45:00 EEST)" (scheduled at 2025-10-12 08:45:00+03:00)
+[2025-10-12 08:45:01,891] INFO: Job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-13 08:45:00 EEST)" executed successfully
+[2025-10-13 01:46:58,687] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
