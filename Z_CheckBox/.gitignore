@@ -1,0 +1,5 @@
+
+# secrets
+_Acces/*.json
+auth/*.json
+*.env
