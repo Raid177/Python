@@ -221,7 +221,7 @@ async def post_card(message: Message, bot: Bot):
     F.is_topic_message == True,
     IsSupportMember(),
 )
-async def show_client_info(message: Message):
+async def show_client_info(message: Message, bot: Bot):
     conn = get_conn()
     try:
         t = repo_t.find_by_thread(conn, message.message_thread_id)
@@ -232,6 +232,18 @@ async def show_client_info(message: Message):
     finally:
         conn.close()
 
+    # --- отримуємо username з Telegram ---
+    try:
+        ch = await bot.get_chat(t["client_user_id"])
+        if getattr(ch, "username", None):
+            # клікабельний лінк на профіль
+            tg_username = f"<a href='https://t.me/{ch.username}'>@{ch.username}</a>"
+        else:
+            tg_username = "— відсутній —"
+    except Exception:
+        tg_username = "— недоступний —"
+
+    # --- інша інформація ---
     label = (c and c.get("label")) or t["client_user_id"]
     phone = (c and c.get("phone")) or "— не вказано —"
     confirmed = None
@@ -243,15 +255,19 @@ async def show_client_info(message: Message):
             confirmed = "підтверджено ✅" if int(pc) == 1 else "не підтверджено ❌"
     total_closed = (c and c.get("total_closed")) or 0
     tg_link = f"tg://user?id={t['client_user_id']}"
+
+    # --- формуємо текст відповіді ---
     text = (
         "<b>Картка клієнта</b>\n"
         f"• Клієнт: <code>{label}</code>\n"
         f"• Telegram ID: <a href='{tg_link}'>{t['client_user_id']}</a>\n"
+        f"• Нік: {tg_username}\n"
         f"• Телефон: <code>{phone}</code>"
     )
     if confirmed is not None:
         text += f" ({confirmed})"
     text += f"\n• Закритих звернень: <b>{total_closed}</b>"
+
     await message.answer(text, disable_web_page_preview=True)
 
 # =============== ПРОКСІ ІЗ ТЕМИ → КЛІЄНТУ ===============
