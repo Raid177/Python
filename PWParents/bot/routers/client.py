@@ -1,17 +1,19 @@
 # bot/routers/client.py
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
 from aiogram import Router, F, Bot
 from aiogram.types import Message, Contact
 from aiogram.filters import Command
+
 from core.db import get_conn
 from core.config import settings
 from core.repositories import clients as repo_c
 from core.repositories import tickets as repo_t
-from core.services.relay import log_and_send_text_to_topic, log_inbound_media_copy
+from core.services.relay import log_and_send_text_to_topic
 
 from bot.keyboards.common import ask_phone_kb, main_menu_kb, privacy_inline_kb
 from bot.routers._media import relay_media
-from datetime import datetime, timedelta, timezone
-
 
 router = Router()
 
@@ -27,20 +29,24 @@ PHONE_EXPLAIN = (
     "Це добровільно. Ви можете натиснути «Пропустити»."
 )
 
+ASK_PHONE_COOLDOWN = timedelta(hours=24)
+
+
 # -------------------- helpers --------------------
 
+def _touch_last_phone_prompt(conn, client_id: int) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
+            (client_id,),
+        )
 
-
-ASK_PHONE_COOLDOWN = timedelta(hours=24)
 
 def _should_prompt_phone(c: dict | None) -> bool:
     """
-    Питаємо номер, якщо:
-      - запис клієнта є, але телефону немає;
-      - і від останнього показу підказки минуло ≥ 24 год.
+    Питаємо номер, якщо немає телефону і остання підказка була ≥ 24 год тому (або ніколи).
     """
     if not c:
-        # якщо запису ще нема — дамо підказку один раз (і одразу зафіксуємо показ)
         return True
     if c.get("phone"):
         return False
@@ -49,14 +55,10 @@ def _should_prompt_phone(c: dict | None) -> bool:
     if not last:
         return True
 
-    # усі порівняння у UTC
     now = datetime.now(timezone.utc)
     if last.tzinfo is None:
-        # БД повернула naive datetime — вважаємо, що це UTC
         last = last.replace(tzinfo=timezone.utc)
-
     return (now - last) >= ASK_PHONE_COOLDOWN
-
 
 
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
@@ -84,11 +86,21 @@ async def _client_display_name(bot: Bot, user_id: int) -> str | None:
         return None
 
 
-async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
+async def _ensure_ticket_for_client(
+    bot: Bot,
+    client_id: int,
+    *,
+    silent: bool = False,
+    notify_text: str | None = None,
+) -> dict:
     """
     Повертає відкритий тікет; якщо нема — бере останній/створює новий і забезпечує тему.
+    Поведінка повідомлень у групі:
+      - silent=True  → нічого не шле;
+      - silent=False + notify_text → шле лише notify_text (одне «м’яке» повідомлення);
+      - silent=False + notify_text is None → шле стандартні «зелені» службові повідомлення.
     """
-    # 1) відкритий/у роботі — використовуємо
+    # 1) Якщо є відкритий — використовуємо
     conn = get_conn()
     try:
         t = repo_t.find_open_by_client(conn, client_id)
@@ -97,17 +109,39 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
     if t:
         return t
 
-    # 2) відкритих немає → останній тікет
+    # 2) Відкритих немає → беремо останній тікет
     conn = get_conn()
     try:
         last = repo_t.find_latest_by_client(conn, client_id)
     finally:
         conn.close()
 
+    async def _notify(thread_id: int, label: str | int, status: str):
+        if silent:
+            return
+        if notify_text:
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=thread_id,
+                text=notify_text
+            )
+        else:
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=thread_id,
+                text=f"🟢 Перевідкрито звернення клієнта <code>{label}</code>."
+            )
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=thread_id,
+                text=(f"🟢 Заявка\nКлієнт: <code>{label}</code>\n"
+                      f"Статус: {status}")
+            )
+
     if last:
         thread_id = last.get("thread_id")
 
-        # тема втрачена → створюємо нову з «людською» назвою (label/ім’я/ID)
+        # 2а) Тема втрачена → створюємо нову з людською назвою
         if not thread_id:
             display = await _client_display_name(bot, client_id)
             topic_name = (last.get("label") or display or f"ID{client_id}")[:128]
@@ -121,20 +155,10 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
             finally:
                 conn.close()
 
-            await bot.send_message(
-                chat_id=settings.support_group_id,
-                message_thread_id=last["thread_id"],
-                text=f"🟢 Перевідкрито звернення клієнта <code>{last['label'] or client_id}</code>."
-            )
-            await bot.send_message(
-                chat_id=settings.support_group_id,
-                message_thread_id=last["thread_id"],
-                text=(f"🟢 Заявка\nКлієнт: <code>{last['label'] or last['client_user_id']}</code>\n"
-                      f"Статус: {last['status']}")
-            )
+            await _notify(last["thread_id"], last['label'] or client_id, last['status'])
             return last
 
-        # тема існує → просто reopen тікета
+        # 2б) Тема існує → просто reopen
         conn = get_conn()
         try:
             repo_t.reopen(conn, last["id"])
@@ -142,20 +166,10 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
         finally:
             conn.close()
 
-        await bot.send_message(
-            chat_id=settings.support_group_id,
-            message_thread_id=last["thread_id"],
-            text=f"🟢 Перевідкрито звернення клієнта <code>{last['label'] or client_id}</code>."
-        )
-        await bot.send_message(
-            chat_id=settings.support_group_id,
-            message_thread_id=last["thread_id"],
-            text=(f"🟢 Заявка\nКлієнт: <code>{last['label'] or last['client_user_id']}</code>\n"
-                  f"Статус: {last['status']}")
-        )
+        await _notify(last["thread_id"], last['label'] or client_id, last['status'])
         return last
 
-    # 3) ще не було тікетів → створюємо перший з іменем
+    # 3) Ще не було тікетів → створюємо перший з іменем
     display = await _client_display_name(bot, client_id)
     topic_name = (display or f"ID{client_id}")[:128]
     topic = await bot.create_forum_topic(chat_id=settings.support_group_id, name=topic_name)
@@ -169,19 +183,28 @@ async def _ensure_ticket_for_client(bot: Bot, client_id: int) -> dict:
     finally:
         conn.close()
 
-    await bot.send_message(
-        chat_id=settings.support_group_id,
-        message_thread_id=t["thread_id"],
-        text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
-              f"Статус: {t['status']}")
-    )
+    if not silent:
+        if notify_text:
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=t["thread_id"],
+                text=notify_text
+            )
+        else:
+            await bot.send_message(
+                chat_id=settings.support_group_id,
+                message_thread_id=t["thread_id"],
+                text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
+                      f"Статус: {t['status']}")
+            )
     return t
+
 
 # -------------------- /start + телефон + кнопки --------------------
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
-    # якщо це співробітник — показуємо службовий текст і ВИХОДИМО
+    # Якщо це співробітник — показуємо службовий текст і виходимо
     try:
         cm = await bot.get_chat_member(settings.support_group_id, message.from_user.id)
         if cm.status in ("creator", "administrator", "member"):
@@ -194,46 +217,46 @@ async def client_start(message: Message, bot: Bot):
     except Exception:
         pass
 
-    # клієнтський сценарій
+    # 1) гарантуємо запис клієнта
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
         c = repo_c.get_client(conn, message.from_user.id)  # dict або None
         if not c or not c.get("phone"):
-            # збережемо «порожнього» клієнта, щоб точно був запис
             repo_c.upsert_client(conn, message.from_user.id, None, False)
     finally:
         conn.close()
 
-       # якщо телефон відсутній — даємо клавіатуру “Поділитись номером”
+    # 2) ОДРАЗУ забезпечуємо тікет/тему — клієнт видимий, але БЕЗ шуму
+    await _ensure_ticket_for_client(
+        bot,
+        message.from_user.id,
+        silent=True,              # ← тихо на /start
+        # Можеш у майбутньому замінити на:
+        # silent=False, notify_text="👋 Клієнт приєднався до бота"
+    )
+
+    # 3) Далі — телефон/меню
     if not c or not c.get("phone"):
-        await message.answer(
-            "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
-            "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
-            "Це добровільно. Можна натиснути «Пропустити».",
-            reply_markup=ask_phone_kb(),
-        )
+        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
         await message.answer(
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
             reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
         )
-
-        # 🔹 фіксуємо показ підказки, щоб не смикати частіше ніж раз/24 год
         conn = get_conn()
         try:
             _touch_last_phone_prompt(conn, message.from_user.id)
             conn.commit()
         finally:
             conn.close()
-
         return
 
-    # якщо телефон уже є — показуємо головне меню
     await message.answer("Головне меню:", reply_markup=main_menu_kb())
+    await message.answer(WELCOME)
+
 
 @router.message(F.contact, F.chat.type == "private", flags={"block": True})
 async def got_contact(message: Message):
-    # фіксуємо клієнта в БД у будь-якому разі
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
@@ -263,7 +286,7 @@ async def skip_phone(message: Message):
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
-        _touch_last_phone_prompt(conn, message.from_user.id)  # ← важливо!
+        _touch_last_phone_prompt(conn, message.from_user.id)
         conn.commit()
     finally:
         conn.close()
@@ -327,7 +350,6 @@ async def btn_question(message: Message, bot: Bot):
 
 @router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private", flags={"block": True})
 async def btn_nav(message: Message, bot: Bot):
-    # просто гарантуємо запис клієнта — і даємо інформацію (нічого в тему не шлемо)
     conn = get_conn()
     try:
         repo_c.ensure_exists(conn, message.from_user.id)
@@ -341,11 +363,9 @@ async def btn_nav(message: Message, bot: Bot):
         "Google Maps: https://maps.app.goo.gl/Rir8Qgmzotz3RZMU7"
     )
 
+
 # -------------------- клієнт → тема саппорт-групи --------------------
 
-# НЕ матчимо команди. Беремо:
-#  • текст, що НЕ починається з "/"
-#  • або будь-які не-текстові повідомлення (фото/відео/док)
 @router.message(
     F.chat.type == "private",
     (F.text & ~F.text.startswith("/")) | ~F.text
@@ -363,41 +383,32 @@ async def inbound_from_client(message: Message, bot: Bot):
     finally:
         conn.close()
 
-    # 2) якщо телефону немає і «тиша» ≥ 24 год — показуємо запит і фіксуємо момент показу,
-    #    ПРИ ЦЬОМУ ДІАЛОГ У ТЕМУ НЕ ШЛЕМО (return)
+    # 2) ОДРАЗУ знайти/створити тікет і тему — клієнт видимий з першого пінгу
+    t = await _ensure_ticket_for_client(
+        bot,
+        message.from_user.id,
+        silent=False,                 # тут хочемо бачити активність
+        notify_text=None              # або за бажанням коротко: "📩 Нове повідомлення від клієнта"
+    )
+    label = t.get("label") or f"{message.from_user.id}"
+    head = f"📨 Від клієнта <code>{label}</code>"
 
-    # import logging
-    # logger = logging.getLogger(__name__)
-    # logger.info("client_row=%r", client_row)
-
-
-
+    # 3) Якщо треба — попросити телефон, але НЕ зупиняти доставку у тему
     if _should_prompt_phone(client_row):
-        await message.answer(
-            "Щоб ми ідентифікували вас як власника тварини та могли надсилати нагадування "
-            "про візити/вакцинації й результати аналізів — поділіться номером телефону.\n\n"
-            "Це добровільно. Можна натиснути «Пропустити».",
-            reply_markup=ask_phone_kb()
-        )
+        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
         await message.answer(
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
             reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
         )
-        # фіксуємо, що підказку показали (щоб не смикати частіше ніж раз/24год)
         conn = get_conn()
         try:
             _touch_last_phone_prompt(conn, message.from_user.id)
             conn.commit()
         finally:
             conn.close()
-        return
+        # без return → повідомлення все одно підемо в тему
 
-    # 3) знайти/створити тікет і проштовхнути в тему
-    t = await _ensure_ticket_for_client(bot, message.from_user.id)
-    label = t.get("label") or f"{message.from_user.id}"
-    head = f"📨 Від клієнта <code>{label}</code>"
-
-    # 4) підхопити «висячий» intent (натиснену кнопку) і скинути його
+    # 4) Підхопити «висячий» intent
     pending_intent = None
     conn = get_conn()
     try:
@@ -422,34 +433,31 @@ async def inbound_from_client(message: Message, bot: Bot):
             bot, settings.support_group_id, t["thread_id"], t["id"], pending_intent, head
         )
 
-    # 5) далі — власне контент клієнта
+    # 5) Власне контент клієнта
     if message.content_type == "text":
         await log_and_send_text_to_topic(
             bot, settings.support_group_id, t["thread_id"], t["id"], message.text, head
         )
     else:
-    # 1) фізично перекидаємо медіа в тему
         out = await relay_media(
             bot,
             message,
             settings.support_group_id,
-            prefix=head,                 # "📨 Від клієнта <code>...</code>"
+            prefix=head,
             thread_id=t["thread_id"],
         )
-
-        # 2) логуємо факт (якщо у тебе є таблиця pp_messages і т.п.)
         try:
-            from bot.service.msglog import log_and_touch  # або твій актуальний логер
+            from bot.service.msglog import log_and_touch
             log_and_touch(
                 t["id"],
-                "in",                      # напрямок
-                out.message_id,            # айді скопійованого повідомлення в темі
+                "in",
+                out.message_id,
                 getattr(message, "caption", None),
                 message.content_type
             )
         except Exception:
-            # логер не критичний для доставлення медіа — помилки тут не роняємо
             pass
+
 
 # Додаткова команда, щоб руками викликати меню
 @router.message(Command("menu"), F.chat.type == "private")
@@ -457,21 +465,14 @@ async def show_menu(message: Message):
     await message.answer("Головне меню:", reply_markup=main_menu_kb())
     await message.answer(WELCOME)
 
-def _touch_last_phone_prompt(conn, client_id: int):
-    with conn.cursor() as cur:
-        cur.execute(
-            "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
-            (client_id,),
-        )
 
 @router.message(Command("help"))
 async def help_cmd(message: Message):
     await message.answer(
         "Доступні команди:\n"
-        "/start — головне меню\n"
+        "/start — головне меню (тихо створює звернення у службовій групі)\n"
         "/menu — кнопки швидкого доступу\n"
         "/help — ця підказка\n\n"
         "У службовій групі доступні: /label, /assign, /card, /client, /phone, "
         "/threadinfo, /close, /close_silent, /reopen, /snooze."
     )
-
