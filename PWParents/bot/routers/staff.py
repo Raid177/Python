@@ -61,12 +61,18 @@ async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
 
     await message.answer(f"✅ Мітку теми оновлено на: <b>{new_label}</b>")
 
-@router.message(
-    Command("assign"),
-    F.chat.id == settings.support_group_id,
-    F.is_topic_message == True,
-    IsSupportMember(),
-)
+def _abs_chat_id_str(chat_id: int) -> str:
+    s = str(chat_id)
+    if s.startswith("-100"): return s[4:]
+    if s.startswith("-"):    return s[1:]
+    return s
+
+async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
+    ch = await bot.get_chat(group_id)
+    if getattr(ch, "username", None):                # публічна група
+        return f"https://t.me/{ch.username}/{thread_id}"
+    return f"https://t.me/c/{_abs_chat_id_str(ch.id)}/{thread_id}"  # приватна група
+
 @router.message(
     Command("assign"),
     F.chat.id == settings.support_group_id,
@@ -122,17 +128,25 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
         # приватне повідомлення виконавцю з клікабельною кнопкою "Відкрити тему"
         try:
             topic_url = await build_topic_url(bot, settings.support_group_id, t["thread_id"])
+
+            # 1) Кнопка з URL (найнадійніше)
             kb = InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]
             ])
+
+            # 2) У тексті дай ПРЯМИЙ URL (Telegram сам зробить клікабельним навіть без HTML)
+            safe_label = html.escape(str(label))
+            dm_text = (
+                f"🔔 Вам призначено звернення клієнта {safe_label}.\n"
+                f"{topic_url}"
+            )
+
             await bot.send_message(
                 chat_id=tg_id,
-                text=(
-                    f"🔔 Вам призначено звернення клієнта <b>{safe_label}</b>.\n"
-                    f"Натисніть кнопку, щоб перейти у тему."
-                ),
+                text=dm_text,
                 reply_markup=kb,
                 disable_web_page_preview=True
+                # parse_mode не потрібен, бо даємо сирий URL
             )
         except Exception:
             await message.answer("ℹ️ Не вдалося надіслати приватне повідомлення (співробітник не стартував бота).")
@@ -391,21 +405,3 @@ async def snooze_cmd(message: Message, command: CommandObject):
 
     await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import html
-
-# утиліта для правильного лінку на тему
-def _abs_chat_id_str(chat_id: int) -> str:
-    s = str(chat_id)
-    if s.startswith("-100"):
-        return s[4:]
-    if s.startswith("-"):
-        return s[1:]
-    return s
-
-async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
-    """Повертає пряме посилання на тему (forum topic) у службовій групі."""
-    ch = await bot.get_chat(group_id)
-    if getattr(ch, "username", None):  # публічна група
-        return f"https://t.me/{ch.username}/{thread_id}"
-    return f"https://t.me/c/{_abs_chat_id_str(ch.id)}/{thread_id}"
