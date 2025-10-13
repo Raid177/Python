@@ -63,3 +63,7 @@ TODO.md
 
 # 🔑 ключі, токени, паролі
 Acces/
+# secrets
+_Acces/*.json
+auth/*.json
+*.env
