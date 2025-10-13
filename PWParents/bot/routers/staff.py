@@ -2,6 +2,9 @@
 import logging
 from datetime import datetime, timedelta
 
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import html
+
 from aiogram import Router, F, Bot
 from aiogram.types import Message
 from aiogram.filters import Command, CommandObject
@@ -64,6 +67,12 @@ async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
     F.is_topic_message == True,
     IsSupportMember(),
 )
+@router.message(
+    Command("assign"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
 async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
     conn = get_conn()
     try:
@@ -76,6 +85,7 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
     label = t.get("label") or t["client_user_id"]
     args = (command.args or "").strip()
 
+    # 1) без аргументів — показати список співробітників
     if not args:
         conn = get_conn()
         try:
@@ -90,9 +100,10 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
             return
 
         kb = assign_agents_kb(agents, client_id=t["client_user_id"], exclude_id=None)
-        await message.answer(f"Кому передати клієнта <b>{label}</b>?", reply_markup=kb)
+        await message.answer(f"Кому передати клієнта <b>{html.escape(str(label))}</b>?", reply_markup=kb)
         return
 
+    # 2) пряме призначення за Telegram ID
     if args.isdigit():
         tg_id = int(args)
         conn = get_conn()
@@ -103,17 +114,31 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
             conn.close()
 
         who = get_display_name(get_conn(), tg_id) or tg_id
-        await message.answer(f"🟡 Призначено виконавця: <b>{who}</b> для клієнта <b>{label}</b>")
+        safe_label = html.escape(str(label))
+
+        # повідомлення в тему (як було)
+        await message.answer(f"🟡 Призначено виконавця: <b>{who}</b> для клієнта <b>{safe_label}</b>")
+
+        # приватне повідомлення виконавцю з клікабельною кнопкою "Відкрити тему"
         try:
+            topic_url = await build_topic_url(bot, settings.support_group_id, t["thread_id"])
+            kb = InlineKeyboardMarkup(inline_keyboard=[
+                [InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]
+            ])
             await bot.send_message(
                 chat_id=tg_id,
-                text=(f"🔔 Вам призначено звернення клієнта <b>{label}</b>.\n"
-                      f"Зайдіть у тему в службовій групі й відповідайте."),
+                text=(
+                    f"🔔 Вам призначено звернення клієнта <b>{safe_label}</b>.\n"
+                    f"Натисніть кнопку, щоб перейти у тему."
+                ),
+                reply_markup=kb,
+                disable_web_page_preview=True
             )
         except Exception:
             await message.answer("ℹ️ Не вдалося надіслати приватне повідомлення (співробітник не стартував бота).")
         return
 
+    # 3) help
     await message.answer(
         "Використання:\n"
         "• /assign 123456789 — одразу призначити за Telegram ID\n"
@@ -365,3 +390,22 @@ async def snooze_cmd(message: Message, command: CommandObject):
         conn.close()
 
     await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")
+
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+import html
+
+# утиліта для правильного лінку на тему
+def _abs_chat_id_str(chat_id: int) -> str:
+    s = str(chat_id)
+    if s.startswith("-100"):
+        return s[4:]
+    if s.startswith("-"):
+        return s[1:]
+    return s
+
+async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
+    """Повертає пряме посилання на тему (forum topic) у службовій групі."""
+    ch = await bot.get_chat(group_id)
+    if getattr(ch, "username", None):  # публічна група
+        return f"https://t.me/{ch.username}/{thread_id}"
+    return f"https://t.me/c/{_abs_chat_id_str(ch.id)}/{thread_id}"
