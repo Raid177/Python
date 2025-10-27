@@ -28,6 +28,8 @@ from __future__ import annotations
 import os
 import sys
 import json
+import hashlib
+
 from datetime import datetime, timedelta, date
 from typing import Dict, Any, List, Tuple
 
@@ -50,7 +52,9 @@ SELECT
   t.pet_name,
   t.species,
   t.contract_number,
-  t.owner_ref_key
+  t.owner_ref_key,
+  t.card_dataversion,     -- NEW
+  t.lethal                -- NEW
 FROM (
   SELECT
     ir.`Карточка_Key`                           AS card_ref_key,
@@ -59,6 +63,8 @@ FROM (
     b.`Description`                             AS species,
     c.`НомерДоговора`                           AS contract_number,
     c.`Хозяин_Key`                              AS owner_ref_key,
+    c.`DataVersion`                             AS card_dataversion,   -- NEW
+    c.`ЛетальныйИсход`                          AS lethal,             -- NEW
     ROW_NUMBER() OVER (
       PARTITION BY ir.`Карточка_Key`, ir.`Period`
       ORDER BY ir.`Period` DESC
@@ -82,28 +88,39 @@ INSERT INTO `{TABLE_NAME}` (
   `owner_ref_key`, `owner_name`, `owner_phone`,
   `owner_first_name`, `owner_last_name`, `owner_middle_name`,
   `last_vacc_date`, `next_due_date`, `source_rowcount`,
-  `ignored_count`, `ignored_dates`
+  `ignored_count`, `ignored_dates`,
+  `lethal`, `card_dataversion`, `owner_signature`
 ) VALUES (
   %(card_ref_key)s, %(pet_name)s, %(species)s, %(contract_number)s,
   %(owner_ref_key)s, %(owner_name)s, %(owner_phone)s,
   %(owner_first_name)s, %(owner_last_name)s, %(owner_middle_name)s,
   %(last_vacc_date)s, %(next_due_date)s, %(source_rowcount)s,
-  %(ignored_count)s, %(ignored_dates)s
+  %(ignored_count)s, %(ignored_dates)s,
+  %(lethal)s, %(card_dataversion)s, %(owner_signature)s
 ) ON DUPLICATE KEY UPDATE
-  `pet_name` = VALUES(`pet_name`),
-  `species` = VALUES(`species`),
-  `contract_number` = VALUES(`contract_number`),
-  `owner_ref_key` = VALUES(`owner_ref_key`),
-  `owner_name` = VALUES(`owner_name`),
-  `owner_phone` = VALUES(`owner_phone`),
-  `owner_first_name` = VALUES(`owner_first_name`),
-  `owner_last_name` = VALUES(`owner_last_name`),
-  `owner_middle_name` = VALUES(`owner_middle_name`),
+  -- якщо змінилась версія картки -> оновити поля картки
+  `pet_name`       = IF(VALUES(`card_dataversion`) <> `card_dataversion`, VALUES(`pet_name`), `pet_name`),
+  `species`        = IF(VALUES(`card_dataversion`) <> `card_dataversion`, VALUES(`species`), `species`),
+  `contract_number`= IF(VALUES(`card_dataversion`) <> `card_dataversion`, VALUES(`contract_number`), `contract_number`),
+  `lethal`         = IF(VALUES(`card_dataversion`) <> `card_dataversion`, VALUES(`lethal`), `lethal`),
+
+  -- якщо змінився “відбиток” власника (API) -> оновити поля власника
+  `owner_name`        = IF(VALUES(`owner_signature`) <> `owner_signature`, VALUES(`owner_name`), `owner_name`),
+  `owner_phone`       = IF(VALUES(`owner_signature`) <> `owner_signature`, VALUES(`owner_phone`), `owner_phone`),
+  `owner_first_name`  = IF(VALUES(`owner_signature`) <> `owner_signature`, VALUES(`owner_first_name`), `owner_first_name`),
+  `owner_last_name`   = IF(VALUES(`owner_signature`) <> `owner_signature`, VALUES(`owner_last_name`), `owner_last_name`),
+  `owner_middle_name` = IF(VALUES(`owner_signature`) <> `owner_signature`, VALUES(`owner_middle_name`), `owner_middle_name`),
+
+  -- ці поля оновлюємо завжди (аудит/планування)
   `last_vacc_date` = VALUES(`last_vacc_date`),
-  `next_due_date` = VALUES(`next_due_date`),
-  `source_rowcount` = VALUES(`source_rowcount`),
-  `ignored_count` = VALUES(`ignored_count`),
-  `ignored_dates` = VALUES(`ignored_dates`);
+  `next_due_date`  = VALUES(`next_due_date`),
+  `source_rowcount`= VALUES(`source_rowcount`),
+  `ignored_count`  = VALUES(`ignored_count`),
+  `ignored_dates`  = VALUES(`ignored_dates`),
+
+  -- відбитки (щоб умови вище працювали наступного разу)
+  `card_dataversion` = VALUES(`card_dataversion`),
+  `owner_signature`  = VALUES(`owner_signature`);
 """
 
 # ===== ENV / DB =====
@@ -156,63 +173,36 @@ def normalize_phone_digits(raw: str) -> str:
     return digits
 
 def api_get_owner(cfg, owner_ref_key: str) -> Tuple[str, str, str, str, str]:
-    """
-    1) Спершу пробуємо PROD:
-       - ?id=<Ref_Key> (новий формат відповіді)
-       - ?Ref_Key=<Ref_Key> (деякі інсталяції)
-       Якщо прийшов JSON-об'єкт — парсимо і повертаємо.
-    2) Якщо на PROD порожньо/None — фолбек на BASE+'-copy' з ?id=<Ref_Key>.
-    Повертаємо (full_name, phone_digits, firstName, lastName, middleName)
-    """
     if not owner_ref_key:
         return "", "", "", "", ""
     if owner_ref_key in _owner_cache:
         return _owner_cache[owner_ref_key]
 
-    base = cfg.get("ENOTE_API_BASE") or ""
+    base = (cfg.get("ENOTE_API_BASE") or "").rstrip("/")
     apikey = cfg.get("ENOTE_APIKEY")
     if not base or not apikey:
         _owner_cache[owner_ref_key] = ("", "", "", "", "")
         return "", "", "", "", ""
 
-    def _call(base_url: str, param_name: str):
-        url = f"{base_url}/hs/api/v2/GetClient"
-        try:
-            r = requests.get(
-                url,
-                headers={"apikey": apikey, "Accept": "application/json"},
-                params={param_name: owner_ref_key},
-                timeout=15,
-            )
-        except Exception:
-            return None
-        if not r.ok:
-            return None
-        try:
-            return r.json()
-        except Exception:
-            return None
+    url = f"{base}/hs/api/v2/GetClient"
+    try:
+        r = requests.get(
+            url,
+            headers={"apikey": apikey, "Accept": "application/json"},
+            params={"id": owner_ref_key},
+            timeout=15,
+        )
+        data = r.json() if r.ok else None
+    except Exception:
+        data = None
 
-    # PROD
-    data = _call(base, "id")
     if not isinstance(data, dict) or not data:
-        data = _call(base, "Ref_Key")
+        _owner_cache[owner_ref_key] = ("", "", "", "", "")
+        return "", "", "", "", ""
 
-    # COPY fallback
-    if not isinstance(data, dict) or not data:
-        base_copy = base + "-copy"
-        data = _call(base_copy, "id")
-        if isinstance(data, dict) and data:
-            print(f"[WARN] Prod GetClient returned null for {owner_ref_key}; -copy returned data. Using copy.")
-        else:
-            _owner_cache[owner_ref_key] = ("", "", "", "", "")
-            return "", "", "", "", ""
-
-    # Ім'я
     fn = (data.get("firstName") or "").strip()
     ln = (data.get("lastName") or "").strip()
     mn = (data.get("middleName") or "").strip()
-
     if not (fn or ln or mn):
         desc = (data.get("Description") or data.get("Name") or "").strip()
         if desc:
@@ -223,10 +213,8 @@ def api_get_owner(cfg, owner_ref_key: str) -> Tuple[str, str, str, str, str]:
                 ln, fn = parts
             else:
                 ln, fn, mn = parts[0], parts[1], " ".join(parts[2:])
-
     full_name = " ".join([x for x in (ln, fn, mn) if x])
 
-    # Телефон → тільки цифри
     phone_digits = ""
     ci = data.get("contact_information")
     if isinstance(ci, list):
@@ -238,12 +226,7 @@ def api_get_owner(cfg, owner_ref_key: str) -> Tuple[str, str, str, str, str]:
                 if phone_digits:
                     break
     if not phone_digits:
-        legacy = (
-            data.get("Phone")
-            or data.get("Телефон")
-            or data.get("МобильныйТелефон")
-            or ""
-        )
+        legacy = (data.get("Phone") or data.get("Телефон") or data.get("МобильныйТелефон") or "")
         phone_digits = normalize_phone_digits(legacy)
     if not phone_digits and isinstance(data.get("Phones"), list):
         for p in data["Phones"]:
@@ -255,29 +238,33 @@ def api_get_owner(cfg, owner_ref_key: str) -> Tuple[str, str, str, str, str]:
     _owner_cache[owner_ref_key] = (full_name, phone_digits, fn, ln, mn)
     return full_name, phone_digits, fn, ln, mn
 
+def owner_signature(phone_digits: str, fn: str, ln: str, mn: str) -> str:
+    s = "|".join([
+        (ln or "").strip().lower(),
+        (fn or "").strip().lower(),
+        (mn or "").strip().lower(),
+        (phone_digits or "").strip()
+    ])
+    return hashlib.sha1(s.encode("utf-8")).hexdigest()
+
 # ===== Data fetch / group =====
 def fetch_all_rows(cur) -> List[Dict[str, Any]]:
     cur.execute(SQL_ALL, (RABIES_WORK_KEY, WINDOW_MONTHS))
     cols = [d[0] for d in cur.description]
     return [dict(zip(cols, r)) for r in cur.fetchall()]
 
-def group_latest_with_ignored(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    В rows уже немає дублів на рівні (Карточка_Key, Period), але
-    додатково страхуємось: агрегуємо унікальні datetime.
-    """
-    out: List[Dict[str, Any]] = []
+def group_latest_with_ignored(rows):
+    out = []
     i = 0
     n = len(rows)
     while i < n:
         card = rows[i]["card_ref_key"]
-        group: List[Dict[str, Any]] = []
+        group = []
         while i < n and rows[i]["card_ref_key"] == card:
             group.append(rows[i])
             i += 1
 
-        # Унікальні datetime у спадному порядку (як у вихідному сортуванні)
-        unique_dt: List[datetime] = []
+        unique_dt = []
         seen = set()
         for g in group:
             vd = g["vacc_date"]
@@ -290,7 +277,7 @@ def group_latest_with_ignored(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]
         latest_dt = unique_dt[0]
         ignored = unique_dt[1:]
 
-        head = group[0]
+        head = group[0]  # найсвіжіший запис по цій картці
         out.append({
             "card_ref_key": head["card_ref_key"],
             "last_vacc_date": latest_dt,
@@ -300,15 +287,20 @@ def group_latest_with_ignored(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]
             "owner_ref_key": head.get("owner_ref_key"),
             "ignored_count": len(ignored),
             "ignored_dates": [d.strftime("%Y-%m-%d") for d in ignored],
-            "source_rowcount": len(group),  # скільки сирих рядків бачили (для аудиту)
+            "source_rowcount": len(group),
+
+            # 🔻 ОЦЕ ДОДАЙ
+            "lethal": head.get("lethal"),
+            "card_dataversion": head.get("card_dataversion"),
         })
     return out
 
 # ===== Upsert / Print =====
-def upsert_summary(cur, groups: List[Dict[str, Any]], cfg) -> List[Dict[str, Any]]:
+def upsert_summary(cur, groups, cfg):
     batch = []
     for g in groups:
         owner_name, owner_phone_digits, fn, ln, mn = api_get_owner(cfg, g.get("owner_ref_key"))
+        sig = owner_signature(owner_phone_digits, fn, ln, mn)  # NEW
         next_due = g["last_vacc_date"] + timedelta(days=365)
         payload = {
             "card_ref_key": g["card_ref_key"],
@@ -317,7 +309,7 @@ def upsert_summary(cur, groups: List[Dict[str, Any]], cfg) -> List[Dict[str, Any
             "contract_number": g.get("contract_number", ""),
             "owner_ref_key": g.get("owner_ref_key"),
             "owner_name": owner_name,
-            "owner_phone": owner_phone_digits,  # збережено ТІЛЬКИ ЦИФРИ
+            "owner_phone": owner_phone_digits,
             "owner_first_name": fn,
             "owner_last_name": ln,
             "owner_middle_name": mn,
@@ -326,6 +318,12 @@ def upsert_summary(cur, groups: List[Dict[str, Any]], cfg) -> List[Dict[str, Any
             "source_rowcount": g.get("source_rowcount", 1),
             "ignored_count": g.get("ignored_count", 0),
             "ignored_dates": json.dumps(g.get("ignored_dates", []), ensure_ascii=False),
+
+            # NEW (з БД-SELECT)
+            "lethal": g.get("lethal"),
+            "card_dataversion": g.get("card_dataversion"),
+            # NEW (з API)
+            "owner_signature": sig,
         }
         batch.append(payload)
     if batch:
@@ -366,6 +364,7 @@ def print_console_reminders(batch: List[Dict[str, Any]]):
     else:
         print("[INFO] У найближчі 30 днів ревакцинацій за умовами відбору не знайдено.")
 
+
 # ===== main =====
 def main():
     cfg = load_env()
@@ -386,3 +385,4 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("Interrupted")
         sys.exit(130)
+
