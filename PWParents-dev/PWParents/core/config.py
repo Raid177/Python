@@ -73,4 +73,10 @@ class Settings:
     UNASSIGNED_IDLE_MINUTES: int = _get_int("UNASSIGNED_IDLE_MINUTES", 15)
     POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool("POST_ASSIGNED_REMINDER_TO_THREAD", False)
 
+    ENOTE_ODATA_URL: str = os.getenv("ENOTE_ODATA_URL", "").rstrip("/")
+    ENOTE_ODATA_USER: str = os.getenv("ENOTE_ODATA_USER", "")
+    ENOTE_ODATA_PASS: str = os.getenv("ENOTE_ODATA_PASS", "")
+    ENOTE_API_URL: str   = os.getenv("ENOTE_API_URL", "").rstrip("/")
+    ENOTE_API_KEY: str   = os.getenv("ENOTE_API_KEY", "")
+
 settings = Settings()

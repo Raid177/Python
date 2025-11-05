@@ -1,6 +1,8 @@
 # core/repositories/clients.py
 
 from typing import Optional
+from datetime import datetime
+from typing import Optional
 
 def get_client(conn, telegram_id: int) -> Optional[dict]:
     """
@@ -117,3 +119,44 @@ def mark_phone_prompted(conn, telegram_id: int):
             "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
             (telegram_id,),
         )
+
+def update_enote_link(
+    conn,
+    *,
+    telegram_id: int,
+    owner_ref_key: str,
+    owner_name_enote: Optional[str],
+    owner_phone_enote: Optional[str],
+    linked_contract_number: Optional[str],
+    linked_by: int
+) -> None:
+    """
+    Ідемпотентне оновлення зв'язку з Єнотом для клієнта.
+    Не створює новий запис; очікує, що клієнт існує.
+    """
+    cur = conn.cursor()
+    sql = """
+        UPDATE pp_clients
+           SET owner_ref_key = %s,
+               owner_name_enote = %s,
+               owner_phone_enote = %s,
+               linked_contract_number = %s,
+               linked_by = %s,
+               linked_at = %s
+         WHERE telegram_id = %s
+         LIMIT 1
+    """
+    cur.execute(sql, (
+        owner_ref_key,
+        owner_name_enote,
+        owner_phone_enote,
+        linked_contract_number,
+        linked_by,
+        datetime.utcnow(),
+        telegram_id
+    ))
+    if cur.rowcount == 0:
+        # Якщо раптом запису нема — краще явно знати про це:
+        raise RuntimeError(f"Client {telegram_id} not found in pp_clients")
+    conn.commit()
+    cur.close()

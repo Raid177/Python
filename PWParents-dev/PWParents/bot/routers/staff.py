@@ -275,39 +275,53 @@ async def show_client_info(message: Message, bot: Bot):
     try:
         ch = await bot.get_chat(t["client_user_id"])
         if getattr(ch, "username", None):
-            # клікабельний лінк на профіль
             tg_username = f"<a href='https://t.me/{ch.username}'>@{ch.username}</a>"
         else:
             tg_username = "— відсутній —"
     except Exception:
         tg_username = "— недоступний —"
 
-    # --- інша інформація ---
+    # --- інша інформація (тільки збираємо дані) ---
     label = (c and c.get("label")) or t["client_user_id"]
-    phone = (c and c.get("phone")) or "— не вказано —"
+    phone = (c and c.get("phone")) or None
+    enote_phone = (c and c.get("owner_phone_enote")) or None
     confirmed = None
     if c is not None:
         pc = c.get("phone_confirmed")
         if pc is None:
-            confirmed = " "
+            confirmed = ""
         else:
             confirmed = "підтверджено ✅" if int(pc) == 1 else "не підтверджено ❌"
     total_closed = (c and c.get("total_closed")) or 0
     tg_link = f"tg://user?id={t['client_user_id']}"
 
-    # --- формуємо текст відповіді ---
+    # --- формуємо текст відповіді (єдиний раз) ---
     text = (
         "<b>Картка клієнта</b>\n"
         f"• Клієнт: <code>{label}</code>\n"
         f"• Telegram ID: <a href='{tg_link}'>{t['client_user_id']}</a>\n"
         f"• Нік: {tg_username}\n"
-        f"• Телефон: <code>{phone}</code>"
     )
-    if confirmed is not None:
-        text += f" ({confirmed})"
+
+    # показ номерів за узгодженими правилами
+    if phone and enote_phone and phone == enote_phone:
+        text += f"• Телефон: <code>{phone}</code> (авторизовано ✅)"
+    elif phone and enote_phone and phone != enote_phone:
+        text += (
+            f"• Телефон (бот): <code>{phone}</code> ({confirmed})\n"
+            f"• Телефон (Єнот): <code>{enote_phone}</code> [enote]"
+        )
+    elif phone:
+        text += f"• Телефон (бот): <code>{phone}</code> ({confirmed})"
+    elif enote_phone:
+        text += f"• Телефон (Єнот): <code>{enote_phone}</code> [enote]"
+    else:
+        text += "• Телефон: — не вказано —"
+
     text += f"\n• Закритих звернень: <b>{total_closed}</b>"
 
     await message.answer(text, disable_web_page_preview=True)
+
 
 # =============== ПРОКСІ ІЗ ТЕМИ → КЛІЄНТУ ===============
 @router.message(
