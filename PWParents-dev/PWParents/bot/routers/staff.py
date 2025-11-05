@@ -1,29 +1,33 @@
 # bot/routers/staff.py
-import logging
+# ── stdlib ──────────────────────────────────────────────────────────────────────
 from datetime import datetime, timedelta
-
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 import html
+import logging
 
-from aiogram import Router, F, Bot
-from aiogram.types import Message
-from aiogram.filters import Command, CommandObject
+# ── third-party (aiogram) ───────────────────────────────────────────────────────
+from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command, CommandObject
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
+# ── first-party (your project) ──────────────────────────────────────────────────
 from core.config import settings
 from core.db import get_conn
-from core.repositories import (
-    messages as repo_m,
-    tickets as repo_t,
-    agents as repo_a,
-    clients as repo_c,
-)
+from core.integrations import enote
+from core.repositories import agents as repo_a
+from core.repositories import clients as repo_c
+from core.repositories import messages as repo_m
+from core.repositories import tickets as repo_t
 from core.repositories.agents import get_display_name
 
 from bot.keyboards.common import (
+    assign_agents_kb,
     prefix_for_staff,
     ticket_actions_kb,
-    assign_agents_kb,
 )
 from bot.routers._media import relay_media
 from bot.utils.staff_guard import IsSupportMember
@@ -419,3 +423,98 @@ async def snooze_cmd(message: Message, command: CommandObject):
 
     await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")
 
+@router.message(
+    Command("patient"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def list_owner_patients(message: Message):
+    conn = get_conn()
+    try:
+        t = repo_t.find_by_thread(conn, message.message_thread_id)
+        if not t:
+            await message.answer("ℹ️ Не знайшов тікет, прив’язаний до цієї теми.")
+            return
+
+        c = repo_c.get_client(conn, t["client_user_id"])
+        if not c or not c.get("owner_ref_key"):
+            await message.answer("ℹ️ Немає прив’язки до Єнота. Виконайте /enote_link спочатку.")
+            return
+
+        owner_ref = c["owner_ref_key"]
+    finally:
+        conn.close()
+
+    # Тягнемо список карток
+    cards = enote.odata_get_owner_cards(owner_ref)
+    if not cards:
+        await message.answer("🐾 У власника не знайдено карток тварин.")
+        return
+
+    lines = [f"<b>Тварини власника</b> (Ref_Key {owner_ref}):"]
+    for p in cards:
+        nm = p.get("Description") or "—"
+        cn = p.get("НомерДоговора") or "—"
+        lines.append(f"• {nm} — {cn}")
+
+    await message.answer("\n".join(lines))
+
+    @router.message(
+    Command("auto_label"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+    async def auto_label_topic(message: Message, bot: Bot):
+        conn = get_conn()
+        try:
+            t = repo_t.find_by_thread(conn, message.message_thread_id)
+            if not t:
+                await message.answer("ℹ️ Не знайшов тікет, прив’язаний до цієї теми.")
+                return
+
+            c = repo_c.get_client(conn, t["client_user_id"])
+            if not c or not c.get("owner_ref_key"):
+                await message.answer("ℹ️ Немає прив’язки до Єнота. Спочатку виконайте /enote_link.")
+                return
+
+            owner_ref = c["owner_ref_key"]
+            owner_name = (c.get("owner_name_enote") or "").strip()
+
+            # беремо лише ім’я (друге слово), якщо ПІБ у форматі "Прізвище Імʼя По батькові"
+            parts = owner_name.split()
+            first_name = parts[1] if len(parts) >= 2 else (parts[0] if parts else "Клієнт")
+
+            # тягнемо тварин
+            cards = enote.odata_get_owner_cards(owner_ref)
+
+            # "Імʼя — ПЕС (123), КІТ (456)"
+            tails = []
+            for p in cards or []:
+                nm = (p.get("Description") or "").strip()
+                cn = (p.get("НомерДоговора") or "").strip()
+                if nm and cn:
+                    tails.append(f"{nm} ({cn})")
+                elif nm:
+                    tails.append(nm)
+
+            label = first_name + (" — " + ", ".join(tails) if tails else "")
+
+            # обмеження TG для назв тем (~128, візьмемо запас)
+            label = label[:124]
+
+            # 1) перейменувати тему
+            await bot.edit_forum_topic(
+                chat_id=message.chat.id,
+                message_thread_id=message.message_thread_id,
+                name=label,
+            )
+
+            # 2) оновити label у БД (НЕ чіпаємо ваш /label — це окрема команда)
+            repo_c.set_label(conn, t["client_user_id"], label)
+            conn.commit()
+
+            await message.answer(f"✅ Автоперейменовано: <b>{label}</b>")
+        finally:
+            conn.close()

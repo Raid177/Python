@@ -8,6 +8,7 @@ from core.config import settings
 from core.db import get_conn
 from core.repositories import agents as repo_a
 from core.repositories.agents import get_display_name
+from aiogram.filters import StateFilter
 
 import logging
 import re  # ← потрібен для _clean_name
@@ -18,7 +19,13 @@ router = Router()
 def _is_staff_member_status(status: str) -> bool:
     return status in ("creator", "administrator", "member")
 
-@router.message(Command("start"), F.chat.type == "private", flags={"block": False})
+@router.message(
+        StateFilter(None),                     # ← ловимо ТІЛЬКИ коли немає стану
+        F.chat.id == settings.support_group_id,
+        F.is_topic_message == True,
+        Command("start"), F.chat.type == "private", flags={"block": False}
+        )
+
 async def start_private(message: Message, bot: Bot):
     u = message.from_user
     # перевірка членства у support-групі
@@ -65,7 +72,12 @@ def _is_active_agent(conn, telegram_id: int) -> bool:
         cur.execute("SELECT 1 FROM pp_agents WHERE telegram_id=%s AND active=1 LIMIT 1", (telegram_id,))
         return cur.fetchone() is not None
 
-@router.message(Command("setname"), F.chat.type == "private")
+@router.message(
+        StateFilter(None),                     # ← ловимо ТІЛЬКИ коли немає стану
+        F.chat.id == settings.support_group_id,
+        F.is_topic_message == True,
+        Command("setname"), F.chat.type == "private"
+        )
 async def setname_private(message: Message, command: CommandObject, bot: Bot):
     uid = message.from_user.id
 

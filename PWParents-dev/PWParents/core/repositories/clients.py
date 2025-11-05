@@ -21,7 +21,13 @@ def get_client(conn, telegram_id: int) -> Optional[dict]:
                 consent_ts,
                 created_at,
                 updated_at,
-                last_phone_prompt_at
+                last_phone_prompt_at,
+                owner_ref_key,
+                owner_name_enote,
+                owner_phone_enote,
+                linked_contract_number,
+                linked_by,
+                linked_at
             FROM pp_clients
             WHERE telegram_id = %s
             LIMIT 1
@@ -29,7 +35,6 @@ def get_client(conn, telegram_id: int) -> Optional[dict]:
             (telegram_id,),
         )
         return cur.fetchone()
-
 
 def ensure_exists(conn, telegram_id: int):
     """

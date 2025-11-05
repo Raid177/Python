@@ -21,7 +21,6 @@ from bot.routers import health  # лічильник апдейтів-мідлв
 from bot.service.reminder import start_idle_reminder
 from bot.auth import acl_refresher_task
 
-
 async def setup_bot_commands(bot: Bot) -> None:
     """Реєструємо підказки команд (автокомпліт /...) під різні скопи."""
 
@@ -38,16 +37,17 @@ async def setup_bot_commands(bot: Bot) -> None:
     # Службова група (ваш саппорт-чат)
     await bot.set_my_commands(
         commands=[
-            BotCommand(command="label", description="Задати мітку теми"),
             BotCommand(command="assign", description="Призначити виконавця"),
+            BotCommand(command="close", description="Закрити звернення"),
+            BotCommand(command="close_silent", description="Тихо закрити (без клієнта)"),
             BotCommand(command="card", description="Картка звернення в тему"),
             BotCommand(command="client", description="Дані клієнта в темі"),
             BotCommand(command="phone", description="Телефон клієнта"),
             BotCommand(command="threadinfo", description="IDs поточної теми"),
-            BotCommand(command="close", description="Закрити звернення"),
-            BotCommand(command="close_silent", description="Тихо закрити (без клієнта)"),
+            BotCommand(command="label", description="Задати мітку теми"),
             BotCommand(command="reopen", description="Перевідкрити звернення"),
             BotCommand(command="snooze", description="Відкласти алерти: /snooze 30"),
+            BotCommand(command="enote_link", description="Прив’язати клієнта до власника (Єнот)"),
         ],
         scope=BotCommandScopeChat(chat_id=settings.support_group_id),
     )
