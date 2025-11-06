@@ -310,6 +310,7 @@ async def show_client_info(message: Message, bot: Bot):
     label = (c and c.get("label")) or t["client_user_id"]
     phone = (c and c.get("phone")) or None
     enote_phone = (c and c.get("owner_phone_enote")) or None
+    enote_owner = (c and c.get("owner_name_enote")) or None  # 👈 ПІБ з Єнота
     confirmed = None
     if c is not None:
         pc = c.get("phone_confirmed")
@@ -324,14 +325,29 @@ async def show_client_info(message: Message, bot: Bot):
     text = (
         "<b>Картка клієнта</b>\n"
         f"• Клієнт: <code>{label}</code>\n"
+    )
+    # 👇 вставляємо ПІБ з Єнота, якщо є
+    if enote_owner:
+        text += f"• Власник (Єнот): <code>{html.escape(enote_owner)}</code>\n"
+
+    text += (
         f"• Telegram ID: <a href='{tg_link}'>{t['client_user_id']}</a>\n"
         f"• Нік: {tg_username}\n"
     )
 
-    # показ номерів за узгодженими правилами
-    if phone and enote_phone and phone == enote_phone:
+        # показ номерів за узгодженими правилами
+    def normalize_phone(p: str) -> str:
+        """Повертає лише цифри з телефону (для порівняння)."""
+        if not p:
+            return ""
+        return "".join(ch for ch in p if ch.isdigit())
+
+    phone_norm = normalize_phone(phone)
+    enote_phone_norm = normalize_phone(enote_phone)
+
+    if phone and enote_phone and phone_norm == enote_phone_norm:
         text += f"• Телефон: <code>{phone}</code> (авторизовано ✅)"
-    elif phone and enote_phone and phone != enote_phone:
+    elif phone and enote_phone and phone_norm != enote_phone_norm:
         text += (
             f"• Телефон (бот): <code>{phone}</code> ({confirmed})\n"
             f"• Телефон (Єнот): <code>{enote_phone}</code> [enote]"
@@ -346,6 +362,7 @@ async def show_client_info(message: Message, bot: Bot):
     text += f"\n• Закритих звернень: <b>{total_closed}</b>"
 
     await message.answer(text, disable_web_page_preview=True)
+
 
 
 # =============== ПРОКСІ ІЗ ТЕМИ → КЛІЄНТУ ===============
