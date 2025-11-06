@@ -174,3 +174,9 @@ def update_enote_link(
         raise RuntimeError(f"Client {telegram_id} not found in pp_clients")
     conn.commit()
     cur.close()
+
+# додай у кінець файлу
+def delete_client(conn, telegram_id: int) -> int:
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM pp_clients WHERE telegram_id=%s", (telegram_id,))
+        return cur.rowcount

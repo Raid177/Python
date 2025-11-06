@@ -199,109 +199,7 @@ async def _ensure_ticket_for_client(
             )
     return t
 
-
-# -------------------- /start + телефон + кнопки --------------------
-
-
-@router.message(Command("start"), F.chat.type == "private")
-async def client_start(message: Message, bot: Bot):
-    # Якщо це співробітник — показуємо службовий текст і виходимо
-    try:
-        cm = await bot.get_chat_member(settings.support_group_id, message.from_user.id)
-        if cm.status in ("creator", "administrator", "member"):
-            await message.answer(
-                "Вітаю! Ви у команді PetWealth 🐾\n"
-                "Для клієнтів працюємо у темах службової групи.\n"
-                "Своє ім’я вкажіть у приваті: /setname Імʼя Прізвище."
-            )
-            return
-    except Exception:
-        pass
-
-    # 1) гарантуємо запис клієнта
-    conn = get_conn()
-    try:
-        repo_c.ensure_exists(conn, message.from_user.id)
-        c = repo_c.get_client(conn, message.from_user.id)  # dict або None
-        if not c or not c.get("phone"):
-            repo_c.upsert_client(conn, message.from_user.id, None, False)
-    finally:
-        conn.close()
-
-    # 2) ОДРАЗУ забезпечуємо тікет/тему — клієнт видимий, але БЕЗ шуму
-    await _ensure_ticket_for_client(
-        bot,
-        message.from_user.id,
-        silent=True,  # ← тихо на /start
-        # Можеш у майбутньому замінити на:
-        # silent=False, notify_text="👋 Клієнт приєднався до бота"
-    )
-
-    # 3) Далі — телефон/меню
-    if not c or not c.get("phone"):
-        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
-        await message.answer(
-            "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
-            reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
-        )
-        conn = get_conn()
-        try:
-            _touch_last_phone_prompt(conn, message.from_user.id)
-            conn.commit()
-        finally:
-            conn.close()
-        return
-
-    await message.answer("Головне меню:", reply_markup=main_menu_kb())
-    await message.answer(WELCOME)
-
-
-@router.message(F.contact, F.chat.type == "private", flags={"block": True})
-async def got_contact(message: Message):
-    conn = get_conn()
-    try:
-        repo_c.ensure_exists(conn, message.from_user.id)
-    finally:
-        conn.close()
-
-    contact: Contact = message.contact
-    if not contact or not contact.phone_number:
-        await message.answer(
-            "Не вдалося отримати номер. Ви можете спробувати ще раз або натиснути «Пропустити».",
-            reply_markup=ask_phone_kb(),
-        )
-        return
-
-    conn = get_conn()
-    try:
-        repo_c.upsert_client(conn, message.from_user.id, contact.phone_number, True)
-    finally:
-        conn.close()
-
-    await message.answer("Дякуємо! Номер збережено ✅", reply_markup=main_menu_kb())
-    await message.answer(WELCOME)
-
-
-@router.message(F.text == "➡️ Пропустити", F.chat.type == "private", flags={"block": True})
-async def skip_phone(message: Message):
-    conn = get_conn()
-    try:
-        repo_c.ensure_exists(conn, message.from_user.id)
-        _touch_last_phone_prompt(conn, message.from_user.id)
-        conn.commit()
-    finally:
-        conn.close()
-
-    await message.answer(
-        "Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.",
-        reply_markup=main_menu_kb(),
-    )
-    await message.answer(WELCOME)
-
-
 # --------------- кнопки швидкого старту (зберігаємо «намір») ---------------
-
-
 @router.message(
     F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private", flags={"block": True}
 )
@@ -322,7 +220,6 @@ async def btn_current_treatment(message: Message, bot: Bot):
         conn.close()
 
     await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час.")
-
 
 @router.message(
     F.text == "📅 Записатись на прийом", F.chat.type == "private", flags={"block": True}
@@ -347,7 +244,6 @@ async def btn_booking(message: Message, bot: Bot):
         "Напишіть зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинація, діагностика тощо)."
     )
 
-
 @router.message(F.text == "❓ Задати питання", F.chat.type == "private", flags={"block": True})
 async def btn_question(message: Message, bot: Bot):
     conn = get_conn()
@@ -367,7 +263,6 @@ async def btn_question(message: Message, bot: Bot):
 
     await message.answer("Напишіть, будь ласка, ваше питання — і ми відповімо якнайшвидше.")
 
-
 @router.message(F.text == "🗺 Як нас знайти", F.chat.type == "private", flags={"block": True})
 async def btn_nav(message: Message, bot: Bot):
     conn = get_conn()
@@ -385,8 +280,6 @@ async def btn_nav(message: Message, bot: Bot):
 
 
 # -------------------- клієнт → тема саппорт-групи --------------------
-
-
 @router.message(F.chat.type == "private", (F.text & ~F.text.startswith("/")) | ~F.text)
 async def inbound_from_client(message: Message, bot: Bot):
     # 0) співробітників ігноруємо в клієнтському роутері

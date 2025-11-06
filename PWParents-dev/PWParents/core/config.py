@@ -85,5 +85,16 @@ class Settings:
     ENOTE_API_URL: str = os.getenv("ENOTE_API_URL", "").rstrip("/")
     ENOTE_API_KEY: str = os.getenv("ENOTE_API_KEY", "")
 
+        # --- Version / release ---
+    APP_VERSION: str = os.getenv("APP_VERSION", "dev")
+    APP_RELEASE: str = os.getenv("APP_RELEASE", "")
+    ENV: str = os.getenv("ENV", "dev")
+
+        # --- Phone reminder ---
+    PHONE_REMINDER_ENABLED: bool = os.getenv("PHONE_REMINDER_ENABLED", "1") == "1"
+    PHONE_REMINDER_MIN_INTERVAL_MIN: int = int(os.getenv("PHONE_REMINDER_MIN_INTERVAL_MIN", "720"))  # мін. пауза між пінгами одного клієнта (12 год)
+    PHONE_REMINDER_POLL_EVERY_MIN: int = int(os.getenv("PHONE_REMINDER_POLL_EVERY_MIN", "10"))       # як часто сканувати БД
+    PHONE_REMINDER_BATCH: int = int(os.getenv("PHONE_REMINDER_BATCH", "50"))                          # скільки клієнтів за раз
+
 
 settings = Settings()

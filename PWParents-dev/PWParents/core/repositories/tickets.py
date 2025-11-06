@@ -1,4 +1,7 @@
 # core/repositories/tickets.py
+from typing import Optional, Sequence
+from datetime import datetime
+
 def find_open_by_client(conn, client_id: int):
     cur = conn.cursor(dictionary=True)
     cur.execute(
@@ -244,3 +247,35 @@ def get_by_thread(conn, thread_id: int) -> dict | None:
     with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM pp_tickets WHERE thread_id=%s LIMIT 1", (thread_id,))
         return cur.fetchone()
+
+# додай у кінець файлу
+def list_ids_by_client(conn, client_user_id: int) -> list[int]:
+    with conn.cursor() as cur:
+        cur.execute("SELECT id FROM pp_tickets WHERE client_user_id=%s", (client_user_id,))
+        return [row[0] for row in cur.fetchall()]
+
+def count_messages_by_ticket_ids(conn, ticket_ids: list[int]) -> int:
+    if not ticket_ids:
+        return 0
+    with conn.cursor() as cur:
+        q = "SELECT COUNT(*) FROM pp_messages WHERE ticket_id IN (" + ",".join(["%s"] * len(ticket_ids)) + ")"
+        cur.execute(q, ticket_ids)
+        return int(cur.fetchone()[0])
+
+def delete_messages_by_ticket_ids(conn, ticket_ids: list[int]) -> int:
+    if not ticket_ids:
+        return 0
+    with conn.cursor() as cur:
+        q = "DELETE FROM pp_messages WHERE ticket_id IN (" + ",".join(["%s"] * len(ticket_ids)) + ")"
+        cur.execute(q, ticket_ids)
+        return cur.rowcount
+
+def count_tickets_by_client(conn, client_user_id: int) -> int:
+    with conn.cursor() as cur:
+        cur.execute("SELECT COUNT(*) FROM pp_tickets WHERE client_user_id=%s", (client_user_id,))
+        return int(cur.fetchone()[0])
+
+def delete_tickets_by_client(conn, client_user_id: int) -> int:
+    with conn.cursor() as cur:
+        cur.execute("DELETE FROM pp_tickets WHERE client_user_id=%s", (client_user_id,))
+        return cur.rowcount
