@@ -1,17 +1,26 @@
 # bot/routers/health.py
-import os, time, platform, psutil
-from aiogram import Router, Bot
+import logging
+import os
+import platform
+import time
+
+import psutil
+from aiogram import Bot, Router
 from aiogram.filters import Command
 from aiogram.types import Message
-from bot.auth import is_allowed, force_refresh, ADMIN_ALERT_CHAT_ID
-from bot.auth import is_allowed, ADMIN_ALERT_CHAT_ID, get_agent_info  # ← додали get_agent_info
-from aiogram import Router, F
-import logging
+
+from bot.auth import (
+    ADMIN_ALERT_CHAT_ID,
+    force_refresh,
+    get_agent_info,  # ← додали get_agent_info
+    is_allowed,
+)
 
 router = Router()
 START_TS = time.monotonic()
 UPDATE_COUNT = 0
 BOT_VERSION = os.getenv("BOT_VERSION", "dev")
+
 
 def _fmt_seconds(sec: float) -> str:
     sec = int(sec)
@@ -19,11 +28,15 @@ def _fmt_seconds(sec: float) -> str:
     h, sec = divmod(sec, 3600)
     m, s = divmod(sec, 60)
     parts = []
-    if d: parts.append(f"{d}d")
-    if h: parts.append(f"{h}h")
-    if m: parts.append(f"{m}m")
+    if d:
+        parts.append(f"{d}d")
+    if h:
+        parts.append(f"{h}h")
+    if m:
+        parts.append(f"{m}m")
     parts.append(f"{s}s")
     return " ".join(parts)
+
 
 @router.message(Command("status"))
 async def status_cmd(message: Message, bot: Bot):
@@ -50,6 +63,7 @@ async def status_cmd(message: Message, bot: Bot):
         f"{loadavg}"
     )
 
+
 @router.message(Command("ping"))
 async def ping_cmd(message: Message, bot: Bot):
     if not await is_allowed(bot, message):
@@ -58,26 +72,31 @@ async def ping_cmd(message: Message, bot: Bot):
     dt = (time.perf_counter() - t0) * 1000
     await message.reply(f"pong {dt:.1f} ms")
 
+
 @router.message(Command("whoami"))
 async def whoami_cmd(message: Message, bot: Bot):
     if not message.from_user:
         return
 
     allowed = await is_allowed(bot, message)
-    role = "admin-group" if (message.chat.id == ADMIN_ALERT_CHAT_ID) else ("allowed" if allowed else "client")
+    role = (
+        "admin-group"
+        if (message.chat.id == ADMIN_ALERT_CHAT_ID)
+        else ("allowed" if allowed else "client")
+    )
 
     info = await get_agent_info(message.from_user.id)
     if info:
-        db_line = f"display_name: {info['display_name']}\nrole: {info['role']}\nactive: {info['active']}"
+        db_line = (
+            f"display_name: {info['display_name']}\nrole: {info['role']}\nactive: {info['active']}"
+        )
     else:
         db_line = "db: not found (pp_agents)"
 
     await message.reply(
-        f"you are: {role}\n"
-        f"user_id: {message.from_user.id}\n"
-        f"chat_id: {message.chat.id}\n"
-        f"{db_line}"
+        f"you are: {role}\nuser_id: {message.from_user.id}\nchat_id: {message.chat.id}\n{db_line}"
     )
+
 
 @router.message(Command("version"))
 async def version_cmd(message: Message, bot: Bot):
@@ -85,11 +104,13 @@ async def version_cmd(message: Message, bot: Bot):
         return
     await message.reply(f"version: {BOT_VERSION}")
 
+
 # middleware-лічильник
 async def count_updates_middleware(handler, event, data):
     global UPDATE_COUNT
     UPDATE_COUNT += 1
     return await handler(event, data)
+
 
 @router.message(Command("acl_reload"))
 async def acl_reload_cmd(message: Message, bot: Bot):
@@ -99,15 +120,17 @@ async def acl_reload_cmd(message: Message, bot: Bot):
     await force_refresh(bot)
     await message.reply("✅ ACL reloaded")
 
+
 @router.message(Command("test"))
 async def test_cmd(message: Message):
     await message.reply("✅ test ok")
+
 
 @router.message(Command("boom"))
 async def cmd_boom(message: Message):
     # імітація помилки у коді
     try:
-        1/0
+        1 / 0
     except Exception:
         logging.getLogger("bot.test").exception("Штучна помилка для перевірки алерта")
         await message.answer("Згенерував помилку. Перевірте алерт у групі.")

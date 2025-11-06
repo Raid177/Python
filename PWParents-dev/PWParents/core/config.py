@@ -11,17 +11,20 @@ DOTENV = ROOT / (".env.dev" if ENV == "dev" else ".env")
 load_dotenv(DOTENV)
 # -----------------------------------------------------------
 
+
 def _get_bool(name: str, default: bool) -> bool:
     val = os.getenv(name)
     if val is None:
         return default
     return val.strip().lower() in ("1", "true", "yes", "on")
 
+
 def _get_int(name: str, default: int) -> int:
     try:
         return int(os.getenv(name, str(default)))
     except ValueError:
         return default
+
 
 def _get_int_or_none(name: str):
     val = os.getenv(name, "").strip()
@@ -32,11 +35,12 @@ def _get_int_or_none(name: str):
     except ValueError:
         return None
 
+
 @dataclass
 class Settings:
     # --- Mode ---
     env: str = ENV
-    is_dev: bool = (ENV == "dev")
+    is_dev: bool = ENV == "dev"
     response_prefix: str = os.getenv("RESPONSE_PREFIX", "[DEV]" if ENV == "dev" else "")
 
     # --- Bot ---
@@ -71,12 +75,15 @@ class Settings:
 
     ESCALATE_UNASSIGNED: bool = _get_bool("ESCALATE_UNASSIGNED", True)
     UNASSIGNED_IDLE_MINUTES: int = _get_int("UNASSIGNED_IDLE_MINUTES", 15)
-    POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool("POST_ASSIGNED_REMINDER_TO_THREAD", False)
+    POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool(
+        "POST_ASSIGNED_REMINDER_TO_THREAD", False
+    )
 
     ENOTE_ODATA_URL: str = os.getenv("ENOTE_ODATA_URL", "").rstrip("/")
     ENOTE_ODATA_USER: str = os.getenv("ENOTE_ODATA_USER", "")
     ENOTE_ODATA_PASS: str = os.getenv("ENOTE_ODATA_PASS", "")
-    ENOTE_API_URL: str   = os.getenv("ENOTE_API_URL", "").rstrip("/")
-    ENOTE_API_KEY: str   = os.getenv("ENOTE_API_KEY", "")
+    ENOTE_API_URL: str = os.getenv("ENOTE_API_URL", "").rstrip("/")
+    ENOTE_API_KEY: str = os.getenv("ENOTE_API_KEY", "")
+
 
 settings = Settings()

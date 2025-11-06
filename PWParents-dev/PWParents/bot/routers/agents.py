@@ -1,54 +1,80 @@
 # bot/routers/agents.py
-from aiogram import Router, F, Bot
-from aiogram.types import Message
-from aiogram.filters import Command, CommandObject
-from aiogram.exceptions import TelegramBadRequest
+import logging
+import re  # для _clean_name
 
-from core.config import settings
+from aiogram import Bot, F, Router
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command, CommandObject, StateFilter
+from aiogram.types import Message
+
 from core.db import get_conn
 from core.repositories import agents as repo_a
 from core.repositories.agents import get_display_name
-from aiogram.filters import StateFilter
+from core.config import settings  # лише для перевірки членства в групі
 
-import logging
-import re  # ← потрібен для _clean_name
 logger = logging.getLogger(__name__)
-
 router = Router()
 
-def _is_staff_member_status(status: str) -> bool:
-    return status in ("creator", "administrator", "member")
 
-@router.message(
-        StateFilter(None),                     # ← ловимо ТІЛЬКИ коли немає стану
-        F.chat.id == settings.support_group_id,
-        F.is_topic_message == True,
-        Command("start"), F.chat.type == "private", flags={"block": False}
+# ── helpers ─────────────────────────────────────────────────────────────────────
+
+def _clean_name(s: str) -> str:
+    return re.sub(r"\s+", " ", (s or "").strip())
+
+def _is_active_agent(conn, telegram_id: int) -> bool:
+    with conn.cursor() as cur:
+        cur.execute(
+            "SELECT 1 FROM pp_agents WHERE telegram_id=%s AND active=1 LIMIT 1",
+            (telegram_id,),
         )
+        return cur.fetchone() is not None
 
-async def start_private(message: Message, bot: Bot):
-    u = message.from_user
-    # перевірка членства у support-групі
-    is_staff = False
+async def _is_staff(bot: Bot, user_id: int) -> bool:
+    """
+    Дозволяємо команду, якщо користувач:
+      1) є учасником саппорт-групи, або
+      2) уже активний у БД (pp_agents.active=1).
+    """
     try:
-        cm = await bot.get_chat_member(settings.support_group_id, u.id)
-        is_staff = cm.status in ("creator", "administrator", "member")
+        cm = await bot.get_chat_member(settings.support_group_id, user_id)
+        if cm.status in ("creator", "administrator", "member"):
+            return True
     except TelegramBadRequest:
         pass
 
-    if not is_staff:
-        # НЕ відповідаємо і НЕ блокуємо
+    conn = get_conn()
+    try:
+        return _is_active_agent(conn, user_id)
+    finally:
+        conn.close()
+
+
+# ── /start (приватний лише для staff) ───────────────────────────────────────────
+
+@router.message(
+    StateFilter(None),
+    F.chat.type == "private",
+    Command("start"),
+    flags={"block": False},
+)
+async def start_private(message: Message, bot: Bot):
+    u = message.from_user
+
+    if not await _is_staff(bot, u.id):
+        # тихо ігноруємо сторонніх
         return
 
-    # гарантуємо запис у БД (порожнє ім'я ок на старті)
+    # гарантуємо запис про агента
     conn = get_conn()
     try:
         repo_a.upsert_agent(conn, telegram_id=u.id, display_name="", role="doctor", active=1)
         conn.commit()
+
+        # акуратно читаємо display_name (через той самий conn)
+        display = get_display_name(conn, u.id)
     finally:
         conn.close()
 
-    display = get_display_name(get_conn(), u.id)
     if display:
         await message.answer(
             f"Вітаю! Ти в команді PetWealth 🐾\n"
@@ -64,42 +90,21 @@ async def start_private(message: Message, bot: Bot):
             "• У темі групи можна використовувати /assign, /label, /close тощо."
         )
 
-def _clean_name(s: str) -> str:
-    return re.sub(r"\s+", " ", (s or "").strip())
 
-def _is_active_agent(conn, telegram_id: int) -> bool:
-    with conn.cursor() as cur:
-        cur.execute("SELECT 1 FROM pp_agents WHERE telegram_id=%s AND active=1 LIMIT 1", (telegram_id,))
-        return cur.fetchone() is not None
+# ── /setname (приватний лише для staff) ────────────────────────────────────────
 
 @router.message(
-        StateFilter(None),                     # ← ловимо ТІЛЬКИ коли немає стану
-        F.chat.id == settings.support_group_id,
-        F.is_topic_message == True,
-        Command("setname"), F.chat.type == "private"
-        )
+    StateFilter(None),
+    F.chat.type == "private",
+    Command("setname"),
+)
 async def setname_private(message: Message, command: CommandObject, bot: Bot):
     uid = message.from_user.id
 
-    # допускаємо, якщо юзер у support-групі АБО вже активний у БД
-    allowed = False
-    try:
-        cm = await bot.get_chat_member(settings.support_group_id, uid)
-        allowed = cm.status in ("creator", "administrator", "member")
-    except TelegramBadRequest as e:
-        logger.warning("get_chat_member failed: %s", e)
+    if not await _is_staff(bot, uid):
+        return  # стороннім нічого не відповідаємо
 
-    if not allowed:
-        conn = get_conn()
-        try:
-            allowed = _is_active_agent(conn, uid)
-        finally:
-            conn.close()
-
-    if not allowed:
-        return  # тихо ігноруємо для сторонніх
-
-    # парсимо ім'я
+    # парсимо ім’я
     name = _clean_name(command.args or "")
     if not name:
         await message.answer("Використання: <code>/setname Імʼя Прізвище</code>")
@@ -111,13 +116,10 @@ async def setname_private(message: Message, command: CommandObject, bot: Bot):
     # зберігаємо display_name
     conn = get_conn()
     try:
-        # Вибери ОДИН з варіантів виклику згідно з репозиторієм:
-
-        # ВАРІАНТ А: якщо ти реалізуєш апсерт-версію з activate=
+        # ВАРІАНТ A: якщо у тебе реалізований метод із activate=
         repo_a.set_display_name(conn, telegram_id=uid, display_name=name, activate=True)
 
-        # ВАРІАНТ B (закоментуй А): якщо залишаєш стару функцію без activate
-        # спершу гарантуємо запис, потім оновлюємо поле
+        # ВАРІАНТ B (якщо без activate): спочатку гарантуємо запис, потім оновлюємо
         # repo_a.upsert_agent(conn, telegram_id=uid, display_name="", role="doctor", active=1)
         # repo_a.set_display_name(conn, telegram_id=uid, display_name=name)
 

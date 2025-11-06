@@ -13,13 +13,46 @@ from aiogram.types import (
 )
 
 from core.config import settings
+from core.db import get_conn
 from infra.logging import setup_logging
 
 from bot.routers import root
 from bot.routers import health  # лічильник апдейтів-мідлвар і /health роутер
-
 from bot.service.reminder import start_idle_reminder
 from bot.auth import acl_refresher_task
+
+
+async def setup_staff_private_commands(bot: Bot) -> None:
+    """
+    Ставимо персональну підказку /setname у приваті ТІЛЬКИ співробітникам.
+    Беремо список активних агентів з pp_agents.active=1 і задаємо BotCommandScopeChat(chat_id=<agent_id>).
+    """
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT telegram_id FROM pp_agents WHERE active=1")
+            ids = [row[0] for row in cur.fetchall() if row and row[0]]
+    finally:
+        conn.close()
+
+    if not ids:
+        return
+
+    staff_private_cmds = [
+        BotCommand(command="setname", description="Змінити ваше ім’я для клієнтів"),
+    ]
+
+    for uid in ids:
+        try:
+            await bot.set_my_commands(
+                commands=staff_private_cmds,
+                scope=BotCommandScopeChat(chat_id=uid),
+            )
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "Cannot set private commands for staff user_id=%s (maybe blocked bot)", uid
+            )
+
 
 async def setup_bot_commands(bot: Bot) -> None:
     """Реєструємо підказки команд (автокомпліт /...) під різні скопи."""
@@ -34,7 +67,7 @@ async def setup_bot_commands(bot: Bot) -> None:
         scope=BotCommandScopeAllPrivateChats(),
     )
 
-    # Службова група (ваш саппорт-чат)
+    # Службова група (саппорт-чат)
     await bot.set_my_commands(
         commands=[
             BotCommand(command="assign", description="Призначити виконавця"),
@@ -48,6 +81,8 @@ async def setup_bot_commands(bot: Bot) -> None:
             BotCommand(command="reopen", description="Перевідкрити звернення"),
             BotCommand(command="snooze", description="Відкласти алерти: /snooze 30"),
             BotCommand(command="enote_link", description="Прив’язати клієнта до власника (Єнот)"),
+            BotCommand(command="patient", description="Пацієнти власника (кличка — договір)"),
+            BotCommand(command="auto_label", description="Автоперейменувати тему за даними Єнота"),
         ],
         scope=BotCommandScopeChat(chat_id=settings.support_group_id),
     )
@@ -59,6 +94,9 @@ async def setup_bot_commands(bot: Bot) -> None:
         ],
         scope=BotCommandScopeAllGroupChats(),
     )
+
+    # Персональні приватні команди для співробітників (лише /setname)
+    await setup_staff_private_commands(bot)
 
 
 async def main():

@@ -2,6 +2,7 @@
 from aiogram import Bot
 from aiogram.types import Message
 
+
 async def relay_media(
     bot: Bot,
     src_msg: Message,
@@ -18,11 +19,7 @@ async def relay_media(
     """
     # 1) опційна «шапка» перед медіа (для службового заголовка)
     if prefix:
-        await bot.send_message(
-            chat_id=dst_chat_id,
-            message_thread_id=thread_id,
-            text=prefix
-        )
+        await bot.send_message(chat_id=dst_chat_id, message_thread_id=thread_id, text=prefix)
 
     # 2) власне копія повідомлення
     return await bot.copy_message(

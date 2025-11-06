@@ -1,4 +1,5 @@
-#core/repositories/agents.py
+# core/repositories/agents.py
+
 
 def get_display_name(conn, telegram_id: int) -> str | None:
     cur = conn.cursor()
@@ -12,7 +13,9 @@ def get_display_name(conn, telegram_id: int) -> str | None:
     return row[0] if row else None
 
 
-def upsert_agent(conn, telegram_id: int, display_name: str, role: str = "doctor", active: int = 1):
+def upsert_agent(
+    conn, telegram_id: int, display_name: str, role: str = "doctor", active: int = 1
+):
     """
     Додати співробітника або оновити його відображуване ім'я.
     """
@@ -52,6 +55,7 @@ def set_display_name(conn, telegram_id: int, display_name: str, activate: bool =
                 (telegram_id, display_name, want_active),
             )
 
+
 def list_active(conn):
     """
     Список активних співробітників для побудови меню призначення.
@@ -67,6 +71,7 @@ def list_active(conn):
     rows = cur.fetchall()
     cur.close()
     return rows
+
 
 def get_agent(conn, telegram_id: int) -> dict | None:
     cur = conn.cursor(dictionary=True)

@@ -7,16 +7,18 @@ from requests.auth import HTTPBasicAuth
 from core.config import settings
 
 ODATA_BASE = settings.ENOTE_ODATA_URL  # .../odata/standard.odata
-API_BASE   = settings.ENOTE_API_URL    # .../hs/api/v2
+API_BASE = settings.ENOTE_API_URL  # .../hs/api/v2
 HEAD_ODATA = {"Accept": "application/json"}
-HEAD_API   = {"Accept": "application/json", "apikey": settings.ENOTE_API_KEY}
-AUTH       = HTTPBasicAuth(settings.ENOTE_ODATA_USER, settings.ENOTE_ODATA_PASS)
+HEAD_API = {"Accept": "application/json", "apikey": settings.ENOTE_API_KEY}
+AUTH = HTTPBasicAuth(settings.ENOTE_ODATA_USER, settings.ENOTE_ODATA_PASS)
 
 CARDS = "Catalog_Карточки"
 GETCLIENT = f"{API_BASE}/GetClient"
 
+
 class EnoteError(Exception):
     pass
+
 
 def norm_phone_digits(raw: str) -> str:
     d = re.sub(r"\D", "", str(raw or ""))
@@ -30,6 +32,7 @@ def norm_phone_digits(raw: str) -> str:
         return "3" + d
     return d
 
+
 def _odata_raw_query(path_query: str) -> Dict[str, Any]:
     """
     Приймає повністю сформований path+query (щоб уникати проблем з кирилицею).
@@ -41,6 +44,7 @@ def _odata_raw_query(path_query: str) -> Dict[str, Any]:
     if not r.ok:
         raise EnoteError(f"ODATA HTTP {r.status_code}: {r.text[:500]}")
     return r.json()
+
 
 def odata_get_card_by_contract(contract: str) -> Optional[Dict[str, Any]]:
     """
@@ -55,9 +59,11 @@ def odata_get_card_by_contract(contract: str) -> Optional[Dict[str, Any]]:
     data = _odata_raw_query(q2).get("value", [])
     return data[0] if data else None
 
+
 def odata_get_owner_cards(owner_ref: str) -> List[Dict[str, Any]]:
     q = f"{CARDS}?$format=json&$select=Ref_Key,Description,Хозяин_Key,НомерДоговора&$filter=Хозяин_Key eq guid'{owner_ref}'&$orderby=Description"
     return _odata_raw_query(q).get("value", [])
+
 
 def api_get_client(owner_ref: str) -> Dict[str, Any]:
     if not API_BASE:
@@ -68,6 +74,7 @@ def api_get_client(owner_ref: str) -> Dict[str, Any]:
     except Exception:
         return {}
 
+
 def extract_owner_name(c: Dict[str, Any]) -> str:
     ln = (c.get("lastName") or "").strip()
     fn = (c.get("firstName") or "").strip()
@@ -75,6 +82,7 @@ def extract_owner_name(c: Dict[str, Any]) -> str:
     if ln or fn or mn:
         return " ".join(x for x in (ln, fn, mn) if x)
     return (c.get("Description") or "—").strip()
+
 
 def extract_owner_phone(c: Dict[str, Any]) -> str:
     ci = c.get("contact_information")

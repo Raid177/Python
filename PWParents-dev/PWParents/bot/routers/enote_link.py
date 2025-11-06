@@ -1,17 +1,17 @@
 # bot/routers/enote_link.py
 
-from aiogram import Router, F, Bot
-from aiogram.filters import Command, StateFilter
+from aiogram import Bot, F, Router
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-
+from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from core.config import settings
 from core.db import get_conn
 from core.integrations import enote
 from core.logging_setup import get_enote_link_logger
-from core.repositories import tickets as repo_t
 from core.repositories import clients as clients_repo
+from core.repositories import tickets as repo_t
+
 from bot.utils.staff_guard import IsSupportMember
 
 router = Router(name="enote_link")
@@ -37,7 +37,7 @@ def _preview_text(owner_name: str, owner_phone: str, owner_ref: str, pets: list[
     else:
         for i, p in enumerate(pets, 1):
             lines.append(
-                f"  {i}) {p.get('Description','—')} — договір {p.get('НомерДоговора','—')}"
+                f"  {i}) {p.get('Description', '—')} — договір {p.get('НомерДоговора', '—')}"
             )
     return "\n".join(lines)
 
@@ -108,6 +108,7 @@ async def process_contract_and_preview(message: Message, state: FSMContext, cont
 
 
 # ===== handlers =====
+
 
 @router.message(
     Command("enote_link"),

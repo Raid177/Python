@@ -2,7 +2,7 @@
 
 from typing import Optional
 from datetime import datetime
-from typing import Optional
+
 
 def get_client(conn, telegram_id: int) -> Optional[dict]:
     """
@@ -35,6 +35,7 @@ def get_client(conn, telegram_id: int) -> Optional[dict]:
             (telegram_id,),
         )
         return cur.fetchone()
+
 
 def ensure_exists(conn, telegram_id: int):
     """
@@ -90,7 +91,11 @@ def upsert_client(
             (
                 telegram_id,
                 phone,
-                (1 if phone_confirmed is True else (0 if phone_confirmed is False else None)),
+                (
+                    1
+                    if phone_confirmed is True
+                    else (0 if phone_confirmed is False else None)
+                ),
                 label,
                 bool(gave_consent),
                 bool(gave_consent),
@@ -125,6 +130,7 @@ def mark_phone_prompted(conn, telegram_id: int):
             (telegram_id,),
         )
 
+
 def update_enote_link(
     conn,
     *,
@@ -133,7 +139,7 @@ def update_enote_link(
     owner_name_enote: Optional[str],
     owner_phone_enote: Optional[str],
     linked_contract_number: Optional[str],
-    linked_by: int
+    linked_by: int,
 ) -> None:
     """
     Ідемпотентне оновлення зв'язку з Єнотом для клієнта.
@@ -151,15 +157,18 @@ def update_enote_link(
          WHERE telegram_id = %s
          LIMIT 1
     """
-    cur.execute(sql, (
-        owner_ref_key,
-        owner_name_enote,
-        owner_phone_enote,
-        linked_contract_number,
-        linked_by,
-        datetime.utcnow(),
-        telegram_id
-    ))
+    cur.execute(
+        sql,
+        (
+            owner_ref_key,
+            owner_name_enote,
+            owner_phone_enote,
+            linked_contract_number,
+            linked_by,
+            datetime.utcnow(),
+            telegram_id,
+        ),
+    )
     if cur.rowcount == 0:
         # Якщо раптом запису нема — краще явно знати про це:
         raise RuntimeError(f"Client {telegram_id} not found in pp_clients")

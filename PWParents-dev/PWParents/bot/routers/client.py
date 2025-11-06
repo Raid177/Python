@@ -2,12 +2,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from aiogram import Router, F, Bot
-from aiogram.types import Message, Contact
-from aiogram.filters import Command
 
-from core.db import get_conn
+from aiogram import Bot, F, Router
+from aiogram.filters import Command
+from aiogram.types import Contact, Message
 from core.config import settings
+from core.db import get_conn
 from core.repositories import clients as repo_c
 from core.repositories import tickets as repo_t
 from core.services.relay import log_and_send_text_to_topic
@@ -33,6 +33,7 @@ ASK_PHONE_COOLDOWN = timedelta(hours=24)
 
 
 # -------------------- helpers --------------------
+
 
 def _touch_last_phone_prompt(conn, client_id: int) -> None:
     with conn.cursor() as cur:
@@ -121,21 +122,18 @@ async def _ensure_ticket_for_client(
             return
         if notify_text:
             await bot.send_message(
-                chat_id=settings.support_group_id,
-                message_thread_id=thread_id,
-                text=notify_text
+                chat_id=settings.support_group_id, message_thread_id=thread_id, text=notify_text
             )
         else:
             await bot.send_message(
                 chat_id=settings.support_group_id,
                 message_thread_id=thread_id,
-                text=f"🟢 Перевідкрито звернення клієнта <code>{label}</code>."
+                text=f"🟢 Перевідкрито звернення клієнта <code>{label}</code>.",
             )
             await bot.send_message(
                 chat_id=settings.support_group_id,
                 message_thread_id=thread_id,
-                text=(f"🟢 Заявка\nКлієнт: <code>{label}</code>\n"
-                      f"Статус: {status}")
+                text=(f"🟢 Заявка\nКлієнт: <code>{label}</code>\nСтатус: {status}"),
             )
 
     if last:
@@ -188,19 +186,22 @@ async def _ensure_ticket_for_client(
             await bot.send_message(
                 chat_id=settings.support_group_id,
                 message_thread_id=t["thread_id"],
-                text=notify_text
+                text=notify_text,
             )
         else:
             await bot.send_message(
                 chat_id=settings.support_group_id,
                 message_thread_id=t["thread_id"],
-                text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
-                      f"Статус: {t['status']}")
+                text=(
+                    f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
+                    f"Статус: {t['status']}"
+                ),
             )
     return t
 
 
 # -------------------- /start + телефон + кнопки --------------------
+
 
 @router.message(Command("start"), F.chat.type == "private")
 async def client_start(message: Message, bot: Bot):
@@ -231,7 +232,7 @@ async def client_start(message: Message, bot: Bot):
     await _ensure_ticket_for_client(
         bot,
         message.from_user.id,
-        silent=True,              # ← тихо на /start
+        silent=True,  # ← тихо на /start
         # Можеш у майбутньому замінити на:
         # silent=False, notify_text="👋 Клієнт приєднався до бота"
     )
@@ -267,7 +268,7 @@ async def got_contact(message: Message):
     if not contact or not contact.phone_number:
         await message.answer(
             "Не вдалося отримати номер. Ви можете спробувати ще раз або натиснути «Пропустити».",
-            reply_markup=ask_phone_kb()
+            reply_markup=ask_phone_kb(),
         )
         return
 
@@ -291,22 +292,31 @@ async def skip_phone(message: Message):
     finally:
         conn.close()
 
-    await message.answer("Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.", reply_markup=main_menu_kb())
+    await message.answer(
+        "Добре, пропускаємо. Ви завжди зможете надіслати номер пізніше.",
+        reply_markup=main_menu_kb(),
+    )
     await message.answer(WELCOME)
 
 
 # --------------- кнопки швидкого старту (зберігаємо «намір») ---------------
 
-@router.message(F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private", flags={"block": True})
+
+@router.message(
+    F.text == "🩺 Запитання по поточному лікуванню", F.chat.type == "private", flags={"block": True}
+)
 async def btn_current_treatment(message: Message, bot: Bot):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO pp_client_intents (client_user_id, intent_label)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
-            """, (message.from_user.id, "➡️ Кнопка: «🩺 Запитання по поточному лікуванню»"))
+            """,
+                (message.from_user.id, "➡️ Кнопка: «🩺 Запитання по поточному лікуванню»"),
+            )
         conn.commit()
     finally:
         conn.close()
@@ -314,21 +324,28 @@ async def btn_current_treatment(message: Message, bot: Bot):
     await message.answer("Напишіть, будь ласка, ваше питання, і лікар відповість в найближчий час.")
 
 
-@router.message(F.text == "📅 Записатись на прийом", F.chat.type == "private", flags={"block": True})
+@router.message(
+    F.text == "📅 Записатись на прийом", F.chat.type == "private", flags={"block": True}
+)
 async def btn_booking(message: Message, bot: Bot):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO pp_client_intents (client_user_id, intent_label)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
-            """, (message.from_user.id, "➡️ Кнопка: «📅 Записатись на прийом»"))
+            """,
+                (message.from_user.id, "➡️ Кнопка: «📅 Записатись на прийом»"),
+            )
         conn.commit()
     finally:
         conn.close()
 
-    await message.answer("Напишіть зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинація, діагностика тощо).")
+    await message.answer(
+        "Напишіть зручний день/час, ім’я пацієнта та причину звернення (первинний огляд, вакцинація, діагностика тощо)."
+    )
 
 
 @router.message(F.text == "❓ Задати питання", F.chat.type == "private", flags={"block": True})
@@ -336,11 +353,14 @@ async def btn_question(message: Message, bot: Bot):
     conn = get_conn()
     try:
         with conn.cursor() as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 INSERT INTO pp_client_intents (client_user_id, intent_label)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE intent_label=VALUES(intent_label), created_at=CURRENT_TIMESTAMP
-            """, (message.from_user.id, "➡️ Кнопка: «❓ Задати питання»"))
+            """,
+                (message.from_user.id, "➡️ Кнопка: «❓ Задати питання»"),
+            )
         conn.commit()
     finally:
         conn.close()
@@ -366,10 +386,8 @@ async def btn_nav(message: Message, bot: Bot):
 
 # -------------------- клієнт → тема саппорт-групи --------------------
 
-@router.message(
-    F.chat.type == "private",
-    (F.text & ~F.text.startswith("/")) | ~F.text
-)
+
+@router.message(F.chat.type == "private", (F.text & ~F.text.startswith("/")) | ~F.text)
 async def inbound_from_client(message: Message, bot: Bot):
     # 0) співробітників ігноруємо в клієнтському роутері
     if await _is_staff_member(bot, message.from_user.id):
@@ -387,8 +405,8 @@ async def inbound_from_client(message: Message, bot: Bot):
     t = await _ensure_ticket_for_client(
         bot,
         message.from_user.id,
-        silent=False,                 # тут хочемо бачити активність
-        notify_text=None              # або за бажанням коротко: "📩 Нове повідомлення від клієнта"
+        silent=False,  # тут хочемо бачити активність
+        notify_text=None,  # або за бажанням коротко: "📩 Нове повідомлення від клієнта"
     )
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
@@ -398,7 +416,7 @@ async def inbound_from_client(message: Message, bot: Bot):
         await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
         await message.answer(
             "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
-            reply_markup=privacy_inline_kb(settings.PRIVACY_URL)
+            reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
         )
         conn = get_conn()
         try:
@@ -415,14 +433,13 @@ async def inbound_from_client(message: Message, bot: Bot):
         with conn.cursor(dictionary=True) as cur:
             cur.execute(
                 "SELECT intent_label FROM pp_client_intents WHERE client_user_id=%s",
-                (message.from_user.id,)
+                (message.from_user.id,),
             )
             row = cur.fetchone()
             if row:
                 pending_intent = row["intent_label"]
                 cur.execute(
-                    "DELETE FROM pp_client_intents WHERE client_user_id=%s",
-                    (message.from_user.id,)
+                    "DELETE FROM pp_client_intents WHERE client_user_id=%s", (message.from_user.id,)
                 )
         conn.commit()
     finally:
@@ -448,12 +465,13 @@ async def inbound_from_client(message: Message, bot: Bot):
         )
         try:
             from bot.service.msglog import log_and_touch
+
             log_and_touch(
                 t["id"],
                 "in",
                 out.message_id,
                 getattr(message, "caption", None),
-                message.content_type
+                message.content_type,
             )
         except Exception:
             pass

@@ -26,11 +26,15 @@ async def check_and_ping_assigned(bot: Bot):
     """Пінгуємо відповідального, якщо клієнт чекає відповідь довше порогу.
     Поважаємо snooze: якщо snooze_until у майбутньому — не пінгуємо.
     """
-    now_utc = datetime.now(timezone.utc).replace(tzinfo=None)  # порівнюємо naive з MySQL DATETIME
+    now_utc = datetime.now(timezone.utc).replace(
+        tzinfo=None
+    )  # порівнюємо naive з MySQL DATETIME
 
     conn = get_conn()
     try:
-        tickets = repo_t.find_idle(conn, min_idle_minutes=settings.REMINDER_IDLE_MINUTES)
+        tickets = repo_t.find_idle(
+            conn, min_idle_minutes=settings.REMINDER_IDLE_MINUTES
+        )
         # очікуємо, що find_idle вже відфільтровує закриті; якщо ні — підстрахуємося нижче
     finally:
         conn.close()
@@ -50,7 +54,10 @@ async def check_and_ping_assigned(bot: Bot):
             continue
 
         # 3) не частіше, ніж раз на REMINDER_PING_EVERY_MIN
-        if t.get("since_last_reminder") is not None and t["since_last_reminder"] < settings.REMINDER_PING_EVERY_MIN:
+        if (
+            t.get("since_last_reminder") is not None
+            and t["since_last_reminder"] < settings.REMINDER_PING_EVERY_MIN
+        ):
             continue
 
         label = t.get("label") or str(t["client_user_id"])
@@ -60,8 +67,10 @@ async def check_and_ping_assigned(bot: Bot):
             # особистий пінг виконавцю
             await bot.send_message(
                 chat_id=t["assigned_to"],
-                text=(f"⏰ Немає відповіді клієнту вже {minutes} хв у темі "
-                      f"<code>{label}</code>. Будь ласка, відпишіться/передайте/закрийте.")
+                text=(
+                    f"⏰ Немає відповіді клієнту вже {minutes} хв у темі "
+                    f"<code>{label}</code>. Будь ласка, відпишіться/передайте/закрийте."
+                ),
             )
 
             # опційно продублюємо в тему
@@ -70,9 +79,11 @@ async def check_and_ping_assigned(bot: Bot):
                     await bot.send_message(
                         chat_id=settings.support_group_id,
                         message_thread_id=t["thread_id"],
-                        text=(f"⚠️ Нагадування для виконавця <code>{label}</code>: "
-                              f"клієнт чекає {minutes} хв. "
-                              f"Будь ласка, відповідайте або передайте / закрийте.")
+                        text=(
+                            f"⚠️ Нагадування для виконавця <code>{label}</code>: "
+                            f"клієнт чекає {minutes} хв. "
+                            f"Будь ласка, відповідайте або передайте / закрийте."
+                        ),
                     )
                 except Exception:
                     # тему могли видалити — ігноруємо
@@ -101,7 +112,9 @@ async def check_and_escalate_unassigned(bot: Bot):
 
     conn = get_conn()
     try:
-        tickets = repo_t.find_unassigned_idle(conn, min_idle_minutes=settings.UNASSIGNED_IDLE_MINUTES)
+        tickets = repo_t.find_unassigned_idle(
+            conn, min_idle_minutes=settings.UNASSIGNED_IDLE_MINUTES
+        )
         agents = repo_a.list_active(conn)
     finally:
         conn.close()
@@ -117,15 +130,20 @@ async def check_and_escalate_unassigned(bot: Bot):
             continue
 
         # 2) не частіше, ніж раз на REMINDER_PING_EVERY_MIN
-        if t.get("since_last_alert") is not None and t["since_last_alert"] < settings.REMINDER_PING_EVERY_MIN:
+        if (
+            t.get("since_last_alert") is not None
+            and t["since_last_alert"] < settings.REMINDER_PING_EVERY_MIN
+        ):
             continue
 
         label = t.get("label") or str(t["client_user_id"])
         minutes = t.get("idle_minutes") or settings.UNASSIGNED_IDLE_MINUTES
         kb = assign_agents_kb(agents, client_id=t["client_user_id"]) if agents else None
 
-        text = (f"🚨 Первинне звернення без відповіді {minutes} хв.\n"
-                f"Клієнт: <code>{label}</code>\nTicket ID: {t['id']}")
+        text = (
+            f"🚨 Первинне звернення без відповіді {minutes} хв.\n"
+            f"Клієнт: <code>{label}</code>\nTicket ID: {t['id']}"
+        )
 
         try:
             # повідомлення в тему (якщо є)
@@ -134,16 +152,14 @@ async def check_and_escalate_unassigned(bot: Bot):
                     await bot.send_message(
                         chat_id=settings.support_group_id,
                         message_thread_id=t["thread_id"],
-                        text=text
+                        text=text,
                     )
                 except Exception:
                     pass
 
             # алерт у адміністраторський чат
             await bot.send_message(
-                chat_id=settings.ADMIN_ALERT_CHAT_ID,
-                text=text,
-                reply_markup=kb
+                chat_id=settings.ADMIN_ALERT_CHAT_ID, text=text, reply_markup=kb
             )
 
             # зафіксувати факт ескалації
