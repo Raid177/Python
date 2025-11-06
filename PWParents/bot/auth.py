@@ -9,7 +9,6 @@ from aiogram import Bot
 from aiogram.types import Message
 from aiogram.exceptions import TelegramForbiddenError, TelegramBadRequest
 
-import aiomysql
 
 ADMIN_ALERT_CHAT_ID = int(os.getenv("ADMIN_ALERT_CHAT_ID", "0"))
 SUPPORT_GROUP_ID = int(os.getenv("SUPPORT_GROUP_ID", "0"))
@@ -21,12 +20,17 @@ DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
 ACL_REFRESH_SECONDS = int(os.getenv("ACL_REFRESH_SECONDS", "600"))  # 10 хв
-AGENT_ROLES = tuple(r.strip() for r in os.getenv("AGENT_ROLES", "admin,agent,doctor").split(",") if r.strip())
+AGENT_ROLES = tuple(
+    r.strip()
+    for r in os.getenv("AGENT_ROLES", "admin,agent,doctor").split(",")
+    if r.strip()
+)
 
 # Увімкни/вимкни джерела
 USE_ADMINS_FROM_ADMIN_GROUP = True
 USE_ADMINS_FROM_SUPPORT_GROUP = False
 USE_DB_AGENTS = True
+
 
 class _AclCache:
     def __init__(self):
@@ -41,7 +45,9 @@ class _AclCache:
         self.agent_ids = ids
         self._last_refresh = time.time()
 
+
 _acl = _AclCache()
+
 
 async def _fetch_group_admin_ids(bot: Bot, chat_id: int) -> Set[int]:
     ids: Set[int] = set()
@@ -56,6 +62,7 @@ async def _fetch_group_admin_ids(bot: Bot, chat_id: int) -> Set[int]:
         pass
     return ids
 
+
 async def _fetch_db_agent_ids() -> Set[int]:
     """
     Даємо доступ усім із pp_agents, де active=1 і є telegram_id.
@@ -67,8 +74,12 @@ async def _fetch_db_agent_ids() -> Set[int]:
     conn: Optional[aiomysql.Connection] = None
     try:
         conn = await aiomysql.connect(
-            host=DB_HOST, port=DB_PORT, user=DB_USER,
-            password=DB_PASSWORD, db=DB_NAME, autocommit=True
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            db=DB_NAME,
+            autocommit=True,
         )
         async with conn.cursor() as cur:
             await cur.execute("""
@@ -87,6 +98,7 @@ async def _fetch_db_agent_ids() -> Set[int]:
             conn.close()
     return ids
 
+
 async def _refresh_acl(bot: Bot):
     ids: Set[int] = set()
     if USE_DB_AGENTS:
@@ -97,6 +109,7 @@ async def _refresh_acl(bot: Bot):
         ids |= await _fetch_group_admin_ids(bot, SUPPORT_GROUP_ID)
     _acl.set(ids)
 
+
 async def ensure_acl_fresh(bot: Bot):
     if _acl.is_fresh():
         return
@@ -104,11 +117,14 @@ async def ensure_acl_fresh(bot: Bot):
         if not _acl.is_fresh():
             await _refresh_acl(bot)
 
+
 def allowed_in_private(user_id: int) -> bool:
     return user_id in _acl.agent_ids
 
+
 def allowed_in_admin_group(chat_id: int) -> bool:
     return ADMIN_ALERT_CHAT_ID and chat_id == ADMIN_ALERT_CHAT_ID
+
 
 async def is_allowed(bot: Bot, message: Message) -> bool:
     await ensure_acl_fresh(bot)
@@ -118,6 +134,7 @@ async def is_allowed(bot: Bot, message: Message) -> bool:
         return True
     return False
 
+
 async def acl_refresher_task(bot: Bot):
     while True:
         try:
@@ -126,9 +143,11 @@ async def acl_refresher_task(bot: Bot):
             pass
         await asyncio.sleep(ACL_REFRESH_SECONDS)
 
+
 # bot/auth.py (внизу файлу)
 async def force_refresh(bot: Bot):
     await _refresh_acl(bot)
+
 
 async def get_agent_info(user_id: int):
     """
@@ -141,20 +160,31 @@ async def get_agent_info(user_id: int):
     conn = None
     try:
         conn = await aiomysql.connect(
-            host=DB_HOST, port=DB_PORT, user=DB_USER,
-            password=DB_PASSWORD, db=DB_NAME, autocommit=True
+            host=DB_HOST,
+            port=DB_PORT,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            db=DB_NAME,
+            autocommit=True,
         )
         async with conn.cursor() as cur:
-            await cur.execute("""
+            await cur.execute(
+                """
                 SELECT display_name, role, active
                 FROM pp_agents
                 WHERE telegram_id = %s
                 LIMIT 1
-            """, (user_id,))
+            """,
+                (user_id,),
+            )
             row = await cur.fetchone()
             if row:
                 display_name, role, active = row
-                return {"display_name": display_name, "role": role, "active": int(active)}
+                return {
+                    "display_name": display_name,
+                    "role": role,
+                    "active": int(active),
+                }
     except Exception:
         # не валимо команду, просто повертаємо None
         return None
@@ -162,4 +192,3 @@ async def get_agent_info(user_id: int):
         if conn:
             conn.close()
     return None
-    

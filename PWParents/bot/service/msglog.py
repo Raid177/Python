@@ -3,7 +3,14 @@ from core.db import get_conn
 from core.repositories import messages as repo_m
 from core.repositories import tickets as repo_t
 
-def log_and_touch(ticket_id: int, direction: str, tg_message_id: int, text: str | None, content_type: str):
+
+def log_and_touch(
+    ticket_id: int,
+    direction: str,
+    tg_message_id: int,
+    text: str | None,
+    content_type: str,
+):
     """
     direction: "in"  (від клієнта)  -> touch_client
                "out" (від саппорта) -> touch_staff

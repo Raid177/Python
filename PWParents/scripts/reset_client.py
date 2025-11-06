@@ -1,4 +1,4 @@
-#scripts/reset_client.py
+# scripts/reset_client.py
 # видалення клієнта з БД (обнулення)
 
 
@@ -11,8 +11,8 @@ from dotenv import load_dotenv
 # Налаштування
 # -------------------------------
 ENV_PATH = "/root/Python/PWParents/.env"
-TELEGRAM_ID_TO_RESET = 6557995963      # ← поміняй тут на потрібний ID
-DRY_RUN = False                        # ← True = тільки показати, що буде видалено
+TELEGRAM_ID_TO_RESET = 6557995963  # ← поміняй тут на потрібний ID
+DRY_RUN = False  # ← True = тільки показати, що буде видалено
 
 # -------------------------------
 # Завантаження .env
@@ -32,9 +32,11 @@ DB_CONFIG = {
     "autocommit": False,
 }
 
+
 def table_exists(cur, table_name: str) -> bool:
     cur.execute("SHOW TABLES LIKE %s", (table_name,))
     return cur.fetchone() is not None
+
 
 def reset_client(conn, telegram_id: int):
     cur = conn.cursor()
@@ -57,9 +59,13 @@ def reset_client(conn, telegram_id: int):
     # 3) (опціонально) видалимо «висячий намір» з pp_client_intents
     if table_exists(cur, "pp_client_intents"):
         if DRY_RUN:
-            print(f"[DRY] DELETE FROM pp_client_intents WHERE client_user_id={telegram_id}")
+            print(
+                f"[DRY] DELETE FROM pp_client_intents WHERE client_user_id={telegram_id}"
+            )
         else:
-            cur.execute("DELETE FROM pp_client_intents WHERE client_user_id=%s", (telegram_id,))
+            cur.execute(
+                "DELETE FROM pp_client_intents WHERE client_user_id=%s", (telegram_id,)
+            )
             print(f"[OK] Видалено з pp_client_intents: {cur.rowcount}")
 
     # 4) видалимо тікети
@@ -78,6 +84,7 @@ def reset_client(conn, telegram_id: int):
 
     cur.close()
 
+
 def main():
     print(f"🔹 Підключення до {os.getenv('DB_NAME')} ...")
     conn = pymysql.connect(**DB_CONFIG)
@@ -91,6 +98,7 @@ def main():
             print("✅ Видалення завершено. Транзакцію зафіксовано.")
     finally:
         conn.close()
+
 
 if __name__ == "__main__":
     main()

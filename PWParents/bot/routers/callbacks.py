@@ -1,17 +1,18 @@
 # bot/routers/ticket_callbacks.py
-from aiogram import Router, F, Bot
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.exceptions import TelegramBadRequest
-import html
 
+from aiogram import Bot, F, Router
+from aiogram.exceptions import TelegramBadRequest
+from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 from core.db import get_conn
-from core.repositories import tickets as repo_t
 from core.repositories import agents as repo_a
-from bot.keyboards.common import ticket_actions_kb, prefix_for_staff, assign_agents_kb
+from core.repositories import tickets as repo_t
+
+from bot.keyboards.common import assign_agents_kb, prefix_for_staff, ticket_actions_kb
 
 router = Router()
 
 # ---------- helpers ----------
+
 
 def _parse(data: str):
     try:
@@ -20,6 +21,7 @@ def _parse(data: str):
     except Exception:
         return None, None
 
+
 def _abs_chat_id_str(chat_id: int) -> str:
     s = str(chat_id)
     if s.startswith("-100"):
@@ -27,6 +29,7 @@ def _abs_chat_id_str(chat_id: int) -> str:
     if s.startswith("-"):
         return s[1:]
     return s
+
 
 async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
     """
@@ -41,6 +44,7 @@ async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
 
 
 # ---------- callbacks ----------
+
 
 @router.callback_query(F.data.startswith("pp."))
 async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
@@ -87,8 +91,10 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
-                      f"Виконавець: {who}"),
+                text=(
+                    f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
+                    f"Виконавець: {who}"
+                ),
                 reply_markup=ticket_actions_kb(client_id),
             )
         except TelegramBadRequest as e:
@@ -133,8 +139,10 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
             await bot.edit_message_text(
                 chat_id=cb.message.chat.id,
                 message_id=cb.message.message_id,
-                text=(f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
-                      f"Виконавець: {who}"),
+                text=(
+                    f"🟡 В роботі | Клієнт: <code>{t['label'] or client_id}</code>\n"
+                    f"Виконавець: {who}"
+                ),
                 reply_markup=ticket_actions_kb(client_id),
             )
         except TelegramBadRequest as e:
@@ -144,19 +152,16 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
         # --- DM виконавцю: клікабельне посилання на тему ---
         try:
             topic_url = await build_topic_url(bot, cb.message.chat.id, t["thread_id"])
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]
-            ])
-            safe_label = str(t.get("label") or client_id)
-            dm_text = (
-                f"🔔 Вам призначено звернення клієнта {safe_label}.\n"
-                f"{topic_url}"
+            kb = InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]]
             )
+            safe_label = str(t.get("label") or client_id)
+            dm_text = f"🔔 Вам призначено звернення клієнта {safe_label}.\n{topic_url}"
             await bot.send_message(
                 chat_id=assignee_id,
-                text=dm_text,                 # даємо сирий URL — клікається без parse_mode
+                text=dm_text,  # даємо сирий URL — клікається без parse_mode
                 reply_markup=kb,
-                disable_web_page_preview=True
+                disable_web_page_preview=True,
             )
         except Exception:
             # мовчки ігноруємо, якщо немає /start у бота
@@ -186,7 +191,7 @@ async def ticket_callbacks(cb: CallbackQuery, bot: Bot):
 
         await bot.send_message(
             chat_id=t["client_user_id"],
-            text="✅ Щиро дякуємо за довіру. Якщо знадобиться допомога — пишіть, будемо раді відповісти."
+            text="✅ Щиро дякуємо за довіру. Якщо знадобиться допомога — пишіть, будемо раді відповісти.",
         )
         await cb.answer("Закрито")
         return

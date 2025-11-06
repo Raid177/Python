@@ -13,19 +13,49 @@ from aiogram.types import (
 )
 
 from core.config import settings
+from core.db import get_conn
 from infra.logging import setup_logging
 
 from bot.routers import root
 from bot.routers import health  # лічильник апдейтів-мідлвар і /health роутер
-
 from bot.service.reminder import start_idle_reminder
 from bot.auth import acl_refresher_task
+from bot.service.phone_reminder import start_phone_reminders
+
+async def setup_staff_private_commands(bot: Bot) -> None:
+    """
+    Ставимо персональну підказку /setname у приваті ТІЛЬКИ співробітникам.
+    Беремо список активних агентів з pp_agents.active=1 і задаємо BotCommandScopeChat(chat_id=<agent_id>).
+    """
+    conn = get_conn()
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT telegram_id FROM pp_agents WHERE active=1")
+            ids = [row[0] for row in cur.fetchall() if row and row[0]]
+    finally:
+        conn.close()
+
+    if not ids:
+        return
+
+    staff_private_cmds = [
+        BotCommand(command="setname", description="Змінити ваше ім’я для клієнтів"),
+    ]
+
+    for uid in ids:
+        try:
+            await bot.set_my_commands(
+                commands=staff_private_cmds,
+                scope=BotCommandScopeChat(chat_id=uid),
+            )
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "Cannot set private commands for staff user_id=%s (maybe blocked bot)", uid
+            )
 
 
 async def setup_bot_commands(bot: Bot) -> None:
-    """Реєструємо підказки команд (автокомпліт /...) під різні скопи."""
-
-    # Приватні чати (клієнти)
+    # Приватні (клієнти)
     await bot.set_my_commands(
         commands=[
             BotCommand(command="start", description="Почати / головне меню"),
@@ -35,30 +65,45 @@ async def setup_bot_commands(bot: Bot) -> None:
         scope=BotCommandScopeAllPrivateChats(),
     )
 
-    # Службова група (ваш саппорт-чат)
+    # Саппорт-група — основні
     await bot.set_my_commands(
         commands=[
-            BotCommand(command="label", description="Задати мітку теми"),
             BotCommand(command="assign", description="Призначити виконавця"),
-            BotCommand(command="card", description="Картка звернення в тему"),
-            BotCommand(command="client", description="Дані клієнта в темі"),
-            BotCommand(command="phone", description="Телефон клієнта"),
-            BotCommand(command="threadinfo", description="IDs поточної теми"),
             BotCommand(command="close", description="Закрити звернення"),
             BotCommand(command="close_silent", description="Тихо закрити (без клієнта)"),
+            BotCommand(command="card", description="Картка звернення в тему"),
+            BotCommand(command="client", description="Дані клієнта"),
+            BotCommand(command="phone", description="Телефон(и) клієнта"),
+            BotCommand(command="threadinfo", description="IDs поточної теми"),
+            BotCommand(command="label", description="Задати мітку теми"),
             BotCommand(command="reopen", description="Перевідкрити звернення"),
             BotCommand(command="snooze", description="Відкласти алерти: /snooze 30"),
+            BotCommand(command="enote_link", description="Прив’язати клієнта до власника (Єнот)"),
+            BotCommand(command="patient", description="Пацієнти власника"),
+            BotCommand(command="auto_label", description="Автоперейменувати тему"),
+            
+            # ── службові/технічні в самому кінці ──
+            BotCommand(command="status", description="Статус бота"),
+            BotCommand(command="version", description="Версія релізу"),
+            BotCommand(command="ping", description="Пінг"),
+            BotCommand(command="whoami", description="Хто я"),
+            BotCommand(command="acl_reload", description="Перечитати ACL"),
+            BotCommand(command="test", description="Тест"),
+            BotCommand(command="wipe_client_dry", description="(DEV) Показати, що буде видалено"),
+            BotCommand(command="wipe_client",     description="(DEV) Видалити клієнта + тему (НЕЗВОРОТНО)"),
+
+
         ],
         scope=BotCommandScopeChat(chat_id=settings.support_group_id),
     )
 
-    # (опційно) дефолт для всіх груп — якщо бот колись з’явиться ще десь
+    # За замовчуванням — для всіх груп (мінімум)
     await bot.set_my_commands(
-        commands=[
-            BotCommand(command="threadinfo", description="IDs поточної теми"),
-        ],
+        commands=[BotCommand(command="threadinfo", description="IDs поточної теми")],
         scope=BotCommandScopeAllGroupChats(),
     )
+    # Персональні приватні команди для співробітників (лише /setname)
+    await setup_staff_private_commands(bot)
 
 
 async def main():
@@ -87,7 +132,15 @@ async def main():
     # Фонові задачі
     if settings.REMINDER_ENABLED:
         asyncio.create_task(start_idle_reminder(bot))
-    asyncio.create_task(acl_refresher_task(bot))
+        logging.getLogger("bot.service.reminder").info(
+            "reminder: starting (idle=%sm, ping=%sm, escalate=%s)",
+            settings.REMINDER_IDLE_MINUTES,
+            settings.REMINDER_PING_EVERY_MIN,
+            settings.ESCALATE_UNASSIGNED,
+        )
+    # ⬇️ НОВЕ: нагадування про телефон
+    if settings.PHONE_REMINDER_ENABLED:
+        asyncio.create_task(start_phone_reminders(bot))
 
     # Старт полінгу
     await dp.start_polling(bot)

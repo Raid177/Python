@@ -1,6 +1,7 @@
 import mysql.connector as mysql
 from core.config import settings
 
+
 def get_conn():
     return mysql.connect(
         host=settings.db_host,

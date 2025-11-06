@@ -1,9 +1,16 @@
 # core/config.py
 from dataclasses import dataclass
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
+# --- load .env or .env.dev from project root (PWParents) ---
+ROOT = Path(__file__).resolve().parents[1]  # .../PWParents
+ENV = os.getenv("ENV", "prod").lower()
+DOTENV = ROOT / (".env.dev" if ENV == "dev" else ".env")
+load_dotenv(DOTENV)
+# -----------------------------------------------------------
+
 
 def _get_bool(name: str, default: bool) -> bool:
     val = os.getenv(name)
@@ -11,11 +18,13 @@ def _get_bool(name: str, default: bool) -> bool:
         return default
     return val.strip().lower() in ("1", "true", "yes", "on")
 
+
 def _get_int(name: str, default: int) -> int:
     try:
         return int(os.getenv(name, str(default)))
     except ValueError:
         return default
+
 
 def _get_int_or_none(name: str):
     val = os.getenv(name, "").strip()
@@ -26,8 +35,14 @@ def _get_int_or_none(name: str):
     except ValueError:
         return None
 
+
 @dataclass
 class Settings:
+    # --- Mode ---
+    env: str = ENV
+    is_dev: bool = ENV == "dev"
+    response_prefix: str = os.getenv("RESPONSE_PREFIX", "[DEV]" if ENV == "dev" else "")
+
     # --- Bot ---
     bot_token: str = os.getenv("BOT_TOKEN", "")
     bot_username: str = os.getenv("BOT_USERNAME", "")
@@ -60,6 +75,26 @@ class Settings:
 
     ESCALATE_UNASSIGNED: bool = _get_bool("ESCALATE_UNASSIGNED", True)
     UNASSIGNED_IDLE_MINUTES: int = _get_int("UNASSIGNED_IDLE_MINUTES", 15)
-    POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool("POST_ASSIGNED_REMINDER_TO_THREAD", False)
+    POST_ASSIGNED_REMINDER_TO_THREAD: bool = _get_bool(
+        "POST_ASSIGNED_REMINDER_TO_THREAD", False
+    )
+
+    ENOTE_ODATA_URL: str = os.getenv("ENOTE_ODATA_URL", "").rstrip("/")
+    ENOTE_ODATA_USER: str = os.getenv("ENOTE_ODATA_USER", "")
+    ENOTE_ODATA_PASS: str = os.getenv("ENOTE_ODATA_PASS", "")
+    ENOTE_API_URL: str = os.getenv("ENOTE_API_URL", "").rstrip("/")
+    ENOTE_API_KEY: str = os.getenv("ENOTE_API_KEY", "")
+
+        # --- Version / release ---
+    APP_VERSION: str = os.getenv("APP_VERSION", "dev")
+    APP_RELEASE: str = os.getenv("APP_RELEASE", "")
+    ENV: str = os.getenv("ENV", "dev")
+
+        # --- Phone reminder ---
+    PHONE_REMINDER_ENABLED: bool = os.getenv("PHONE_REMINDER_ENABLED", "1") == "1"
+    PHONE_REMINDER_MIN_INTERVAL_MIN: int = int(os.getenv("PHONE_REMINDER_MIN_INTERVAL_MIN", "720"))  # мін. пауза між пінгами одного клієнта (12 год)
+    PHONE_REMINDER_POLL_EVERY_MIN: int = int(os.getenv("PHONE_REMINDER_POLL_EVERY_MIN", "10"))       # як часто сканувати БД
+    PHONE_REMINDER_BATCH: int = int(os.getenv("PHONE_REMINDER_BATCH", "50"))                          # скільки клієнтів за раз
+
 
 settings = Settings()

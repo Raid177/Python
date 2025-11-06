@@ -4,14 +4,21 @@ import logging
 from aiogram import Bot
 from aiogram.enums import ParseMode
 
+
 class TelegramAlerter(logging.Handler):
-    def __init__(self, bot_token: str, chat_id: int, thread_id: int | None = None,
-                 level=logging.ERROR, throttle_seconds: int = 60):
+    def __init__(
+        self,
+        bot_token: str,
+        chat_id: int,
+        thread_id: int | None = None,
+        level=logging.ERROR,
+        throttle_seconds: int = 60,
+    ):
         super().__init__(level)
         self._bot = Bot(bot_token)
         self._chat_id = chat_id
         self._thread_id = thread_id
-        self._last = {}          # msg_hash -> ts
+        self._last = {}  # msg_hash -> ts
         self._throttle = throttle_seconds
 
     def emit(self, record: logging.LogRecord) -> None:

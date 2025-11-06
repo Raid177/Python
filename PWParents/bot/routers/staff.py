@@ -1,41 +1,48 @@
 # bot/routers/staff.py
+# ── stdlib ──────────────────────────────────────────────────────────────────────
+import html
 import logging
 from datetime import datetime, timedelta
 
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-import html
-
-from aiogram import Router, F, Bot
-from aiogram.types import Message
-from aiogram.filters import Command, CommandObject
+# ── third-party (aiogram) ───────────────────────────────────────────────────────
+from aiogram import Bot, F, Router
 from aiogram.exceptions import TelegramBadRequest
+from aiogram.filters import Command, CommandObject
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    Message,
+)
 
+# ── first-party (your project) ──────────────────────────────────────────────────
 from core.config import settings
 from core.db import get_conn
-from core.repositories import (
-    messages as repo_m,
-    tickets as repo_t,
-    agents as repo_a,
-    clients as repo_c,
-)
+from core.integrations import enote
+from core.repositories import agents as repo_a
+from core.repositories import clients as repo_c
+from core.repositories import tickets as repo_t
 from core.repositories.agents import get_display_name
 
 from bot.keyboards.common import (
+    assign_agents_kb,
     prefix_for_staff,
     ticket_actions_kb,
-    assign_agents_kb,
 )
 from bot.routers._media import relay_media
 from bot.utils.staff_guard import IsSupportMember
 
 router = Router()
 logger = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 
 # =========================
 # СЛУЖБОВІ КОМАНДИ В ТЕМІ
 # =========================
 
-@router.message(Command("label"), F.chat.id == settings.support_group_id, F.is_topic_message == True)
+
+@router.message(
+    Command("label"), F.chat.id == settings.support_group_id, F.is_topic_message == True
+)
 async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
     new_label = (command.args or "").strip()
     if not new_label:
@@ -61,17 +68,22 @@ async def set_label_cmd(message: Message, command: CommandObject, bot: Bot):
 
     await message.answer(f"✅ Мітку теми оновлено на: <b>{new_label}</b>")
 
+
 def _abs_chat_id_str(chat_id: int) -> str:
     s = str(chat_id)
-    if s.startswith("-100"): return s[4:]
-    if s.startswith("-"):    return s[1:]
+    if s.startswith("-100"):
+        return s[4:]
+    if s.startswith("-"):
+        return s[1:]
     return s
+
 
 async def build_topic_url(bot: Bot, group_id: int, thread_id: int) -> str:
     ch = await bot.get_chat(group_id)
-    if getattr(ch, "username", None):                # публічна група
+    if getattr(ch, "username", None):  # публічна група
         return f"https://t.me/{ch.username}/{thread_id}"
     return f"https://t.me/c/{_abs_chat_id_str(ch.id)}/{thread_id}"  # приватна група
+
 
 @router.message(
     Command("assign"),
@@ -106,7 +118,9 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
             return
 
         kb = assign_agents_kb(agents, client_id=t["client_user_id"], exclude_id=None)
-        await message.answer(f"Кому передати клієнта <b>{html.escape(str(label))}</b>?", reply_markup=kb)
+        await message.answer(
+            f"Кому передати клієнта <b>{html.escape(str(label))}</b>?", reply_markup=kb
+        )
         return
 
     # 2) пряме призначення за Telegram ID
@@ -123,33 +137,34 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
         safe_label = html.escape(str(label))
 
         # повідомлення в тему (як було)
-        await message.answer(f"🟡 Призначено виконавця: <b>{who}</b> для клієнта <b>{safe_label}</b>")
+        await message.answer(
+            f"🟡 Призначено виконавця: <b>{who}</b> для клієнта <b>{safe_label}</b>"
+        )
 
         # приватне повідомлення виконавцю з клікабельною кнопкою "Відкрити тему"
         try:
             topic_url = await build_topic_url(bot, settings.support_group_id, t["thread_id"])
 
             # 1) Кнопка з URL (найнадійніше)
-            kb = InlineKeyboardMarkup(inline_keyboard=[
-                [InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]
-            ])
+            kb = InlineKeyboardMarkup(
+                inline_keyboard=[[InlineKeyboardButton(text="➡️ Відкрити тему", url=topic_url)]]
+            )
 
             # 2) У тексті дай ПРЯМИЙ URL (Telegram сам зробить клікабельним навіть без HTML)
             safe_label = html.escape(str(label))
-            dm_text = (
-                f"🔔 Вам призначено звернення клієнта {safe_label}.\n"
-                f"{topic_url}"
-            )
+            dm_text = f"🔔 Вам призначено звернення клієнта {safe_label}.\n{topic_url}"
 
             await bot.send_message(
                 chat_id=tg_id,
                 text=dm_text,
                 reply_markup=kb,
-                disable_web_page_preview=True
+                disable_web_page_preview=True,
                 # parse_mode не потрібен, бо даємо сирий URL
             )
         except Exception:
-            await message.answer("ℹ️ Не вдалося надіслати приватне повідомлення (співробітник не стартував бота).")
+            await message.answer(
+                "ℹ️ Не вдалося надіслати приватне повідомлення (співробітник не стартував бота)."
+            )
         return
 
     # 3) help
@@ -158,6 +173,7 @@ async def assign_cmd(message: Message, command: CommandObject, bot: Bot):
         "• /assign 123456789 — одразу призначити за Telegram ID\n"
         "• /assign — показати список співробітників і обрати з кнопок"
     )
+
 
 @router.message(
     Command("close"),
@@ -169,7 +185,8 @@ async def staff_close(message: Message, bot: Bot):
     conn = get_conn()
     try:
         t = repo_t.find_by_thread(conn, message.message_thread_id)
-        if not t: return
+        if not t:
+            return
         repo_t.close_ticket(conn, t["id"])
     finally:
         conn.close()
@@ -179,6 +196,7 @@ async def staff_close(message: Message, bot: Bot):
         chat_id=t["client_user_id"],
         text="✅ Щиро дякуємо за довіру. Якщо знадобиться допомога — пишіть.",
     )
+
 
 @router.message(
     Command("reopen"),
@@ -190,7 +208,8 @@ async def staff_reopen(message: Message, bot: Bot):
     conn = get_conn()
     try:
         t = repo_t.find_by_thread(conn, message.message_thread_id)
-        if not t: return
+        if not t:
+            return
         repo_t.reopen(conn, t["id"])
     finally:
         conn.close()
@@ -202,6 +221,7 @@ async def staff_reopen(message: Message, bot: Bot):
         text=f"🟢 Перевідкрито | Клієнт: <code>{t['label'] or t['client_user_id']}</code>",
         reply_markup=ticket_actions_kb(t["client_user_id"]),
     )
+
 
 @router.message(
     Command("close_silent"),
@@ -230,6 +250,7 @@ async def close_silent_cmd(message: Message, bot: Bot):
         logger.exception("close_silent failed: %s", e)
         await message.answer("⚠️ Не вдалось закрити тихо (див. логи).")
 
+
 @router.message(
     Command("card"),
     F.chat.id == settings.support_group_id,
@@ -242,17 +263,21 @@ async def post_card(message: Message, bot: Bot):
         t = repo_t.find_by_thread(conn, message.message_thread_id)
     finally:
         conn.close()
-    if not t: return
+    if not t:
+        return
     try:
         await bot.send_message(
             chat_id=message.chat.id,
             message_thread_id=message.message_thread_id,
-            text=(f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
-                  f"Статус: {t['status']}"),
+            text=(
+                f"🟢 Заявка\nКлієнт: <code>{t['label'] or t['client_user_id']}</code>\n"
+                f"Статус: {t['status']}"
+            ),
             reply_markup=ticket_actions_kb(t["client_user_id"]),
         )
     except TelegramBadRequest:
         pass
+
 
 @router.message(
     Command("client", "phone"),
@@ -275,39 +300,70 @@ async def show_client_info(message: Message, bot: Bot):
     try:
         ch = await bot.get_chat(t["client_user_id"])
         if getattr(ch, "username", None):
-            # клікабельний лінк на профіль
             tg_username = f"<a href='https://t.me/{ch.username}'>@{ch.username}</a>"
         else:
             tg_username = "— відсутній —"
     except Exception:
         tg_username = "— недоступний —"
 
-    # --- інша інформація ---
+    # --- інша інформація (тільки збираємо дані) ---
     label = (c and c.get("label")) or t["client_user_id"]
-    phone = (c and c.get("phone")) or "— не вказано —"
+    phone = (c and c.get("phone")) or None
+    enote_phone = (c and c.get("owner_phone_enote")) or None
+    enote_owner = (c and c.get("owner_name_enote")) or None  # 👈 ПІБ з Єнота
     confirmed = None
     if c is not None:
         pc = c.get("phone_confirmed")
         if pc is None:
-            confirmed = " "
+            confirmed = ""
         else:
             confirmed = "підтверджено ✅" if int(pc) == 1 else "не підтверджено ❌"
     total_closed = (c and c.get("total_closed")) or 0
     tg_link = f"tg://user?id={t['client_user_id']}"
 
-    # --- формуємо текст відповіді ---
+    # --- формуємо текст відповіді (єдиний раз) ---
     text = (
         "<b>Картка клієнта</b>\n"
         f"• Клієнт: <code>{label}</code>\n"
+    )
+    # 👇 вставляємо ПІБ з Єнота, якщо є
+    if enote_owner:
+        text += f"• Власник (Єнот): <code>{html.escape(enote_owner)}</code>\n"
+
+    text += (
         f"• Telegram ID: <a href='{tg_link}'>{t['client_user_id']}</a>\n"
         f"• Нік: {tg_username}\n"
-        f"• Телефон: <code>{phone}</code>"
     )
-    if confirmed is not None:
-        text += f" ({confirmed})"
+
+        # показ номерів за узгодженими правилами
+    def normalize_phone(p: str) -> str:
+        """Повертає лише цифри з телефону (для порівняння)."""
+        if not p:
+            return ""
+        return "".join(ch for ch in p if ch.isdigit())
+
+    phone_norm = normalize_phone(phone)
+    enote_phone_norm = normalize_phone(enote_phone)
+
+    if phone and enote_phone and phone_norm == enote_phone_norm:
+        text += f"• Телефон: <code>{phone}</code> (авторизовано ✅)"
+    elif phone and enote_phone and phone_norm != enote_phone_norm:
+        text += (
+            f"• Телефон (бот): <code>{phone}</code> ({confirmed})\n"
+            f"• Телефон (Єнот): <code>{enote_phone}</code> [enote]"
+        )
+    elif phone:
+        text += f"• Телефон (бот): <code>{phone}</code> ({confirmed})"
+    elif enote_phone:
+        text += f"• Телефон (Єнот): <code>{enote_phone}</code> [enote]"
+    else:
+        text += "• Телефон: — не вказано —"
+
     text += f"\n• Закритих звернень: <b>{total_closed}</b>"
 
     await message.answer(text, disable_web_page_preview=True)
+
+
 
 # =============== ПРОКСІ ІЗ ТЕМИ → КЛІЄНТУ ===============
 @router.message(
@@ -348,17 +404,26 @@ async def outbound_to_client(message: Message, bot: Bot):
         except Exception:
             pass
 
-    fallback = message.from_user.full_name or (message.from_user.username and f"@{message.from_user.username}") or None
+    fallback = (
+        message.from_user.full_name
+        or (message.from_user.username and f"@{message.from_user.username}")
+        or None
+    )
     prefix = prefix_for_staff(message.from_user.id, fallback=fallback)
 
     from bot.service.msglog import log_and_touch
 
     if message.content_type == "text":
-        out = await bot.send_message(chat_id=t["client_user_id"], text=f"{prefix}\n\n{message.text}")
+        out = await bot.send_message(
+            chat_id=t["client_user_id"], text=f"{prefix}\n\n{message.text}"
+        )
         log_and_touch(t["id"], "out", out.message_id, message.text, "text")
     else:
         out = await relay_media(bot, message, t["client_user_id"], prefix=prefix)
-        log_and_touch(t["id"], "out", out.message_id, getattr(message, "caption", None), message.content_type)
+        log_and_touch(
+            t["id"], "out", out.message_id, getattr(message, "caption", None), message.content_type
+        )
+
 
 @router.message(Command("threadinfo"), F.chat.type == "supergroup")
 async def thread_info(message: Message):
@@ -373,6 +438,7 @@ async def thread_info(message: Message):
         f"(Назву теми Telegram API не віддає)",
         disable_web_page_preview=True,
     )
+
 
 @router.message(
     Command("snooze"),
@@ -405,3 +471,121 @@ async def snooze_cmd(message: Message, command: CommandObject):
 
     await message.answer(f"⏸ Алерти вимкнено до <b>{until_dt:%Y-%m-%d %H:%M UTC}</b>.")
 
+
+@router.message(
+    Command("patient"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def list_owner_patients(message: Message):
+    conn = get_conn()
+    try:
+        t = repo_t.find_by_thread(conn, message.message_thread_id)
+        if not t:
+            await message.answer("ℹ️ Не знайшов тікет, прив’язаний до цієї теми.")
+            return
+
+        c = repo_c.get_client(conn, t["client_user_id"])
+        if not c or not c.get("owner_ref_key"):
+            await message.answer("ℹ️ Немає прив’язки до Єнота. Виконайте /enote_link спочатку.")
+            return
+
+        owner_ref = c["owner_ref_key"]
+    finally:
+        conn.close()
+
+    cards = enote.odata_get_owner_cards(owner_ref)
+    if not cards:
+        await message.answer("🐾 У власника не знайдено карток тварин.")
+        return
+
+    lines = [f"<b>Тварини власника</b> (Ref_Key {owner_ref}):"]
+    for p in cards:
+        nm = p.get("Description") or "—"
+        cn = p.get("НомерДоговора") or "—"
+        lines.append(f"• {nm} — {cn}")
+
+    await message.answer("\n".join(lines))
+
+
+# ⬇️⬇️⬇️ ВИНЕСЕНО ОКРЕМИМ ХЕНДЛЕРОМ (ТОЙ САМИЙ РІВЕНЬ ВІДСТУПУ, ЩО Й ІНШІ) ⬇️⬇️⬇️
+@router.message(
+    Command("auto_label"),
+    F.chat.id == settings.support_group_id,
+    F.is_topic_message == True,
+    IsSupportMember(),
+)
+async def auto_label_topic(message: Message, bot: Bot):
+    chat_id = message.chat.id
+    topic_id = message.message_thread_id
+
+    conn = get_conn()
+    try:
+        # 1) тікет і клієнт
+        t = repo_t.find_by_thread(conn, topic_id)
+        if not t:
+            await message.answer("ℹ️ Не знайшов тікет, прив’язаний до цієї теми.")
+            return
+
+        c = repo_c.get_client(conn, t["client_user_id"])
+        if not c:
+            await message.answer("ℹ️ Клієнта не знайдено в БД.")
+            return
+
+        owner_ref = (c.get("owner_ref_key") or "").strip()
+        owner_name = (c.get("owner_name_enote") or "").strip()
+        if not owner_ref:
+            await message.answer("ℹ️ Немає прив’язки до Єнота. Спочатку виконайте /enote_link.")
+            return
+
+        # 2) тягнемо картки з Єнота
+        try:
+            cards = enote.odata_get_owner_cards(owner_ref)
+        except Exception:
+            log.exception("auto_label: enote cards failed owner_ref=%s", owner_ref)
+            await message.answer("⚠️ Не вдалося отримати тварин з Єнота. Спробуйте пізніше.")
+            return
+
+        # 3) будуємо назву
+        parts = owner_name.split()
+        first_name = parts[1] if len(parts) >= 2 else (parts[0] if parts else "Клієнт")
+
+        tails = []
+        for p in cards or []:
+            nm = (p.get("Description") or "").strip()
+            cn = (p.get("НомерДоговора") or "").strip()
+            if nm and cn:
+                tails.append(f"{nm} ({cn})")
+            elif nm:
+                tails.append(nm)
+
+        label = first_name + (" — " + ", ".join(tails) if tails else "")
+        label = label[:124]  # запас до 128
+
+        # 4) перейменовуємо тему
+        await bot.edit_forum_topic(
+            chat_id=chat_id,
+            message_thread_id=topic_id,
+            name=label,
+        )
+
+        # 5) оновлюємо в БД
+        try:
+            repo_c.set_label(conn, t["client_user_id"], label)
+            conn.commit()
+        except Exception:
+            log.exception("auto_label: failed to update label in DB")
+            await message.answer("⚠️ Тему перейменовано, але не вдалось оновити label у БД.")
+
+        await message.answer(f"✅ Автоперейменовано: <b>{label}</b>")
+        log.info(
+            "auto_label OK chat=%s topic=%s client=%s label=%s",
+            chat_id, topic_id, t["client_user_id"], label
+        )
+
+    except Exception:
+        log.exception("auto_label: unexpected error chat=%s topic=%s", chat_id, topic_id)
+        await message.answer("❌ Помилка при автоперейменуванні. Див. логи.")
+    finally:
+        conn.close()

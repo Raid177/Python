@@ -1,0 +1,172 @@
+# DEV-документація (повна технічна)
+cat << 'EOF' > /root/Python/PWParents-dev/PWParents/README_DEV.md
+# PetWealth Parents — DEV Documentation
+
+Мета: повна технічна документація для розробки, розгортання та підтримки бота.
+
+## 1) Архітектура та потоки
+
+Компоненти:
+- app/ — точка входу (main.py), ініціалізація бота, конфігів і роутерів.
+- bot/ — усі aiogram-хендлери, маршрути, службова логіка саппорту.
+- core/ — конфіг, БД, інтеграції (Enote), репозиторії, бізнес-сервіси.
+- infra/ — інфраструктурні речі (лог-хендлери тощо).
+- logs/ — файлові логи (наприклад, enote_link.log).
+
+Потік повідомлень (спрощено):
+1. Клієнт → пише боту → бот (bot/routers/client.py) створює/оновлює тікет/повідомлення.
+2. Бот → релеїть у саппорт-групу в **тему (thread)** клієнта (core/services/relay.py, bot/routers/agents.py).
+3. Staff відповідає в темі → бот релеїть клієнту.
+4. Адмінські команди (staff) керують статусами, етикетками, прив’язками до Enote тощо.
+
+## 2) Файлова структура (ключові файли)
+
+- app/main.py — старт бота.
+- bot/routers/root.py — підключення роутерів (agents, staff, callbacks, enote_link, client).
+- bot/routers/staff.py — /client, /phone тощо (працює в саппорт-групі, у темах).
+- bot/routers/enote_link.py — /enote_link — прив’язка клієнта до власника в Єноті.
+- core/config.py — читає .env.
+- core/db.py — MySQL конектор (mysql.connector).
+- core/integrations/enote.py — гібрид OData + hs/api/v2 (GetClient).
+- core/repositories/clients.py — get_client, ensure_exists, upsert_client, update_enote_link (функціональний стиль).
+- core/services/relay.py — логіка “клієнт ↔ саппорт”.
+- infra/telegram_log_handler.py — хендлер телеграм-логів (якщо використовується).
+
+## 3) .env (мінімум)
+
+BOT_TOKEN=…  
+BOT_USERNAME=PetWealthParentsBot  
+SUPPORT_GROUP_ID=-1002992147362
+
+DB_HOST=127.0.0.1  
+DB_PORT=3306  
+DB_USER=olexii_raid  
+DB_PASSWORD=Z4vBrpT7@9uLMxWg  
+DB_NAME=petwealth
+
+ENOTE_ODATA_URL=https://app.enote.vet/<uuid>/odata/standard.odata  
+ENOTE_ODATA_USER=odata  
+ENOTE_ODATA_PASS=********  
+ENOTE_API_URL=https://app.enote.vet/<uuid>/hs/api/v2  
+ENOTE_API_KEY=********************************
+
+## 4) Схема БД (ключові таблиці)
+
+### 4.1) pp_clients
+Основні поля (частина):
+- telegram_id (PK, BIGINT) — ідентифікатор клієнта в TG.
+- phone (VARCHAR) — телефон, наданий у боті.
+- phone_confirmed (TINYINT) — підтверджено в боті (1/0/NULL).
+- label (VARCHAR) — відображуване ім’я/помітка в саппорті.
+- total_closed (INT) — лічильник закритих звернень.
+- created_at, updated_at, last_phone_prompt_at (DATETIME).
+
+Додаткові поля для Enote (додані міграцією):
+- owner_ref_key CHAR(36)
+- owner_name_enote VARCHAR(255)
+- owner_phone_enote VARCHAR(32)
+- linked_contract_number VARCHAR(64)
+- linked_by BIGINT
+- linked_at DATETIME
+- індекс idx_pp_clients_owner_ref_key (owner_ref_key)
+
+### 4.2) tickets
+- id (PK), thread_id (TG message_thread_id), chat_id (support group id)
+- client_user_id (TG id клієнта), status, created_at, updated_at
+- додаткові поля для бізнес-логіки (етикетки, виконавець тощо)
+
+### 4.3) messages
+- id (PK), ticket_id (FK), direction (client→staff або staff→client),
+- telegram_message_id, text, media, created_at
+
+(точні схеми дивись у migrations/ або у відповідних репозиторіях core/repositories/*)
+
+## 5) Інтеграція з Єнотом
+
+Модуль: core/integrations/enote.py  
+Підходи:
+- OData: пошук картки тварини за НомерДоговора → отримання Хозяин_Key (owner_ref_key).
+- OData: по owner_ref_key — список карток тварин власника.
+- hs/api/v2/GetClient (apikey): отримати ПІБ, телефони та іншу контактну інформацію.
+- Нормалізація номера (380XXXXXXXXX).
+
+Стабільність:
+- таймаути 15–25с, до 1–2 retry на GET.
+- формування `$filter` без URL-екодингу кирилиці (шлемо уже сформований path+query).
+
+## 6) Команди і роутери
+
+### 6.1) /enote_link (bot/routers/enote_link.py)
+Контекст: саппорт-група, **в темі**, як reply на повідомлення клієнта.  
+Флоу:
+- /enote_link → бот просить номер договору.
+- OData → знаходимо власника, hs/api → беремо ПІБ/телефон.
+- Прев’ю + кнопки ✅/❌ (список тварин власника, ПІБ, телефон, ref_key).
+- На ✅: оновити pp_clients (owner_ref_key, owner_name_enote, owner_phone_enote, linked_contract_number, linked_by, linked_at).
+- Службове підтвердження у тему.
+- Лог: logs/enote_link.log (події preview|linked|cancel|error).
+
+### 6.2) /phone (bot/routers/staff.py)
+Контекст: саппорт-група, в темі.  
+Дістає client_user_id через tickets.find_by_thread().  
+Виводить: label, tg id (посилання), username, **телефони за політикою**:
+- однаково → один рядок “(авторизовано ✅)”
+- різні → два рядки “бот” і “Єнот [enote]”
+- лише один → відповідну версію.
+
+### 6.3) Інші staff-команди (за наявністю)
+- /client — коротка картка клієнта (може бути злитою з /phone).
+- /assign, /label — призначення/помітки (якщо вже реалізовано).
+- /pay, /pending — платіжний флоу (окремі логи/режим).
+
+## 7) Логи
+
+- logs/enote_link.log — події /enote_link.
+- infra/… — ваші загальні логи (запуск, помилки, телеграм-хендлери).
+- Рекомендація: логувати JSON-рядки (module, chat, thread, client, actor, result, error).
+
+## 8) Деплой і запуск
+
+Віртуалка: Python 3.12, venv, systemd.
+
+Приклад unit-файлу:
+[Unit]
+Description=PetWealth Parents Dev Bot
+After=network-online.target
+
+[Service]
+WorkingDirectory=/root/Python/PWParents-dev/PWParents
+Environment="PYTHONPATH=/root/Python/PWParents-dev/PWParents"
+ExecStart=/root/Python/PWParents-dev/venv/bin/python app/main.py
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target
+
+Команди:
+- systemctl daemon-reload
+- systemctl enable --now parents-dev.service
+- journalctl -u parents-dev.service -f
+
+## 9) Тест-чеклісти
+
+/enote_link:
+- прев’ю з коректною інформацією,
+- ✅ запис у БД, службове підтвердження у тему,
+- повторний запуск на вже прив’язаному клієнті → попередження або overwrite.
+
+/phone:
+- однакові номери → один рядок з “авторизовано”,
+- різні → два рядки,
+- лише enote → “[enote]”.
+
+## 10) Траблшутінг
+
+- 400/500 від Єнота: перевірити ENOTE_* у .env, таймаути/ретраї.
+- Порожній /phone: клієнт відсутній у pp_clients → перевірити створення клієнта під час 1-го контакту.
+- Логи не пишуться: права на каталог logs/, власник процесу.
+- Systemd падає: journalctl -u, перевірити PYTHONPATH, venv, імпорти.
+
+EOF

@@ -1,0 +1,6 @@
+
+# === local environment files ===
+.env
+.env.*
+!example.env
+
