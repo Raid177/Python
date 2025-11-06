@@ -161,12 +161,12 @@ def touch_staff(conn, ticket_id: int):
 
 
 def mark_reminded(conn, ticket_id: int):
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE pp_tickets SET last_reminder_at=UTC_TIMESTAMP() WHERE id=%s",
-        (ticket_id,),
-    )
-    cur.close()
+    with conn.cursor() as cur:
+        cur.execute(
+            "UPDATE pp_tickets SET last_reminder_at = UTC_TIMESTAMP() WHERE id = %s",
+            (ticket_id,),
+        )
+    conn.commit()
 
 
 def mark_unassigned_alerted(conn, ticket_id: int):
@@ -179,26 +179,37 @@ def mark_unassigned_alerted(conn, ticket_id: int):
 
 
 def find_idle(conn, min_idle_minutes: int):
-    cur = conn.cursor(dictionary=True)
-    cur.execute(
-        """
+    """
+    Клієнт чекає відповіді, якщо:
+      - тикет open/in_progress
+      - assigned_to не NULL
+      - останнє повідомлення від клієнта є (last_client_msg_at NOT NULL)
+      - остання відповідь співробітника старіша (last_staff_msg_at IS NULL або < last_client_msg_at)
+      - минуло >= min_idle_minutes від last_client_msg_at
+      - snooze_until не активний
+      - і не пінгували надто нещодавно (since_last_reminder >= REMINDER_PING_EVERY_MIN — це ми перевіримо вище в сервісі)
+    Повертаємо також зручні метрики.
+    """
+    q = """
         SELECT
-          id, client_user_id, label, assigned_to, last_client_msg_at, last_reminder_at,
-          TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) AS idle_minutes,
-          TIMESTAMPDIFF(MINUTE, IFNULL(last_reminder_at,'1970-01-01'), UTC_TIMESTAMP()) AS since_last_reminder
-        FROM pp_tickets
-        WHERE status IN ('open','in_progress')
-          AND assigned_to IS NOT NULL
-          AND last_client_msg_at IS NOT NULL
-          AND (last_staff_msg_at IS NULL OR last_staff_msg_at < last_client_msg_at)
-          AND TIMESTAMPDIFF(MINUTE, last_client_msg_at, UTC_TIMESTAMP()) >= %s
-        ORDER BY last_client_msg_at ASC
-        """,
-        (min_idle_minutes,),
-    )
-    rows = cur.fetchall()
-    cur.close()
-    return rows
+            t.*,
+            TIMESTAMPDIFF(MINUTE, t.last_client_msg_at, UTC_TIMESTAMP()) AS idle_minutes,
+            CASE
+              WHEN t.last_reminder_at IS NULL THEN 99999
+              ELSE TIMESTAMPDIFF(MINUTE, t.last_reminder_at, UTC_TIMESTAMP())
+            END AS since_last_reminder
+        FROM pp_tickets t
+        WHERE t.status IN ('open','in_progress')
+          AND t.assigned_to IS NOT NULL
+          AND t.last_client_msg_at IS NOT NULL
+          AND (t.last_staff_msg_at IS NULL OR t.last_client_msg_at > t.last_staff_msg_at)
+          AND TIMESTAMPDIFF(MINUTE, t.last_client_msg_at, UTC_TIMESTAMP()) >= %s
+          AND (t.snooze_until IS NULL OR t.snooze_until < UTC_TIMESTAMP())
+        ORDER BY t.last_client_msg_at ASC
+    """
+    with conn.cursor(dictionary=True) as cur:
+        cur.execute(q, (min_idle_minutes,))
+        return cur.fetchall()
 
 
 def find_unassigned_idle(conn, min_idle_minutes: int):

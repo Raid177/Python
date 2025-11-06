@@ -81,6 +81,7 @@ async def setup_bot_commands(bot: Bot) -> None:
             BotCommand(command="enote_link", description="Прив’язати клієнта до власника (Єнот)"),
             BotCommand(command="patient", description="Пацієнти власника"),
             BotCommand(command="auto_label", description="Автоперейменувати тему"),
+            
             # ── службові/технічні в самому кінці ──
             BotCommand(command="status", description="Статус бота"),
             BotCommand(command="version", description="Версія релізу"),
@@ -131,8 +132,12 @@ async def main():
     # Фонові задачі
     if settings.REMINDER_ENABLED:
         asyncio.create_task(start_idle_reminder(bot))
-    asyncio.create_task(acl_refresher_task(bot))
-
+        logging.getLogger("bot.service.reminder").info(
+            "reminder: starting (idle=%sm, ping=%sm, escalate=%s)",
+            settings.REMINDER_IDLE_MINUTES,
+            settings.REMINDER_PING_EVERY_MIN,
+            settings.ESCALATE_UNASSIGNED,
+        )
     # ⬇️ НОВЕ: нагадування про телефон
     if settings.PHONE_REMINDER_ENABLED:
         asyncio.create_task(start_phone_reminders(bot))

@@ -17,51 +17,10 @@ from bot.routers._media import relay_media
 
 router = Router()
 
-WELCOME = (
-    "Вітаємо у клініці PetWealth! 💚\n"
-    f"Ми раді допомогти вам. Якщо питання термінове — телефонуйте {settings.SUPPORT_PHONE}.\n"
-    "Зверніть увагу: чат не відслідковується постійно, але ми відповімо, щойно побачимо повідомлення."
-)
-
-PHONE_EXPLAIN = (
-    "Щоб ми ідентифікували вас як власника тварини і надалі надсилали нагадування "
-    "про візити/вакцинації, результати аналізів тощо — поділіться номером телефону.\n\n"
-    "Це добровільно. Ви можете натиснути «Пропустити»."
-)
-
 ASK_PHONE_COOLDOWN = timedelta(hours=24)
 
 
 # -------------------- helpers --------------------
-
-
-def _touch_last_phone_prompt(conn, client_id: int) -> None:
-    with conn.cursor() as cur:
-        cur.execute(
-            "UPDATE pp_clients SET last_phone_prompt_at = UTC_TIMESTAMP() WHERE telegram_id = %s",
-            (client_id,),
-        )
-
-
-def _should_prompt_phone(c: dict | None) -> bool:
-    """
-    Питаємо номер, якщо немає телефону і остання підказка була ≥ 24 год тому (або ніколи).
-    """
-    if not c:
-        return True
-    if c.get("phone"):
-        return False
-
-    last = c.get("last_phone_prompt_at")
-    if not last:
-        return True
-
-    now = datetime.now(timezone.utc)
-    if last.tzinfo is None:
-        last = last.replace(tzinfo=timezone.utc)
-    return (now - last) >= ASK_PHONE_COOLDOWN
-
-
 async def _is_staff_member(bot: Bot, user_id: int) -> bool:
     try:
         cm = await bot.get_chat_member(settings.support_group_id, user_id)
@@ -303,21 +262,6 @@ async def inbound_from_client(message: Message, bot: Bot):
     )
     label = t.get("label") or f"{message.from_user.id}"
     head = f"📨 Від клієнта <code>{label}</code>"
-
-    # 3) Якщо треба — попросити телефон, але НЕ зупиняти доставку у тему
-    if _should_prompt_phone(client_row):
-        await message.answer(PHONE_EXPLAIN, reply_markup=ask_phone_kb())
-        await message.answer(
-            "Натисніть кнопку нижче, щоб переглянути політику конфіденційності.",
-            reply_markup=privacy_inline_kb(settings.PRIVACY_URL),
-        )
-        conn = get_conn()
-        try:
-            _touch_last_phone_prompt(conn, message.from_user.id)
-            conn.commit()
-        finally:
-            conn.close()
-        # без return → повідомлення все одно підемо в тему
 
     # 4) Підхопити «висячий» intent
     pending_intent = None

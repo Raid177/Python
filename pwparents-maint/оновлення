@@ -1,0 +1,14 @@
+Увімкнути мікроботика (під час оновлення)
+pwparents-switch maint
+
+→ зупинить pwparents.service,
+→ запустить pwparents-maint.service.
+
+Повернути бойового бота
+pwparents-switch prod
+
+→ зупинить мікробота,
+→ запустить бойового.
+
+Перевірити статус
+pwparents-switch status
