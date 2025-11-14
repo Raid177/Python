@@ -47,17 +47,20 @@ def _sys_load_cpu_mem():
 
 @router.message(Command("status"))
 async def cmd_status(message: Message):
-    # DB ping
+        # DB ping
     t0 = time.perf_counter()
     db_ok = False
+    db_err = ""
     conn = None
     try:
         conn = get_conn()
         with conn.cursor() as cur:
             cur.execute("SELECT 1")
         db_ok = True
-    except Exception:
-        db_ok = False
+    except Exception as e:
+        import logging, traceback
+        logging.getLogger("health").exception("DB healthcheck failed")
+        db_err = f"{type(e).__name__}: {e}"
     finally:
         if conn:
             conn.close()
@@ -84,20 +87,38 @@ async def cmd_status(message: Message):
 
     # Лічильники з БД
     total_clients = linked = open_tickets = 0
+
+    db_ok = False
+    db_err = ""
+    t0 = time.perf_counter()
+
+    conn = None
     try:
         conn = get_conn()
-        cur = conn.cursor()
-        cur.execute("SELECT COUNT(*) FROM pp_clients")
-        total_clients = cur.fetchone()[0]
-        cur.execute("SELECT COUNT(*) FROM pp_clients WHERE owner_ref_key IS NOT NULL")
-        linked = cur.fetchone()[0]
-        cur.execute("SELECT COUNT(*) FROM pp_tickets WHERE status='open'")
-        open_tickets = cur.fetchone()[0]
-    except Exception:
-        pass
+        with conn.cursor() as cur:
+            cur.execute("SELECT 1")
+            _ = cur.fetchone()
+        db_ok = True
+
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM pp_clients")
+            total_clients = cur.fetchone()[0]
+
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM pp_clients WHERE owner_ref_key IS NOT NULL")
+            linked = cur.fetchone()[0]
+
+        with conn.cursor() as cur:
+            cur.execute("SELECT COUNT(*) FROM pp_tickets WHERE status='open'")
+            open_tickets = cur.fetchone()[0]
+
+    except Exception as e:
+        logging.getLogger("health").exception("DB healthcheck failed")
+        db_err = f"{type(e).__name__}: {e}"
     finally:
         if conn:
             conn.close()
+    db_time = time.perf_counter() - t0
 
     load, cpu, mem = _sys_load_cpu_mem()
     rel = f"  (released: {settings.APP_RELEASE})" if settings.APP_RELEASE else ""
@@ -108,11 +129,13 @@ async def cmd_status(message: Message):
         f"cpu: {cpu:.1f}%   mem: {mem:.1f} MB\n"
         f"loadavg: {load}\n\n"
         f"DB: {'✅ OK' if db_ok else '❌ ERR'} ({db_time:.2f}s)\n"
-        f"Enote: {'✅ OK' if enote_ok else '❌ ERR'} ({enote_time:.2f}s)\n"
-        f"clients: {total_clients}   linked: {linked}\n"
-        f"tickets: {open_tickets} open\n"
+        + (f"<code>{db_err[:180]}</code>\n" if (not db_ok and db_err) else "")
+        + f"Enote: {'✅ OK' if enote_ok else '❌ ERR'} ({enote_time:.2f}s)\n"
+        + f"clients: {total_clients}   linked: {linked}\n"
+        + f"tickets: {open_tickets} open\n"
     )
     await message.answer(text)
+
 
 @router.message(Command("ping"))
 async def ping_cmd(message: Message, bot: Bot):

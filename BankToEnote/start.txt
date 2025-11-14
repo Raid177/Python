@@ -1,0 +1,20 @@
+python -m app.main all
+
+
+1. Запуск тільки пуша (як раніше — “в Єнот”):
+cd /root/Python/BankToEnote
+source /root/Python/venv/bin/activate
+python -m app.main push
+
+2. Якщо хочеш обмежити кількість документів (м’який старт):
+python -m app.main push --limit 10
+
+3. Якщо хочеш тимчасово зробити dry-run, не міняючи .env:
+python -m app.main push --limit 10 --dry-run
+
+4. Повний цикл (банк → еквайринг → Єнот):
+python -m app.main all
+
+
+Тобто тепер push, fetch, ekv, all — це підкоманди, а не прапори.
+--push працювати не буде — він не існує як опція.
