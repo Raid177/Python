@@ -2,6 +2,9 @@
 from typing import Optional, Sequence
 from datetime import datetime
 
+from typing import Optional, Dict, Any
+from core.db import get_conn
+
 def find_open_by_client(conn, client_id: int):
     cur = conn.cursor(dictionary=True)
     cur.execute(
@@ -290,3 +293,76 @@ def delete_tickets_by_client(conn, client_user_id: int) -> int:
     with conn.cursor() as cur:
         cur.execute("DELETE FROM pp_tickets WHERE client_user_id=%s", (client_user_id,))
         return cur.rowcount
+
+
+def get_ticket_by_id(ticket_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Повертає один тікет з pp_tickets за id.
+    Використовується модулем перенесення переписки в Єнот.
+    """
+
+    sql = """
+        SELECT
+            id,
+            client_user_id,
+            thread_id,
+            label,
+            status,
+            assigned_to,
+            last_client_msg_at,
+            last_staff_msg_at,
+            last_reminder_at,
+            last_unassigned_alert_at,
+            created_at,
+            closed_at,
+            snooze_until,
+            updated_at
+        FROM pp_tickets
+        WHERE id = %s
+        LIMIT 1
+    """
+
+    conn = get_conn()
+    try:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute(sql, (ticket_id,))
+            row = cur.fetchone()
+            return row if row else None
+    finally:
+        conn.close()
+
+def get_ticket_by_thread_id(thread_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Повертає тікет з pp_tickets за thread_id (ID теми в саппорт-групі).
+    Використовується модулем перенесення переписки в Єнот.
+    """
+
+    sql = """
+        SELECT
+            id,
+            client_user_id,
+            thread_id,
+            label,
+            status,
+            assigned_to,
+            last_client_msg_at,
+            last_staff_msg_at,
+            last_reminder_at,
+            last_unassigned_alert_at,
+            created_at,
+            closed_at,
+            snooze_until,
+            updated_at
+        FROM pp_tickets
+        WHERE thread_id = %s
+        LIMIT 1
+    """
+
+    conn = get_conn()
+    try:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute(sql, (thread_id,))
+            row = cur.fetchone()
+            return row if row else None
+    finally:
+        conn.close()

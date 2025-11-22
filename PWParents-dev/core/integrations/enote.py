@@ -98,3 +98,30 @@ def extract_owner_phone(c: Dict[str, Any]) -> str:
             if num:
                 return num
     return ""
+
+def enote_request(method: str, path: str, **kwargs) -> Any:
+    if not ODATA_BASE:
+        raise EnoteError("ODATA base URL is not configured")
+
+    url = f"{ODATA_BASE}/{path.lstrip('/')}"
+
+    m = method.upper()
+    if m == "GET":
+        r = requests.get(url, headers=HEAD_ODATA, auth=AUTH, timeout=25, **kwargs)
+    elif m == "POST":
+        r = requests.post(url, headers=HEAD_ODATA, auth=AUTH, timeout=25, **kwargs)
+    elif m == "PATCH":
+        r = requests.patch(url, headers=HEAD_ODATA, auth=AUTH, timeout=25, **kwargs)
+    else:
+        raise EnoteError(f"Unsupported method for enote_request: {method}")
+
+    if not r.ok:
+        raise EnoteError(f"ODATA HTTP {r.status_code}: {r.text[:500]}")
+
+    if not r.content:
+        return None
+
+    try:
+        return r.json()
+    except ValueError:
+        return None

@@ -5876,3 +5876,10 @@ UA403220010000026006310087701
 [2025-10-12 08:45:00,005] INFO: Running job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-13 08:45:00 EEST)" (scheduled at 2025-10-12 08:45:00+03:00)
 [2025-10-12 08:45:01,891] INFO: Job "daily_balance (trigger: cron[day_of_week='sun,mon,tue,wed,thu,fri,sat', hour='8', minute='45', second='0'], next run at: 2025-10-13 08:45:00 EEST)" executed successfully
 [2025-10-13 01:46:58,687] ERROR: ❌ ПОМИЛКА: httpx.ReadError: 
+[2025-11-22 23:21:05,965] INFO: 🚀 Запуск бота...
+[2025-11-22 23:21:06,414] INFO: Adding job tentatively -- it will be properly scheduled when the scheduler starts
+[2025-11-22 23:21:06,414] INFO: ⏰ Планувальник: щоденний баланс о 08:45 (Europe/Kyiv) активовано
+[2025-11-22 23:21:06,530] INFO: Added job "daily_balance" to job store "default"
+[2025-11-22 23:21:06,531] INFO: Scheduler started
+[2025-11-22 23:21:06,531] INFO: Application started
+[2025-11-22 23:21:51,184] INFO: 💰 /balance запит від 161197876 (Alexey_Raid)

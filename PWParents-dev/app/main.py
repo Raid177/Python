@@ -22,6 +22,8 @@ from bot.service.reminder import start_idle_reminder
 from bot.auth import acl_refresher_task
 from bot.service.phone_reminder import start_phone_reminders
 
+from bot.routers import cnt_visit_router
+
 async def setup_staff_private_commands(bot: Bot) -> None:
     """
     Ставимо персональну підказку /setname у приваті ТІЛЬКИ співробітникам.
@@ -124,6 +126,8 @@ async def main():
     # Маршрути — без дублювання
     dp.include_router(health.router)
     dp.include_router(root.router)
+    dp.include_router(cnt_visit_router.router)
+
 
     # Чистимо вебхук і ставимо команди
     await bot.delete_webhook(drop_pending_updates=True)

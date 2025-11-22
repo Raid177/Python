@@ -1,5 +1,8 @@
 # core/repositories/agents.py
 
+from __future__ import annotations
+from typing import Optional, Dict, Any
+from core.db import get_conn
 
 def get_display_name(conn, telegram_id: int) -> str | None:
     cur = conn.cursor()
@@ -84,3 +87,59 @@ def get_agent(conn, telegram_id: int) -> dict | None:
     row = cur.fetchone()
     cur.close()
     return row
+
+def get_agent_by_telegram(telegram_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Повертає дані агента (співробітника) за telegram_id.
+    Включає enote_ref_key — Ref_Key співробітника в Єноті.
+    """
+
+    sql = """
+        SELECT
+            telegram_id,
+            display_name,
+            role,
+            active,
+            enote_ref_key
+        FROM pp_agents
+        WHERE telegram_id = %s
+        LIMIT 1
+    """
+
+    conn = get_conn()
+    try:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute(sql, (telegram_id,))
+            row = cur.fetchone()
+            return row if row else None
+    finally:
+        conn.close()
+
+
+def get_agent_by_id(agent_id: int) -> Optional[Dict[str, Any]]:
+    """
+    Альтернативний спосіб отримати дані агента — за telegram_id,
+    якщо раптом десь у коді ідентифікатор зберігається окремо.
+    (Таблиця pp_agents не має окремого id, тож тут agent_id == telegram_id)
+    """
+
+    sql = """
+        SELECT
+            telegram_id,
+            display_name,
+            role,
+            active,
+            enote_ref_key
+        FROM pp_agents
+        WHERE telegram_id = %s
+        LIMIT 1
+    """
+
+    conn = get_conn()
+    try:
+        with conn.cursor(dictionary=True) as cur:
+            cur.execute(sql, (agent_id,))
+            row = cur.fetchone()
+            return row if row else None
+    finally:
+        conn.close()
